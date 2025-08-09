@@ -1,7 +1,6 @@
 {
-  "name": "me2verse-sample",
+  "name": "me2verse-backend",
   "version": "1.0.0",
-  "description": "Me2Verse Pi Login and Payment Sample",
   "main": "backend/index.js",
   "scripts": {
     "start": "node backend/index.js"
