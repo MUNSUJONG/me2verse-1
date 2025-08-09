@@ -2,10 +2,18 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <title>Me2Verse 메인페이지</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Me2Verse Pi Login & Payment Demo</title>
 </head>
 <body>
-  <h1>Me2Verse-1에 오신 것을 환영합니다!</h1>
-  <p>이 페이지가 정상적으로 보이면 index.html 배포 성공입니다.</p>
+  <h1>Me2Verse Pi 로그인 & 테스트 결제 데모</h1>
+  <button id="loginBtn">Pi 로그인</button>
+  <div id="loginStatus"></div>
+
+  <button id="payBtn" disabled>테스트 결제 (1π)</button>
+  <div id="payStatus"></div>
+
+  <script src="app.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@minepi/pi-sdk@latest/dist/pi.min.js"></script>
 </body>
 </html>
