@@ -3,16 +3,54 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Me2Verse Pi Login & Payment Test</title>
+  <title>Me2Verse Pi 로그인 & 결제</title>
+  <!-- Pi SDK -->
   <script src="https://cdn.jsdelivr.net/npm/@minepi/pi-sdk@latest/dist/pi.min.js" defer></script>
+  <!-- 앱 JS -->
   <script src="app.js" defer></script>
+  <style>
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      background-color: #f5f7fa;
+      padding: 20px;
+      text-align: center;
+    }
+    button {
+      font-size: 18px;
+      padding: 12px 24px;
+      margin: 10px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+    }
+    #loginBtn {
+      background-color: #7d4cff;
+      color: white;
+    }
+    #loginBtn:disabled {
+      background-color: #c6bfff;
+      cursor: not-allowed;
+    }
+    #payBtn {
+      background-color: #00c853;
+      color: white;
+    }
+    #payBtn:disabled {
+      background-color: #a5d6a7;
+      cursor: not-allowed;
+    }
+    #status {
+      margin-top: 30px;
+      white-space: pre-wrap;
+      font-size: 16px;
+      color: #333;
+    }
+  </style>
 </head>
 <body>
   <h1>Me2Verse Pi 로그인 & 결제 테스트</h1>
-
   <button id="loginBtn" disabled>Pi 로그인</button>
   <button id="payBtn" disabled>테스트 결제 (1π)</button>
-
-  <div id="status" style="margin-top: 20px; white-space: pre-line;"></div>
+  <div id="status">Pi SDK 로딩 중...</div>
 </body>
 </html>
