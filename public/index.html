@@ -2,46 +2,26 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <title>Me2Verse 로그인 디버깅 테스트</title>
-  <script src="https://sdk.minepi.com/pi-sdk.js"></script>
+  <title>Me2Verse 리디렉션 예시</title>
+  <script>
+    // 특정 조건에 따라 리디렉션
+    window.onload = function() {
+      const currentPath = window.location.pathname;
+
+      // 예: /oldpage로 접속하면 /newpage로 이동시키기
+      if (currentPath === '/oldpage') {
+        window.location.replace('/newpage');
+      }
+
+      // 또는 홈 경로가 아닐 때 강제로 /index.html로 이동시키기
+      if (currentPath !== '/' && currentPath !== '/index.html') {
+        window.location.replace('/index.html');
+      }
+    };
+  </script>
 </head>
 <body>
-  <button id="loginBtn" disabled style="font-size:20px; padding:15px;">로그인</button>
-  <p id="status"></p>
-
-  <script>
-    window.addEventListener('load', () => {
-      const hostname = window.location.hostname;
-      const isSandbox = hostname.includes('sandbox.minepi.com');
-
-      console.log('Pi SDK 초기화 시작, sandbox:', isSandbox);
-      Pi.init({ version: "2.0", sandbox: isSandbox });
-
-      const status = document.getElementById('status');
-      const loginBtn = document.getElementById('loginBtn');
-
-      status.innerText = `✅ SDK 초기화 완료 (${isSandbox ? '샌드박스' : '프로덕션'})`;
-      console.log('SDK 초기화 완료');
-
-      setTimeout(() => {
-        loginBtn.disabled = false;
-        console.log('로그인 버튼 활성화');
-
-        loginBtn.addEventListener('click', async () => {
-          status.innerText = '로그인 시도 중...';
-          console.log('로그인 시도 시작');
-
-          try {
-            const auth = await Pi.authenticate(['username']);
-            console.log('authenticate 결과:', auth);
-            status.innerText = `로그인 성공: ${auth.user.username}`;
-          } catch (e) {
-            console.error('로그인 실패:', e);
-            status.innerText = `로그인 실패: ${e.message}`;
-          }
-        });
-      }, 300);
-    });
-  </script>
+  <h1>Me2Verse</h1>
+  <p>리디렉션 테스트 페이지입니다.</p>
 </body>
 </html>
