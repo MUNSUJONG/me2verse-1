@@ -2,15 +2,38 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <title>Me2Verse-1 Pi Login & Payment</title>
+  <title>Test Pi SDK</title>
 </head>
 <body>
-  <h1>Me2Verse-1 Pi Login & Payment</h1>
   <button id="loginBtn">로그인</button>
   <button id="payBtn" disabled>결제</button>
   <p id="status"></p>
 
   <script src="https://sdk.minepi.com/pi-sdk.js"></script>
-  <script src="app.js"></script>
+  <script>
+    window.addEventListener('load', () => {
+      Pi.init({ version: "2.0", sandbox: true });
+      const loginBtn = document.getElementById('loginBtn');
+      const payBtn = document.getElementById('payBtn');
+      const statusEl = document.getElementById('status');
+
+      loginBtn.disabled = false;
+
+      loginBtn.addEventListener('click', async () => {
+        try {
+          const auth = await Pi.authenticate(['username', 'payments']);
+          statusEl.innerText = `로그인 성공: ${auth.user.username}`;
+          payBtn.disabled = false;
+        } catch(e) {
+          statusEl.innerText = `로그인 실패: ${e.message}`;
+          console.error(e);
+        }
+      });
+
+      payBtn.addEventListener('click', () => {
+        alert('결제 버튼 클릭됨');
+      });
+    });
+  </script>
 </body>
 </html>
