@@ -3,99 +3,42 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Me2Verse-1 Pi Login & Payment</title>
+<title>Me2Verse-1 Pi 로그인 테스트</title>
 <script src="https://cdn.jsdelivr.net/npm/pi-js@latest/dist/pi.min.js"></script>
 <style>
-  body { font-family: Arial, sans-serif; padding: 20px; background:#f7f9fc; }
-  button { padding: 10px 20px; font-size: 16px; margin: 10px; }
+  body { font-family: Arial, sans-serif; padding: 20px; }
+  button { font-size: 18px; padding: 12px 24px; margin: 10px; }
   #status { margin-top: 20px; font-weight: bold; }
 </style>
 </head>
 <body>
 
-<h2>Me2Verse-1 Pi 로그인 & 결제 테스트</h2>
+<h1>Me2Verse-1 Pi 로그인 테스트</h1>
 
 <button id="loginBtn" disabled>로그인</button>
-<button id="payBtn" disabled>결제 진행</button>
-
 <div id="status">SDK 초기화 중...</div>
 
 <script>
-  const BACKEND_URL = 'http://localhost:4000'; // 배포 시 실제 백엔드 주소로 변경
-
   window.addEventListener('load', () => {
     const isSandbox = window.location.hostname === 'sandbox.minepi.com';
     Pi.init({ version: "2.0", sandbox: isSandbox });
 
-    const status = document.getElementById('status');
     const loginBtn = document.getElementById('loginBtn');
-    const payBtn = document.getElementById('payBtn');
+    const status = document.getElementById('status');
 
     status.innerText = `✅ SDK 초기화 완료 (${isSandbox ? '샌드박스' : '프로덕션'})`;
     loginBtn.disabled = false;
 
-    let currentAuth = null;
-
     loginBtn.addEventListener('click', async () => {
       status.innerText = '로그인 시도 중...';
       loginBtn.disabled = true;
+
       try {
         const auth = await Pi.authenticate(['username']);
-        currentAuth = auth;
         status.innerText = `로그인 성공: ${auth.user.username}`;
-        payBtn.disabled = false;
-      } catch (e) {
-        status.innerText = `로그인 실패: ${e.message}`;
-        console.error(e);
+      } catch (err) {
+        status.innerText = `로그인 실패: ${err.message}`;
         loginBtn.disabled = false;
-      }
-    });
-
-    payBtn.addEventListener('click', async () => {
-      if (!currentAuth) {
-        status.innerText = '먼저 로그인하세요.';
-        return;
-      }
-
-      payBtn.disabled = true;
-      status.innerText = '결제 생성 중...';
-
-      try {
-        // 결제 생성 요청
-        const createResp = await fetch(`${BACKEND_URL}/payment/create`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            amount: 1, // Pi 코인 수량 예: 1 Pi
-            memo: 'Me2Verse 결제 테스트',
-            metadata: { user: currentAuth.user.username }
-          }),
-        });
-
-        const createData = await createResp.json();
-
-        if (!createResp.ok) throw new Error(createData.error || '결제 생성 실패');
-
-        const paymentId = createData.id;
-        status.innerText = '결제 승인 중...';
-
-        // 결제 승인 요청
-        const approveResp = await fetch(`${BACKEND_URL}/payment/approve`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ paymentId }),
-        });
-
-        const approveData = await approveResp.json();
-
-        if (!approveResp.ok) throw new Error(approveData.error || '결제 승인 실패');
-
-        status.innerText = '결제 완료! 감사합니다.';
-      } catch (e) {
-        status.innerText = `오류 발생: ${e.message}`;
-        console.error(e);
-      } finally {
-        payBtn.disabled = false;
       }
     });
   });
