@@ -1,25 +1,21 @@
-window.addEventListener('load', () => {
-  const is Sandbox = window.location.hostname === 'sandbox.minepi.com';
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>Me2Verse 샌드박스 로그인 및 결제</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    button { margin: 5px; padding: 10px 20px; font-size: 16px; }
+    #status { margin-top: 20px; font-weight: bold; color: #333; }
+  </style>
+</head>
+<body>
+  <h1>Me2Verse 샌드박스 로그인 & 결제 테스트</h1>
+  <button id="loginBtn" disabled>로그인</button>
+  <button id="payBtn" disabled>결제하기</button>
+  <div id="status">초기화 중...</div>
 
-  Pi.init({ version: "2.0", sandbox: isSandbox });
-
-  const status = document.getElementById('status');
-  const loginBtn = document.getElementById('loginBtn');
-
-  status.innerText = `✅ SDK 초기화 완료 (${isSandbox ? '샌드박스' : '프로덕션'})`;
-
-  setTimeout(() => {
-    loginBtn.disabled = false;
-
-    loginBtn.addEventListener('click', async () => {
-      status.innerText = '로그인 시도 중...';
-      try {
-        const auth = await Pi.authenticate(['username']);
-        status.innerText = `로그인 성공: ${auth.user.username}`;
-      } catch (e) {
-        status.innerText = `로그인 실패: ${e.message}`;
-        console.error(e);
-      }
-    });
-  }, 300);
-});
+  <script src="https://cdn.minepi.com/pi.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
