@@ -16,7 +16,7 @@
       loginBtn.addEventListener('click', async () => {
         status.innerText = '로그인 시도 중...';
         try {
-          const auth = await Pi.authenticate(['username', 'payments']);
+          const auth = await Pi.authenticate(['username']);
           status.innerText = `로그인 성공: ${auth.user.username}`;
         } catch (e) {
           status.innerText = `로그인 실패: ${e.message}`;
