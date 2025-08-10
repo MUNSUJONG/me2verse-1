@@ -4,7 +4,6 @@ const statusDiv = document.getElementById('status');
 
 let userSession = null;
 
-// Pi Browser 환경 확인
 function isPiBrowser() {
   return !!window.Pi && !!window.Pi.authenticate;
 }
@@ -21,8 +20,8 @@ window.addEventListener('DOMContentLoaded', () => {
     statusDiv.textContent = '로그인 시도 중...';
     try {
       userSession = await window.Pi.authenticate({
-        appName: 'Me2Verse',
-        sandbox: true, // 테스트용
+        appName: 'Me2Verse-1',
+        sandbox: true,
       });
       statusDiv.textContent = `로그인 성공: ${userSession.address}`;
       payBtn.disabled = false;
@@ -45,7 +44,7 @@ window.addEventListener('DOMContentLoaded', () => {
         method: 'transaction.request',
         params: [
           {
-            to: 'YOUR_PI_WALLET_ADDRESS', // 백엔드 지갑 주소 또는 테스트용 주소
+            to: 'YOUR_PI_WALLET_ADDRESS', // 반드시 본인 지갑 주소로 변경
             amount: 1,
             memo: '테스트 결제 1π',
           },
@@ -57,7 +56,6 @@ window.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
-      // 결제 승인 후 백엔드로 정보 전송 (임시 예시)
       const response = await fetch('https://me2verse-1.onrender.com/payment/approve', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
