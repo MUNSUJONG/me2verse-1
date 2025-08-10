@@ -37,7 +37,7 @@ window.addEventListener('load', () => {
       status.innerText = '💳 결제 생성 중...';
 
       try {
-        const response = await fetch('/payment/create', {
+        const response = await fetch('http://localhost:4000/payment/create', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -52,7 +52,7 @@ window.addEventListener('load', () => {
         if (data.id) {
           status.innerText = '⏳ 결제 승인 대기 중...';
 
-          const approveRes = await fetch('/payment/approve', {
+          const approveRes = await fetch('http://localhost:4000/payment/approve', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ paymentId: data.id })
