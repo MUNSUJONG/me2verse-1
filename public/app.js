@@ -8,7 +8,11 @@ function isPiBrowser() {
   return !!window.Pi && !!window.Pi.authenticate;
 }
 
+// 페이지 로딩 시점에 Pi SDK 상태 체크
 window.addEventListener('DOMContentLoaded', () => {
+  console.log('window.Pi:', window.Pi);
+  console.log('window.Pi && window.Pi.authenticate:', window.Pi && window.Pi.authenticate);
+
   if (!isPiBrowser()) {
     statusDiv.textContent = 'Pi Browser에서 접속해 주세요.';
     loginBtn.disabled = true;
@@ -16,16 +20,23 @@ window.addEventListener('DOMContentLoaded', () => {
     return;
   }
 
+  statusDiv.textContent = 'Pi Browser 확인 완료. 로그인해 주세요.';
+  loginBtn.disabled = false;
+  payBtn.disabled = true;
+
   loginBtn.onclick = async () => {
+    console.log('로그인 버튼 클릭됨');
     statusDiv.textContent = '로그인 시도 중...';
     try {
       userSession = await window.Pi.authenticate({
         appName: 'Me2Verse-1',
         sandbox: true,
       });
+      console.log('로그인 성공, userSession:', userSession);
       statusDiv.textContent = `로그인 성공: ${userSession.address}`;
       payBtn.disabled = false;
     } catch (e) {
+      console.error('로그인 실패:', e);
       statusDiv.textContent = '로그인 실패: ' + e.message;
       payBtn.disabled = true;
     }
@@ -33,46 +44,25 @@ window.addEventListener('DOMContentLoaded', () => {
 
   payBtn.onclick = async () => {
     if (!userSession) {
-      statusDiv.textContent = '먼저 로그인하세요.';
+      statusDiv.textContent = '먼저 로그인해주세요.';
       return;
     }
-
     statusDiv.textContent = '결제 요청 중...';
 
     try {
-      const transaction = await window.Pi.request({
-        method: 'transaction.request',
-        params: [
-          {
-            to: 'YOUR_PI_WALLET_ADDRESS', // 반드시 본인 지갑 주소로 변경
-            amount: 1,
-            memo: '테스트 결제 1π',
-          },
-        ],
+      const tx = await window.Pi.request({
+        appName: 'Me2Verse-1',
+        action: 'transfer',
+        to: 'YOUR_PI_WALLET_ADDRESS',  // 본인 지갑 주소로 변경하세요
+        amount: 1,
+        memo: '테스트 결제',
+        sandbox: true,
       });
-
-      if (transaction.error) {
-        statusDiv.textContent = '결제 실패: ' + transaction.error;
-        return;
-      }
-
-      const response = await fetch('https://me2verse-1.onrender.com/payment/approve', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          transactionId: transaction.transactionId,
-          userId: userSession.address,
-          amount: 1,
-        }),
-      });
-
-      if (response.ok) {
-        statusDiv.textContent = '결제 승인 완료!';
-      } else {
-        statusDiv.textContent = '서버 승인 실패';
-      }
+      console.log('결제 성공:', tx);
+      statusDiv.textContent = '결제 성공! Tx ID: ' + tx.transactionId;
     } catch (e) {
-      statusDiv.textContent = '결제 오류: ' + e.message;
+      console.error('결제 실패:', e);
+      statusDiv.textContent = '결제 실패: ' + e.message;
     }
   };
 });
