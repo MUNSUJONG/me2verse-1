@@ -8,22 +8,22 @@ const PORT = process.env.PORT || 10000;
 app.use(cors());
 app.use(express.json());
 
-// 루트 경로
+// 루트 경로 (Render 배포 테스트용)
 app.get('/', (req, res) => {
   res.send('🟢 Me2Verse Backend 루트 경로 정상 작동 중');
 });
 
-// 핑 테스트
+// 핑 테스트 (서버 상태 확인용)
 app.get('/ping', (req, res) => {
   res.send('🟢 Me2Verse Backend 정상 작동 중');
 });
 
-// 결제 승인 콜백
+// 결제 승인 콜백 (Pi 결제 승인 처리)
 app.post('/payment/approve', (req, res) => {
   const { transactionId, userId, amount } = req.body;
   console.log('결제 승인 요청:', req.body);
 
-  // TODO: 실제 Pi API 검증 및 승인 처리 로직 추가
+  // TODO: Pi API 검증 및 승인 처리 로직 추가 예정
 
   res.status(200).json({ message: '승인 처리 완료' });
 });
