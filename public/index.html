@@ -11,7 +11,8 @@
 
   <script>
     window.addEventListener('load', () => {
-      const isSandbox = window.location.hostname === 'sandbox.minepi.com';
+      const hostname = window.location.hostname;
+      const isSandbox = hostname.includes('sandbox.minepi.com');
 
       Pi.init({ version: "2.0", sandbox: isSandbox });
 
