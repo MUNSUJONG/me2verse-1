@@ -1,5 +1,5 @@
 {
-  "name": "me2verse-backend",
+  "name": "me2verse-1-backend",
   "version": "1.0.0",
   "main": "backend/index.js",
   "scripts": {
