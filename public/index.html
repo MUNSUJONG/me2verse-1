@@ -1,29 +1,18 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <title>Pi SDK 테스트</title>
-  <script src="https://sandbox.minepi.com/pi-sdk.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Me2Verse Pi Login</title>
+
+  <!-- Pi SDK -->
+  <script src="https://sdk.minepi.com/pi-sdk.js"></script>
+
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <button id="loginBtn">Pi 로그인</button>
-  <pre id="status"></pre>
 
-  <script>
-    const loginBtn = document.getElementById('loginBtn');
-    const status = document.getElementById('status');
-
-    loginBtn.onclick = async () => {
-      try {
-        const pi = new Pi();
-        status.textContent = '로그인 시도 중... Pi 브라우저에서 실행하세요.';
-        await pi.login();
-        const user = pi.getUser();
-        status.textContent = `로그인 성공! UID: ${user.uid}`;
-      } catch (e) {
-        status.textContent = '로그인 실패: ' + e.message;
-      }
-    };
-  </script>
+  <script src="app.js"></script>
 </body>
 </html>
