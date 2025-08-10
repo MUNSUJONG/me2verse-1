@@ -1,28 +1,32 @@
-<button id="loginBtn" disabled>로그인</button>
-<p id="status"></p>
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>Me2Verse Pi 로그인 테스트</title>
+</head>
+<body>
+  <button id="loginBtn" disabled style="font-size:20px; padding:15px;">로그인</button>
+  <p id="status"></p>
 
-<script src="https://sdk.minepi.com/pi-sdk.js"></script>
-<script>
-  window.onload = () => {
-    alert('SDK 초기화 시작');
-    Pi.init({ version: "2.0", sandbox: true });
-    alert('SDK 초기화 완료');
+  <script src="https://sdk.minepi.com/pi-sdk.js"></script>
+  <script>
+    window.addEventListener('load', () => {
+      Pi.init({ version: "2.0", sandbox: true });
+      const status = document.getElementById('status');
+      const loginBtn = document.getElementById('loginBtn');
 
-    const status = document.getElementById('status');
-    const loginBtn = document.getElementById('loginBtn');
+      status.innerText = '✅ SDK 초기화 완료';
 
-    loginBtn.disabled = false;
+      setTimeout(() => {
+        loginBtn.disabled = false;
 
-    loginBtn.onclick = async () => {
-      alert('로그인 시도');
-      try {
-        const auth = await Pi.authenticate(['username', 'payments']);
-        alert('로그인 성공: ' + auth.user.username);
-        status.innerText = '로그인 성공: ' + auth.user.username;
-      } catch (e) {
-        alert('로그인 실패: ' + e.message);
-        status.innerText = '로그인 실패: ' + e.message;
-      }
-    };
-  };
-</script>
+        loginBtn.addEventListener('click', () => {
+          alert('버튼 눌림 확인');
+        });
+
+        // 실제 로그인 함수로 교체 전 테스트용
+      }, 300);
+    });
+  </script>
+</body>
+</html>
