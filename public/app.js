@@ -1,60 +1,40 @@
-const loginBtn = document.getElementById('loginBtn');
-const payBtn = document.getElementById('payBtn');
-const statusDiv = document.getElementById('status');
+document.addEventListener("DOMContentLoaded", () => {
+  const loginBtn = document.getElementById("loginBtn");
+  const payBtn = document.getElementById("payBtn");
+  const statusEl = document.getElementById("status");
 
-let userSession = null;
-
-// Pi Browser 환경 확인 함수
-function isPiBrowser() {
-  return !!window.Pi && typeof window.Pi.authenticate === 'function';
-}
-
-// DOM 완성 후 실행
-window.addEventListener('DOMContentLoaded', () => {
-  if (!isPiBrowser()) {
-    statusDiv.textContent = '⚠️ Pi Browser에서만 작동합니다.\nPi Browser로 접속해주세요.';
-    loginBtn.disabled = true;
-    payBtn.disabled = true;
-    return;
+  // Pi SDK 초기화 (Pi 브라우저에서만 작동)
+  if (typeof Pi !== "undefined") {
+    Pi.init({ version: "2.0" });
+  } else {
+    statusEl.textContent = "⚠ Pi 브라우저에서 접속해주세요.";
   }
 
-  statusDiv.textContent = 'Pi Browser 확인 완료. 로그인 버튼을 눌러주세요.';
-  loginBtn.disabled = false;
-
-  loginBtn.onclick = async () => {
-    statusDiv.textContent = '로그인 시도 중...';
-    try {
-      userSession = await window.Pi.authenticate({
-        appName: 'Me2Verse-1',  // Pi 개발자센터에 등록된 앱 이름으로 변경 필요
-        sandbox: true,           // 테스트 모드
-      });
-      statusDiv.textContent = `✅ 로그인 성공!\n주소: ${userSession.address}\nID: ${userSession.userId}`;
-      payBtn.disabled = false;
-    } catch (err) {
-      statusDiv.textContent = `❌ 로그인 실패: ${err.message}`;
-      payBtn.disabled = true;
-    }
-  };
-
-  payBtn.onclick = async () => {
-    if (!userSession) {
-      statusDiv.textContent = '⚠️ 먼저 로그인을 해주세요.';
+  // 로그인 버튼 클릭
+  loginBtn.addEventListener("click", async () => {
+    if (typeof Pi === "undefined") {
+      alert("Pi 브라우저에서만 로그인할 수 있습니다.");
       return;
     }
 
-    statusDiv.textContent = '결제 요청 중...';
     try {
-      const tx = await window.Pi.request({
-        appName: 'Me2Verse-1',
-        action: 'transfer',
-        to: '사용자_지갑_주소',  // 실제 Pi 지갑 주소로 반드시 변경
-        amount: 1,
-        memo: '테스트 결제',
-        sandbox: true,
-      });
-      statusDiv.textContent = `🎉 결제 성공!\nTx ID: ${tx.transactionId}`;
+      const scopes = ["payments", "username"];
+      const auth = await Pi.authenticate(scopes, onIncompletePaymentFound);
+      console.log("로그인 성공:", auth);
+      statusEl.textContent = `✅ 로그인 성공: ${auth.user.username}`;
+      payBtn.disabled = false;
     } catch (err) {
-      statusDiv.textContent = `❌ 결제 실패: ${err.message}`;
+      console.error("로그인 실패:", err);
+      statusEl.textContent = "❌ 로그인 실패";
     }
-  };
+  });
+
+  // 결제 버튼 클릭
+  payBtn.addEventListener("click", () => {
+    alert("결제 진행 로직 연결 필요");
+  });
+
+  function onIncompletePaymentFound(payment) {
+    console.log("미완료 결제:", payment);
+  }
 });
