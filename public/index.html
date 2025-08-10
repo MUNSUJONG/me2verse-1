@@ -3,49 +3,16 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Me2Verse-1 - Pi 로그인 & 결제 테스트</title>
-
+  <title>Me2Verse Pi Login & Payment Test</title>
   <script src="https://cdn.jsdelivr.net/npm/@minepi/pi-sdk@latest/dist/pi.min.js" defer></script>
-
-  <style>
-    body {
-      font-family: 'Noto Sans KR', sans-serif;
-      background: #f0f4f8;
-      color: #333;
-      padding: 2rem;
-      max-width: 400px;
-      margin: auto;
-    }
-    button {
-      background: #0057ff;
-      color: white;
-      border: none;
-      padding: 1rem 2rem;
-      margin: 1rem 0;
-      border-radius: 6px;
-      cursor: pointer;
-      font-weight: bold;
-    }
-    button:disabled {
-      background: #ccc;
-      cursor: not-allowed;
-    }
-    #status {
-      margin-top: 1rem;
-      font-weight: 600;
-      min-height: 2rem;
-    }
-  </style>
+  <script src="app.js" defer></script>
 </head>
 <body>
+  <h1>Me2Verse Pi 로그인 & 결제 테스트</h1>
 
-  <h1>Me2Verse-1 Pi 로그인 & 결제 테스트</h1>
+  <button id="loginBtn" disabled>Pi 로그인</button>
+  <button id="payBtn" disabled>테스트 결제 (1π)</button>
 
-  <button id="loginBtn">Pi 계정으로 로그인</button>
-  <button id="payBtn" disabled>테스트 결제 1π</button>
-
-  <div id="status"></div>
-
-  <script src="app.js"></script>
+  <div id="status" style="margin-top: 20px; white-space: pre-line;"></div>
 </body>
 </html>
