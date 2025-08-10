@@ -1,94 +1,88 @@
-// me2verse-1 backend
 require('dotenv').config();
 const express = require('express');
-const cors = require('cors');
 const axios = require('axios');
+const cors = require('cors');
 
 const app = express();
-const PORT = process.env.PORT || 4000;
+const port = process.env.PORT || 4000;
 
 app.use(cors());
 app.use(express.json());
 
-// Health check
+// 서버 상태 확인
 app.get('/', (req, res) => {
   res.send('✅ Me2Verse-1 Backend is running 🚀');
 });
 
-app.get('/ping', (req, res) => {
-  res.send('🟢 Me2Verse-1 ping OK');
-});
-
-/**
- * (Optional) Server-side payment creation
- * Some apps create a payment server-side. Not required if you use Pi.createPayment on the client.
- */
-app.post('/payments/create', async (req, res) => {
+// 결제 생성 API
+app.post('/payment/create', async (req, res) => {
   try {
     const { amount, memo, metadata } = req.body;
-    const apiUrl = 'https://api.minepi.com/v2/payments';
-    const response = await axios.post(apiUrl, { amount, memo, metadata }, {
-      headers: {
-        Authorization: `Key ${process.env.PI_API_KEY}`,
-        'Content-Type': 'application/json'
+
+    const response = await axios.post(
+      'https://api.minepi.com/v2/payments',
+      { amount, memo, metadata },
+      {
+        headers: {
+          Authorization: `Key ${process.env.PI_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
       }
-    });
-    return res.json(response.data);
-  } catch (err) {
-    console.error('Me2Verse-1: /payments/create error', err?.response?.data || err.message);
-    return res.status(500).json({ error: 'create payment failed', detail: err?.response?.data || err.message });
+    );
+
+    res.json(response.data);
+  } catch (error) {
+    console.error('❌ 결제 생성 실패:', error.response?.data || error.message);
+    res.status(500).json({ error: 'Payment creation failed' });
   }
 });
 
-/**
- * Server-side approval:
- * Called when the client receives onReadyForServerApproval(paymentId)
- */
-app.post('/payments/approve', async (req, res) => {
+// 결제 승인 API
+app.post('/payment/approve', async (req, res) => {
   try {
     const { paymentId } = req.body;
-    if (!paymentId) return res.status(400).json({ error: 'paymentId required' });
 
-    const apiUrl = `https://api.minepi.com/v2/payments/${encodeURIComponent(paymentId)}/approve`;
-    const response = await axios.post(apiUrl, {}, {
-      headers: {
-        Authorization: `Key ${process.env.PI_API_KEY}`,
-        'Content-Type': 'application/json'
+    const response = await axios.post(
+      `https://api.minepi.com/v2/payments/${paymentId}/approve`,
+      {},
+      {
+        headers: {
+          Authorization: `Key ${process.env.PI_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
       }
-    });
-    console.log('Me2Verse-1: approved', paymentId, response.data);
-    return res.json(response.data);
-  } catch (err) {
-    console.error('Me2Verse-1: /payments/approve error', err?.response?.data || err.message);
-    return res.status(500).json({ error: 'approve payment failed', detail: err?.response?.data || err.message });
+    );
+
+    res.json(response.data);
+  } catch (error) {
+    console.error('❌ 결제 승인 실패:', error.response?.data || error.message);
+    res.status(500).json({ error: 'Payment approval failed' });
   }
 });
 
-/**
- * Server-side completion:
- * Called when the client receives onReadyForServerCompletion(paymentId, txid)
- */
-app.post('/payments/complete', async (req, res) => {
+// 결제 완료 API
+app.post('/payment/complete', async (req, res) => {
   try {
-    const { paymentId, txid } = req.body;
-    if (!paymentId) return res.status(400).json({ error: 'paymentId required' });
+    const { paymentId } = req.body;
 
-    const apiUrl = `https://api.minepi.com/v2/payments/${encodeURIComponent(paymentId)}/complete`;
-    const body = txid ? { txid } : {};
-    const response = await axios.post(apiUrl, body, {
-      headers: {
-        Authorization: `Key ${process.env.PI_API_KEY}`,
-        'Content-Type': 'application/json'
+    const response = await axios.post(
+      `https://api.minepi.com/v2/payments/${paymentId}/complete`,
+      {},
+      {
+        headers: {
+          Authorization: `Key ${process.env.PI_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
       }
-    });
-    console.log('Me2Verse-1: completed', paymentId, response.data);
-    return res.json(response.data);
-  } catch (err) {
-    console.error('Me2Verse-1: /payments/complete error', err?.response?.data || err.message);
-    return res.status(500).json({ error: 'complete payment failed', detail: err?.response?.data || err.message });
+    );
+
+    res.json(response.data);
+  } catch (error) {
+    console.error('❌ 결제 완료 실패:', error.response?.data || error.message);
+    res.status(500).json({ error: 'Payment completion failed' });
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`✅ Me2Verse-1 Server running on port ${PORT}`);
+app.listen(port, () => {
+  console.log(`✅ Me2Verse-1 Backend Server running on port ${port}`);
 });
