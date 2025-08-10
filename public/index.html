@@ -2,66 +2,26 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Me2Verse Pi 로그인 및 결제</title>
-  <script src="https://cdn.jsdelivr.net/npm/@minepi/pi-sdk@latest/dist/pi.min.js" defer></script>
+  <title>Pi SDK 테스트</title>
+  <script src="https://sandbox.minepi.com/pi-sdk.js"></script>
 </head>
 <body>
-  <h1 style="text-align:center;">Me2Verse Pi 로그인 및 결제</h1>
-  <div style="text-align:center; margin-top: 40px;">
-    <button id="loginBtn">Pi 로그인</button>
-    <button id="payBtn" disabled>테스트 결제 (1π)</button>
-    <pre id="status" style="margin-top:20px;"></pre>
-  </div>
+  <button id="loginBtn">Pi 로그인</button>
+  <pre id="status"></pre>
 
   <script>
-    let pi = null;
-    let user = null;
-    const statusEl = document.getElementById('status');
     const loginBtn = document.getElementById('loginBtn');
-    const payBtn = document.getElementById('payBtn');
-
-    window.addEventListener('load', () => {
-      if (window.Pi) {
-        pi = window.Pi;
-        pi.init({ version: "2.0", sandbox: true });
-        statusEl.textContent = "Pi SDK 로딩 완료. Pi Browser에서 접속하세요.";
-      } else {
-        statusEl.textContent = "⚠️ Pi SDK를 찾을 수 없습니다. Pi Browser에서 접속해주세요.";
-      }
-    });
+    const status = document.getElementById('status');
 
     loginBtn.onclick = async () => {
-      if (!pi) return;
-      statusEl.textContent = "로그인 중...";
       try {
-        user = await pi.authenticate({ appName: "Me2Verse-1", sandbox: true });
-        statusEl.textContent = `로그인 성공: ${user.address}`;
-        loginBtn.disabled = true;
-        payBtn.disabled = false;
+        const pi = new Pi();
+        status.textContent = '로그인 시도 중... Pi 브라우저에서 실행하세요.';
+        await pi.login();
+        const user = pi.getUser();
+        status.textContent = `로그인 성공! UID: ${user.uid}`;
       } catch (e) {
-        statusEl.textContent = `로그인 실패: ${e.message}`;
-      }
-    };
-
-    payBtn.onclick = async () => {
-      if (!pi || !user) {
-        statusEl.textContent = "먼저 로그인해주세요.";
-        return;
-      }
-      statusEl.textContent = "결제 요청 중...";
-      try {
-        const tx = await pi.request({
-          appName: "Me2Verse-1",
-          action: "transfer",
-          to: "pi_받는지갑주소",  // 실제 수신 Pi 주소 입력하세요
-          amount: 1,
-          memo: "테스트 결제",
-          sandbox: true,
-        });
-        statusEl.textContent = `결제 성공! TxId: ${tx.transactionId}`;
-      } catch (e) {
-        statusEl.textContent = `결제 실패: ${e.message}`;
+        status.textContent = '로그인 실패: ' + e.message;
       }
     };
   </script>
