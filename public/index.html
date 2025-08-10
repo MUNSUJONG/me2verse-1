@@ -1,18 +1,27 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Me2Verse Pi Login</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Me2Verse-1 Pi 결제 테스트</title>
+  <link rel="stylesheet" href="./style.css" />
 
-  <!-- Pi SDK -->
+  <!-- Pi SDK 로드 (Pi 브라우저에서 실행 시) -->
   <script src="https://sdk.minepi.com/pi-sdk.js"></script>
-
-  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <button id="loginBtn">Pi 로그인</button>
+  <div class="container">
+    <h1>Me2Verse-1 Pi 테스트</h1>
 
-  <script src="app.js"></script>
+    <!-- 로그인 버튼 -->
+    <button id="loginBtn">Pi 로그인</button>
+
+    <!-- 결제 버튼 -->
+    <button id="payBtn" disabled>결제하기</button>
+
+    <p id="status"></p>
+  </div>
+
+  <script src="./app.js"></script>
 </body>
 </html>
