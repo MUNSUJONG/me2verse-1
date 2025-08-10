@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <title>Me2Verse 로그인 테스트</title>
+  <title>Me2Verse 로그인 디버깅 테스트</title>
   <script src="https://sdk.minepi.com/pi-sdk.js"></script>
 </head>
 <body>
@@ -14,24 +14,30 @@
       const hostname = window.location.hostname;
       const isSandbox = hostname.includes('sandbox.minepi.com');
 
+      console.log('Pi SDK 초기화 시작, sandbox:', isSandbox);
       Pi.init({ version: "2.0", sandbox: isSandbox });
 
       const status = document.getElementById('status');
       const loginBtn = document.getElementById('loginBtn');
 
       status.innerText = `✅ SDK 초기화 완료 (${isSandbox ? '샌드박스' : '프로덕션'})`;
+      console.log('SDK 초기화 완료');
 
       setTimeout(() => {
         loginBtn.disabled = false;
+        console.log('로그인 버튼 활성화');
 
         loginBtn.addEventListener('click', async () => {
           status.innerText = '로그인 시도 중...';
+          console.log('로그인 시도 시작');
+
           try {
             const auth = await Pi.authenticate(['username']);
+            console.log('authenticate 결과:', auth);
             status.innerText = `로그인 성공: ${auth.user.username}`;
           } catch (e) {
+            console.error('로그인 실패:', e);
             status.innerText = `로그인 실패: ${e.message}`;
-            console.error(e);
           }
         });
       }, 300);
