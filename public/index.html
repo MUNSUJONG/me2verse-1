@@ -1,27 +1,25 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-  <meta charset="UTF-8" />
-  <title>Me2Verse 리디렉션 예시</title>
-  <script>
-    // 특정 조건에 따라 리디렉션
-    window.onload = function() {
-      const currentPath = window.location.pathname;
+window.addEventListener('load', () => {
+  const isSandbox = window.location.hostname === 'sandbox.minepi.com';
 
-      // 예: /oldpage로 접속하면 /newpage로 이동시키기
-      if (currentPath === '/oldpage') {
-        window.location.replace('/newpage');
-      }
+  Pi.init({ version: "2.0", sandbox: isSandbox });
 
-      // 또는 홈 경로가 아닐 때 강제로 /index.html로 이동시키기
-      if (currentPath !== '/' && currentPath !== '/index.html') {
-        window.location.replace('/index.html');
+  const status = document.getElementById('status');
+  const loginBtn = document.getElementById('loginBtn');
+
+  status.innerText = `✅ SDK 초기화 완료 (${isSandbox ? '샌드박스' : '프로덕션'})`;
+
+  setTimeout(() => {
+    loginBtn.disabled = false;
+
+    loginBtn.addEventListener('click', async () => {
+      status.innerText = '로그인 시도 중...';
+      try {
+        const auth = await Pi.authenticate(['username']);
+        status.innerText = `로그인 성공: ${auth.user.username}`;
+      } catch (e) {
+        status.innerText = `로그인 실패: ${e.message}`;
+        console.error(e);
       }
-    };
-  </script>
-</head>
-<body>
-  <h1>Me2Verse</h1>
-  <p>리디렉션 테스트 페이지입니다.</p>
-</body>
-</html>
+    });
+  }, 300);
+});
