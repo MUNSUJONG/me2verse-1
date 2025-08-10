@@ -1,25 +1,21 @@
-// Me2Verse-1 backend - backend/index.js
 require('dotenv').config();
 const express = require('express');
-const axios = require('axios');
 const cors = require('cors');
+const axios = require('axios');
 
 const app = express();
-const PORT = process.env.PORT || 4000;
+const port = process.env.PORT || 4000;
 
+// CORS 설정 (프론트엔드에서 localhost:4000 호출 허용)
 app.use(cors());
 app.use(express.json());
 
-// 상태 확인 - 명확히 Me2Verse-1로 표시
+// 서버 상태 확인
 app.get('/', (req, res) => {
-  res.send('✅ Me2Verse-1 Backend is running 🚀');
+  res.send('✅ Me2Verse Backend is running 🚀');
 });
 
-app.get('/ping', (req, res) => {
-  res.send('🟢 Me2Verse-1 backend: ping OK');
-});
-
-// 결제 생성 (예시) - 실제 Pi API 경로/스펙에 맞춰 조정하세요
+// 결제 생성
 app.post('/payment/create', async (req, res) => {
   try {
     const { amount, memo, metadata } = req.body;
@@ -29,17 +25,18 @@ app.post('/payment/create', async (req, res) => {
       {
         headers: {
           Authorization: `Key ${process.env.PI_API_KEY}`,
-          'Content-Type': 'application/json'
-        }
+          'Content-Type': 'application/json',
+        },
       }
     );
     res.json(response.data);
-  } catch (err) {
-    console.error('Me2Verse-1: payment/create error', err?.response?.data || err.message);
-    res.status(500).json({ error: 'payment creation failed' });
+  } catch (error) {
+    console.error('❌ 결제 생성 실패:', error.message);
+    res.status(500).json({ error: 'Payment creation failed' });
   }
 });
 
+// 결제 승인
 app.post('/payment/approve', async (req, res) => {
   try {
     const { paymentId } = req.body;
@@ -49,17 +46,18 @@ app.post('/payment/approve', async (req, res) => {
       {
         headers: {
           Authorization: `Key ${process.env.PI_API_KEY}`,
-          'Content-Type': 'application/json'
-        }
+          'Content-Type': 'application/json',
+        },
       }
     );
     res.json(response.data);
-  } catch (err) {
-    console.error('Me2Verse-1: payment/approve error', err?.response?.data || err.message);
-    res.status(500).json({ error: 'payment approval failed' });
+  } catch (error) {
+    console.error('❌ 결제 승인 실패:', error.message);
+    res.status(500).json({ error: 'Payment approval failed' });
   }
 });
 
+// 결제 완료
 app.post('/payment/complete', async (req, res) => {
   try {
     const { paymentId } = req.body;
@@ -69,17 +67,17 @@ app.post('/payment/complete', async (req, res) => {
       {
         headers: {
           Authorization: `Key ${process.env.PI_API_KEY}`,
-          'Content-Type': 'application/json'
-        }
+          'Content-Type': 'application/json',
+        },
       }
     );
     res.json(response.data);
-  } catch (err) {
-    console.error('Me2Verse-1: payment/complete error', err?.response?.data || err.message);
-    res.status(500).json({ error: 'payment completion failed' });
+  } catch (error) {
+    console.error('❌ 결제 완료 실패:', error.message);
+    res.status(500).json({ error: 'Payment completion failed' });
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`✅ Me2Verse-1 Server running on port ${PORT}`);
+app.listen(port, () => {
+  console.log(`✅ Server running on port ${port}`);
 });
