@@ -1,16 +1,45 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <title>Me2Verse-1 Pi Login & Payment Demo</title>
-  <script src="https://sandbox.minepi.com/pi-sdk.js"></script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Me2Verse-1 — Pi Login & Payment Demo</title>
+
+  <link rel="stylesheet" href="./style.css" />
+
+  <!-- 1) Pi SDK 로드 (문서 권장 URL) -->
+  <script src="https://sdk.minepi.com/pi-sdk.js"></script>
+
+  <!-- 2) SDK 초기화: 반드시 app.js보다 먼저 실행 -->
+  <script>
+    // sandbox: true 로 테스트(샌드박스 사용 시). 배포엔 상황에 맞게 변경하세요.
+    if (typeof Pi !== 'undefined') {
+      try {
+        Pi.init({ version: "2.0", sandbox: true }); // 문서 권장 init. 3
+        console.log('Me2Verse-1: Pi SDK initialized');
+      } catch (e) {
+        console.error('Me2Verse-1: Pi.init error', e);
+      }
+    } else {
+      console.warn('Me2Verse-1: Pi SDK not found (not in Pi Browser?)');
+    }
+  </script>
+
+  <!-- app.js는 defer: DOM 준비 후 실행 -->
+  <script src="./app.js" defer></script>
 </head>
 <body>
-  <h1>Me2Verse-1 Pi Login & Payment</h1>
-  <button id="loginBtn">Pi 로그인</button>
-  <button id="payBtn" disabled>결제하기 (0.1 Pi)</button>
-  <pre id="status"></pre>
+  <main class="wrap">
+    <h1>Me2Verse-1 Pi 결제 테스트</h1>
 
-  <script src="app.js"></script>
+    <div class="card">
+      <button id="loginBtn">Pi 로그인</button>
+      <button id="payBtn" disabled>결제하기 (0.1 Pi)</button>
+      <button id="openSandboxBtn">샌드박스 열기 (데스크탑)</button>
+      <pre id="status">상태: 준비됨</pre>
+    </div>
+
+    <p class="note">테스트는 Pi Browser 또는 Pi Sandbox 환경에서 실행하세요. 일반 브라우저에선 동작하지 않습니다.</p>
+  </main>
 </body>
 </html>
