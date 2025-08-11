@@ -3,65 +3,72 @@ Pi.init({ version: "2.0" });
 
 let currentUser = null;
 
-// 상태 표시 함수
-function setStatus(msg) {
-    document.getElementById("status").innerText = "상태: " + msg;
-}
+// DOM 요소
+const loginBtn = document.getElementById("loginBtn");
+const payBtn = document.getElementById("payBtn");
+const statusText = document.getElementById("status");
 
 // 로그인 버튼 클릭
-document.getElementById("loginBtn").addEventListener("click", async () => {
-    try {
-        setStatus("로그인 시도 중...");
-        const scopes = ['username', 'payments'];
-        const authResult = await Pi.authenticate(scopes, onIncompletePaymentFound);
-        currentUser = authResult.user;
-        setStatus(`로그인 성공: ${currentUser.username}`);
-        console.log("로그인 정보:", authResult);
-    } catch (err) {
-        console.error(err);
-        setStatus("로그인 실패");
-    }
+loginBtn.addEventListener("click", async () => {
+  try {
+    const scopes = ["username", "payments"];
+    const auth = await Pi.authenticate(scopes, onIncompletePaymentFound);
+    currentUser = auth.user;
+    statusText.textContent = `로그인 상태: ✅ (${currentUser.username})`;
+    payBtn.disabled = false;
+    console.log("로그인 성공:", currentUser);
+  } catch (err) {
+    console.error("로그인 실패:", err);
+    alert("로그인 실패. 다시 시도하세요.");
+  }
 });
 
 // 결제 버튼 클릭
-document.getElementById("payBtn").addEventListener("click", async () => {
-    if (!currentUser) {
-        setStatus("먼저 로그인해주세요");
-        return;
-    }
+payBtn.addEventListener("click", async () => {
+  if (!currentUser) {
+    alert("먼저 로그인하세요!");
+    return;
+  }
 
-    try {
-        setStatus("결제 요청 중...");
-        const payment = await Pi.createPayment({
-            amount: 1,
-            memo: "테스트 결제",
-            metadata: { type: "test" }
-        }, {
-            onReadyForServerApproval: (paymentId) => {
-                console.log("서버 승인 필요:", paymentId);
-                setStatus("서버 승인 단계...");
-            },
-            onReadyForServerCompletion: (paymentId, txid) => {
-                console.log("서버 완료 필요:", paymentId, txid);
-                setStatus("결제 완료 단계...");
-            },
-            onCancel: (paymentId) => {
-                console.log("결제 취소:", paymentId);
-                setStatus("결제 취소됨");
-            },
-            onError: (error, paymentId) => {
-                console.error("결제 오류:", error, paymentId);
-                setStatus("결제 오류 발생");
-            }
+  try {
+    const payment = await Pi.createPayment({
+      amount: 1,
+      memo: "Me2Verse 테스트 결제",
+      metadata: { type: "test" }
+    }, {
+      onReadyForServerApproval: (paymentId) => {
+        console.log("서버 승인 필요:", paymentId);
+        fetch("/approve", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ paymentId })
         });
-    } catch (err) {
-        console.error(err);
-        setStatus("결제 실패");
-    }
+      },
+      onReadyForServerCompletion: (paymentId) => {
+        console.log("서버 결제 완료 요청:", paymentId);
+        fetch("/complete", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ paymentId })
+        });
+      },
+      onCancel: (paymentId) => {
+        console.warn("결제 취소:", paymentId);
+      },
+      onError: (error, payment) => {
+        console.error("결제 오류:", error, payment);
+        alert("결제 중 오류가 발생했습니다.");
+      }
+    });
+
+    console.log("결제 생성:", payment);
+  } catch (err) {
+    console.error("결제 요청 실패:", err);
+    alert("결제를 시작할 수 없습니다.");
+  }
 });
 
 // 미완료 결제 처리
-function onIncompletePaymentFound(payment) {
-    console.log("미완료 결제 발견:", payment);
-    setStatus("미완료 결제 있음");
+async function onIncompletePaymentFound(payment) {
+  console.log("미완료 결제 발견:", payment);
 }
