@@ -1,103 +1,47 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Me2Verse-1 Pi 로그인 및 결제</title>
-<script src="https://cdn.jsdelivr.net/npm/pi-js@latest/dist/pi.min.js"></script>
-<style>
-  body { font-family: Arial, sans-serif; padding: 20px; }
-  button { font-size: 18px; padding: 12px 24px; margin: 10px; }
-  #status { margin-top: 20px; font-weight: bold; }
-</style>
+    <meta charset="UTF-8">
+    <title>Me2Verse 테스트</title>
+    <script src="https://sdk.minepi.com/pi-sdk.js"></script>
+    <script defer src="app.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f0f4f8;
+            text-align: center;
+            padding-top: 50px;
+        }
+        button {
+            padding: 12px 20px;
+            margin: 10px;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        #loginBtn {
+            background-color: #4CAF50;
+            color: white;
+        }
+        #payBtn {
+            background-color: #2196F3;
+            color: white;
+        }
+        #status {
+            margin-top: 20px;
+            font-weight: bold;
+        }
+    </style>
 </head>
 <body>
 
-<h1>Me2Verse-1 Pi 로그인 및 결제</h1>
+    <h1>Me2Verse 로그인 & 결제 테스트</h1>
 
-<button id="loginBtn" disabled>로그인</button>
-<button id="payBtn" disabled style="display:none;">결제 진행</button>
+    <button id="loginBtn">로그인</button>
+    <button id="payBtn">테스트 결제</button>
 
-<div id="status">SDK 초기화 중...</div>
-
-<script>
-  const BACKEND_URL = 'https://your-backend-url.com'; // 실제 백엔드 URL로 바꾸세요
-
-  window.addEventListener('load', () => {
-    const isSandbox = window.location.hostname === 'sandbox.minepi.com';
-    Pi.init({ version: "2.0", sandbox: isSandbox });
-
-    const loginBtn = document.getElementById('loginBtn');
-    const payBtn = document.getElementById('payBtn');
-    const status = document.getElementById('status');
-
-    status.innerText = `✅ SDK 초기화 완료 (${isSandbox ? '샌드박스' : '프로덕션'})`;
-    loginBtn.disabled = false;
-
-    let currentAuth = null;
-
-    loginBtn.addEventListener('click', async () => {
-      status.innerText = '로그인 시도 중...';
-      loginBtn.disabled = true;
-      try {
-        const auth = await Pi.authenticate(['username']);
-        currentAuth = auth;
-        status.innerText = `로그인 성공: ${auth.user.username}`;
-
-        // 로그인 성공 시 결제 버튼 보이고 활성화
-        payBtn.style.display = 'inline-block';
-        payBtn.disabled = false;
-      } catch (e) {
-        status.innerText = `로그인 실패: ${e.message}`;
-        loginBtn.disabled = false;
-      }
-    });
-
-    payBtn.addEventListener('click', async () => {
-      if (!currentAuth) {
-        status.innerText = '먼저 로그인하세요.';
-        return;
-      }
-
-      payBtn.disabled = true;
-      status.innerText = '결제 생성 중...';
-
-      try {
-        const createResp = await fetch(`${BACKEND_URL}/payment/create`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            amount: 1,
-            memo: 'Me2Verse 결제 테스트',
-            metadata: { user: currentAuth.user.username }
-          }),
-        });
-
-        const createData = await createResp.json();
-
-        if (!createResp.ok) throw new Error(createData.error || '결제 생성 실패');
-
-        const paymentId = createData.id;
-        status.innerText = '결제 승인 중...';
-
-        const approveResp = await fetch(`${BACKEND_URL}/payment/approve`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ paymentId }),
-        });
-
-        const approveData = await approveResp.json();
-
-        if (!approveResp.ok) throw new Error(approveData.error || '결제 승인 실패');
-
-        status.innerText = '결제 완료! 감사합니다.';
-      } catch (e) {
-        status.innerText = `오류 발생: ${e.message}`;
-        payBtn.disabled = false;
-      }
-    });
-  });
-</script>
+    <div id="status">상태: 대기 중</div>
 
 </body>
 </html>
