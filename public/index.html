@@ -1,19 +1,33 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <title>Me2Verse Pi 결제 테스트</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="https://sdk.minepi.com/pi-sdk.js"></script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Me2Verse-1 — Pi 로그인 & 테스트 결제</title>
+  <script src="https://sdk.minepi.com/pi-sdk.js"></script>
+  <style>
+    body{font-family:Inter,Arial,Helvetica,sans-serif;background:#f6f8fb;padding:28px}
+    .wrap{max-width:720px;margin:0 auto;text-align:center}
+    button{padding:12px 20px;margin:10px;font-size:16px;border-radius:8px;border:none;cursor:pointer}
+    #loginBtn{background:#2563eb;color:#fff}
+    #payBtn{background:#10b981;color:#fff}
+    #status{margin-top:18px;font-weight:600}
+    button:disabled{opacity:.5;cursor:not-allowed}
+  </style>
 </head>
 <body>
-    <h1>Me2Verse Pi 결제 테스트</h1>
+  <div class="wrap">
+    <h1>Me2Verse-1</h1>
+    <p>Pi 로그인 및 테스트 결제</p>
 
-    <button id="loginBtn">Pi 로그인</button>
-    <button id="paymentBtn" disabled>테스트 결제</button>
+    <div>
+      <button id="loginBtn">🔑 Pi 로그인</button>
+      <button id="payBtn" disabled style="display:inline-block">💳 테스트 결제</button>
+    </div>
 
-    <div id="status"></div>
+    <div id="status">상태: 초기화 대기</div>
+  </div>
 
-    <script src="app.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>
