@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Me2Verse-1 — Pi Login & Payment Demo</title>
+  <title>Me2Verse-1 — Pi 로그인 및 테스트 결제</title>
 
   <style>
     body {
@@ -15,26 +15,14 @@
     button {
       font-size: 18px;
       padding: 12px 24px;
-      margin: 10px 10px 10px 0;
       border: none;
       border-radius: 6px;
       cursor: pointer;
-      transition: background-color 0.3s ease;
-    }
-    #loginBtn {
       background-color: #4CAF50;
       color: white;
+      transition: background-color 0.3s ease;
     }
-    #loginBtn:disabled {
-      background-color: #9E9E9E;
-      cursor: not-allowed;
-    }
-    #payBtn {
-      background-color: #2196F3;
-      color: white;
-      display: none; /* 로그인 후에 나타남 */
-    }
-    #payBtn:disabled {
+    button:disabled {
       background-color: #9E9E9E;
       cursor: not-allowed;
     }
@@ -48,16 +36,15 @@
   <!-- Pi SDK 로드 -->
   <script src="https://sdk.minepi.com/pi-sdk.js"></script>
 
-  <!-- app.js는 defer로 로드 -->
+  <!-- app.js는 defer 속성으로 로드 -->
   <script src="./app.js" defer></script>
 </head>
 <body>
   <h1>Me2Verse-1 Pi 로그인 및 테스트 결제</h1>
 
-  <button id="loginBtn" disabled>Pi 로그인</button>
-  <button id="payBtn" disabled>테스트 결제 진행 (1 Pi)</button>
+  <button id="actionBtn" disabled>SDK 초기화 중...</button>
 
-  <div id="status">SDK 초기화 중...</div>
+  <div id="status">대기 중...</div>
 
   <p>※ Pi Browser 또는 샌드박스 환경에서 테스트하세요.</p>
 </body>
