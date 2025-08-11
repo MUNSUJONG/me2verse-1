@@ -1,77 +1,63 @@
-const BACKEND_URL = 'http://localhost:4000'; // 실제 백엔드 API 주소로 변경하세요.
+const backendUrl = "https://me2verse-1.onrender.com";
 
-window.addEventListener('load', () => {
-  const isSandbox = window.location.hostname === 'sandbox.minepi.com';
-  Pi.init({ version: "2.0", sandbox: isSandbox });
-
-  const loginBtn = document.getElementById('loginBtn');
-  const payBtn = document.getElementById('payBtn');
-  const status = document.getElementById('status');
-
-  status.innerText = `✅ SDK 초기화 완료 (${isSandbox ? '샌드박스' : '프로덕션'})`;
-
-  loginBtn.disabled = false;
-
-  let currentAuth = null;
-
-  loginBtn.addEventListener('click', async () => {
-    status.innerText = '로그인 시도 중...';
-    loginBtn.disabled = true;
-
+// 로그인
+async function piLogin() {
     try {
-      const auth = await Pi.authenticate(['username']);
-      currentAuth = auth;
-      status.innerText = `로그인 성공: ${auth.user.username}`;
-
-      // 결제 버튼 보이고 활성화
-      payBtn.style.display = 'inline-block';
-      payBtn.disabled = false;
-
-    } catch (e) {
-      status.innerText = `로그인 실패: ${e.message}`;
-      loginBtn.disabled = false;
+        const scopes = ['username', 'payments'];
+        Pi.authenticate(scopes, onIncompletePaymentFound)
+            .then(function(auth) {
+                document.getElementById("status").innerText = `로그인 성공: ${auth.user.username}`;
+                sessionStorage.setItem("pi_user", JSON.stringify(auth.user));
+            }).catch(function(error) {
+                console.error(error);
+                document.getElementById("status").innerText = "로그인 실패";
+            });
+    } catch (err) {
+        console.error("로그인 중 오류", err);
     }
-  });
+}
 
-  payBtn.addEventListener('click', async () => {
-    if (!currentAuth) {
-      status.innerText = '먼저 로그인하세요.';
-      return;
+// 결제
+async function startPayment() {
+    const user = JSON.parse(sessionStorage.getItem("pi_user"));
+    if (!user) {
+        alert("먼저 로그인해주세요.");
+        return;
     }
 
-    payBtn.disabled = true;
-    status.innerText = '결제 생성 중...';
+    const paymentData = {
+        amount: 1,
+        memo: "Me2Verse 결제 테스트",
+        metadata: { purpose: "test" }
+    };
 
-    try {
-      // 결제 생성 API 호출
-      const createResp = await fetch(`${BACKEND_URL}/payment/create`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          amount: 1,
-          memo: 'Me2Verse-1 테스트 결제',
-          metadata: { user: currentAuth.user.username }
-        }),
-      });
-      const createData = await createResp.json();
-      if (!createResp.ok) throw new Error(createData.error || '결제 생성 실패');
+    Pi.createPayment(paymentData, {
+        onReadyForServerApproval: async function(paymentId) {
+            console.log("서버 승인 요청:", paymentId);
+            await fetch(`${backendUrl}/approve`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ paymentId })
+            });
+        },
+        onReadyForServerCompletion: async function(paymentId, txid) {
+            console.log("서버 결제 완료 요청:", paymentId, txid);
+            await fetch(`${backendUrl}/complete`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ paymentId, txid })
+            });
+        },
+        onCancel: function(paymentId) {
+            console.warn("결제 취소:", paymentId);
+        },
+        onError: function(error, payment) {
+            console.error("결제 오류:", error, payment);
+        }
+    });
+}
 
-      const paymentId = createData.id;
-      status.innerText = '결제 승인 중...';
-
-      // 결제 승인 API 호출
-      const approveResp = await fetch(`${BACKEND_URL}/payment/approve`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ paymentId }),
-      });
-      const approveData = await approveResp.json();
-      if (!approveResp.ok) throw new Error(approveData.error || '결제 승인 실패');
-
-      status.innerText = '✅ 결제 완료! 감사합니다.';
-    } catch (e) {
-      status.innerText = `오류 발생: ${e.message}`;
-      payBtn.disabled = false;
-    }
-  });
-});
+// 미결제 처리
+function onIncompletePaymentFound(payment) {
+    console.log("미결제 발견:", payment);
+}
