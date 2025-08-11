@@ -7,8 +7,28 @@
 <script src="https://cdn.jsdelivr.net/npm/pi-js@latest/dist/pi.min.js"></script>
 <style>
   body { font-family: Arial, sans-serif; padding: 20px; }
-  button { font-size: 18px; padding: 12px 24px; margin: 10px; }
-  #status { margin-top: 20px; font-weight: bold; }
+  button {
+    font-size: 18px; padding: 12px 24px; margin: 10px;
+    border: none; border-radius: 6px;
+    cursor: pointer;
+  }
+  #loginBtn {
+    background-color: #4CAF50; color: white;
+  }
+  #loginBtn:disabled {
+    background-color: #9E9E9E; cursor: not-allowed;
+  }
+  #payBtn {
+    background-color: #2196F3; color: white;
+    display: none;
+  }
+  #payBtn:disabled {
+    background-color: #9E9E9E; cursor: not-allowed;
+  }
+  #status {
+    margin-top: 20px;
+    font-weight: bold;
+  }
 </style>
 </head>
 <body>
@@ -16,13 +36,12 @@
 <h1>Me2Verse-1 Pi 로그인 및 결제</h1>
 
 <button id="loginBtn" disabled>로그인</button>
-<button id="payBtn" disabled style="display:none;">테스트 결제 진행</button>
+<button id="payBtn" disabled>테스트 결제 진행</button>
 
 <div id="status">SDK 초기화 중...</div>
 
 <script>
-  // 실제 배포된 백엔드 주소로 변경하세요.
-  const BACKEND_URL = 'http://localhost:4000';
+  const BACKEND_URL = 'http://localhost:4000'; // 백엔드 주소 맞게 변경
 
   window.addEventListener('load', () => {
     const isSandbox = window.location.hostname === 'sandbox.minepi.com';
@@ -34,12 +53,14 @@
 
     status.innerText = `✅ SDK 초기화 완료 (${isSandbox ? '샌드박스' : '프로덕션'})`;
     loginBtn.disabled = false;
+    loginBtn.style.backgroundColor = '#4CAF50'; // 초록 활성화
 
     let currentAuth = null;
 
     loginBtn.addEventListener('click', async () => {
       status.innerText = '로그인 시도 중...';
       loginBtn.disabled = true;
+      loginBtn.style.backgroundColor = '#9E9E9E'; // 비활성화 색
       try {
         const auth = await Pi.authenticate(['username']);
         currentAuth = auth;
@@ -47,9 +68,11 @@
 
         payBtn.style.display = 'inline-block';
         payBtn.disabled = false;
+        payBtn.style.backgroundColor = '#2196F3'; // 파란 활성화
       } catch (e) {
         status.innerText = `로그인 실패: ${e.message}`;
         loginBtn.disabled = false;
+        loginBtn.style.backgroundColor = '#4CAF50'; // 초록 다시 활성화
       }
     });
 
@@ -60,6 +83,7 @@
       }
 
       payBtn.disabled = true;
+      payBtn.style.backgroundColor = '#9E9E9E'; // 비활성화 색
       status.innerText = '결제 생성 중...';
 
       try {
@@ -90,6 +114,7 @@
       } catch (e) {
         status.innerText = `오류 발생: ${e.message}`;
         payBtn.disabled = false;
+        payBtn.style.backgroundColor = '#2196F3'; // 파란 다시 활성화
       }
     });
   });
