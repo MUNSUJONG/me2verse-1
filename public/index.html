@@ -45,8 +45,9 @@
     }
   </style>
 
-  <!-- Pi SDK 불러오기 -->
-  <script src="https://sdk.minepi.com/pi-sdk.js"></script>
+  <!-- Pi SDK 먼저 로드 -->
+  <script src="https://sdk.minepi.com/pi-sdk.js" defer></script>
+  <!-- app.js는 SDK 뒤에 defer로 로드 -->
   <script src="./app.js" defer></script>
 </head>
 <body>
