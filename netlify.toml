@@ -1,13 +1,9 @@
-# 빌드 설정
 [build]
-  command = ""      # (만약 빌드 명령어가 있으면, 없으면 빈칸 혹은 생략 가능)
-  publish = "public"             # 배포할 정적 파일 위치 (index.html 있는 폴더)
+  publish = "public"
+  # 빌드 명령어가 없으면 아래 command 항목은 비워두거나 아예 삭제하세요.
+  # command = ""
 
-# SPA 리디렉션 설정
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
-
-# 환경변수 설정은 Netlify 대시보드에서 별도로 관리 권장
-# netlify.toml에 직접 민감정보 넣지 않는게 보안상 좋음
