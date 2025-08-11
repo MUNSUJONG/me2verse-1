@@ -1,6 +1,6 @@
 # 빌드 설정
 [build]
-  command = "npm run build"      # (만약 빌드 명령어가 있으면, 없으면 빈칸 혹은 생략 가능)
+  command = ""      # (만약 빌드 명령어가 있으면, 없으면 빈칸 혹은 생략 가능)
   publish = "public"             # 배포할 정적 파일 위치 (index.html 있는 폴더)
 
 # SPA 리디렉션 설정
