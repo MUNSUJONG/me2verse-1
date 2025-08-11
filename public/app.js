@@ -1,99 +1,74 @@
-    const button = document.getElementById('actionBtn');
+// Pi SDK 초기화 및 로그인, 결제 흐름 관리
+
+const loginBtn = document.getElementById('loginBtn');
+const payBtn = document.getElementById('payBtn');
 const status = document.getElementById('status');
 
 let user = null;
 
-// Pi SDK 초기화 및 버튼 활성화
-function initializePiSdk() {
-  if (typeof Pi === 'undefined') {
-    status.innerText = 'Pi SDK를 찾을 수 없습니다.';
-    button.disabled = true;
-    return;
+// SDK 초기화
+async function initSDK() {
+  try {
+    await Pi.init({ appId: 'YOUR_APP_ID', appKey: 'YOUR_APP_KEY' }); // 반드시 실제 앱 ID, 키로 교체
+    status.textContent = 'SDK 초기화 완료';
+    loginBtn.disabled = false;
+  } catch (error) {
+    status.textContent = 'SDK 초기화 실패: ' + error.message;
   }
-  button.disabled = false;
-  button.innerText = '로그인 및 테스트 결제 시작';
-  status.innerText = '준비 완료, 버튼을 눌러 진행하세요.';
 }
 
-// Pi 로그인 함수
+// 로그인 처리
 async function login() {
   try {
-    status.innerText = '로그인 중...';
-    const scopes = ['username', 'payments'];
-    const auth = await Pi.authenticate(scopes);
-
-    if (auth && auth.user) {
-      user = auth.user;
-      status.innerText = `로그인 성공: ${user.username}`;
-      return true;
+    status.textContent = '로그인 중...';
+    user = await Pi.login();
+    if (user) {
+      status.textContent = `로그인 성공: ${user.username}`;
+      loginBtn.style.display = 'none';
+      payBtn.style.display = 'inline-block';
+      payBtn.disabled = false;
     } else {
-      status.innerText = '로그인 실패';
-      console.error('인증 결과 없음:', auth);
-      return false;
+      status.textContent = '로그인 실패';
     }
-  } catch (err) {
-    status.innerText = '로그인 중 오류 발생';
-    console.error('로그인 오류:', err);
-    return false;
+  } catch (error) {
+    status.textContent = '로그인 오류: ' + error.message;
   }
 }
 
-// 테스트 결제 함수 (실제 결제 API 호출 필요 시 수정)
-async function testPayment() {
+// 결제 처리
+async function pay() {
   try {
-    status.innerText = '테스트 결제 진행 중...';
+    status.textContent = '결제 진행 중...';
 
-    // 실제 결제 API 호출 예시 (샘플: 1 Pi 결제)
-    const paymentRequest = {
-      app: {
-        name: 'Me2Verse-1',
-      },
-      recipient: 'app', // 'app'은 Pi Network에 등록된 결제 수취자 ID(앱 소유자)
-      amount: 1, // 결제할 Pi 코인 수량
-      memo: '테스트 결제', // 결제 설명(선택사항)
+    const paymentData = {
+      // 실제 결제 요청 데이터 구성
+      amount: 1,
+      currency: 'PI',
+      // 추가 데이터 필요 시 삽입
     };
 
-    // Pi SDK 결제 호출
-    const paymentResult = await Pi.requestPayment(paymentRequest);
+    // 예시: 결제 승인 API 호출 (API_URL은 백엔드 주소)
+    const API_URL = 'https://YOUR_BACKEND_URL'; // 반드시 실제 백엔드 주소로 교체
+    const response = await fetch(`${API_URL}/payment/approve`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(paymentData),
+    });
 
-    if (paymentResult && paymentResult.status === 'success') {
-      status.innerText = '테스트 결제 완료!';
-      return true;
+    const result = await response.json();
+
+    if (result.approved) {
+      status.textContent = '결제 승인 완료!';
+      payBtn.disabled = true;
     } else {
-      status.innerText = `결제 실패: ${paymentResult.status || '알 수 없음'}`;
-      console.error('결제 실패:', paymentResult);
-      return false;
+      status.textContent = '결제 승인 실패';
     }
-  } catch (err) {
-    status.innerText = '결제 중 오류 발생';
-    console.error('결제 오류:', err);
-    return false;
+  } catch (error) {
+    status.textContent = '결제 오류: ' + error.message;
   }
 }
 
-// 버튼 클릭 시: 로그인 → 결제 순서 진행
-button.addEventListener('click', async () => {
-  button.disabled = true;
+loginBtn.addEventListener('click', login);
+payBtn.addEventListener('click', pay);
 
-  if (!user) {
-    const loggedIn = await login();
-    if (!loggedIn) {
-      button.disabled = false;
-      button.innerText = '로그인 및 테스트 결제 시작';
-      return;
-    }
-  }
-
-  const paid = await testPayment();
-  if (!paid) {
-    button.disabled = false;
-    button.innerText = '로그인 및 테스트 결제 시작';
-    return;
-  }
-
-  button.innerText = '완료';
-  button.disabled = true;
-});
-
-// 페이지 로드 시 SDK 초기화 시도
-window.addEventListener('load', initializePiSdk);
+window.addEventListener('load', initSDK);
