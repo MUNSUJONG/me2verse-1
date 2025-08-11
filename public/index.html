@@ -1,21 +1,21 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="utf-8" />
+  <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>me2verse-1 — Pi 로그인 및 결제 데모</title>
+  <title>Me2Verse-1 Pi 로그인 및 결제 테스트</title>
 
   <style>
     body {
       font-family: Arial, sans-serif;
-      padding: 20px;
       background-color: #f0f4f8;
       color: #333;
+      padding: 20px;
     }
     button {
       font-size: 18px;
       padding: 12px 24px;
-      margin: 10px 10px 10px 0;
+      margin-right: 10px;
       border: none;
       border-radius: 6px;
       cursor: pointer;
@@ -45,11 +45,12 @@
     }
   </style>
 
+  <!-- Pi SDK 불러오기 -->
   <script src="https://sdk.minepi.com/pi-sdk.js"></script>
   <script src="./app.js" defer></script>
 </head>
 <body>
-  <h1>me2verse-1 Pi 로그인 및 테스트 결제</h1>
+  <h1>Me2Verse-1 Pi 로그인 및 테스트 결제</h1>
 
   <button id="loginBtn" disabled>Pi 로그인</button>
   <button id="payBtn" disabled>테스트 결제 진행 (1 Pi)</button>
