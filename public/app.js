@@ -1,63 +1,58 @@
-const backendUrl = "https://me2verse-1.onrender.com";
+// app.js
 
-// 로그인
-async function piLogin() {
-    try {
-        const scopes = ['username', 'payments'];
-        Pi.authenticate(scopes, onIncompletePaymentFound)
-            .then(function(auth) {
-                document.getElementById("status").innerText = `로그인 성공: ${auth.user.username}`;
-                sessionStorage.setItem("pi_user", JSON.stringify(auth.user));
-            }).catch(function(error) {
-                console.error(error);
-                document.getElementById("status").innerText = "로그인 실패";
-            });
-    } catch (err) {
-        console.error("로그인 중 오류", err);
+// 로그인 버튼과 결제 버튼 참조
+const loginBtn = document.getElementById('loginBtn');
+const payBtn = document.getElementById('payBtn');
+const status = document.getElementById('status');
+
+let user = null;
+
+// Pi SDK 초기화 확인용 함수
+function initializePiSdk() {
+  if (typeof Pi === 'undefined') {
+    status.innerText = 'Pi SDK를 찾을 수 없습니다.';
+    return;
+  }
+
+  // SDK가 준비되면 로그인 버튼 활성화
+  loginBtn.disabled = false;
+  status.innerText = 'SDK 초기화 완료, 로그인하세요.';
+}
+
+// 로그인 버튼 클릭 이벤트
+loginBtn.addEventListener('click', async () => {
+  try {
+    status.innerText = '로그인 중...';
+    const scopes = ['username', 'payments'];
+
+    const auth = await Pi.authenticate(scopes);
+    user = auth.user;
+
+    if (user) {
+      status.innerText = `로그인 성공: ${user.username}`;
+      loginBtn.style.display = 'none';
+      payBtn.style.display = 'inline-block';
+      payBtn.disabled = false;
+    } else {
+      status.innerText = '로그인 실패';
     }
-}
+  } catch (error) {
+    status.innerText = '로그인 중 오류 발생';
+    console.error(error);
+  }
+});
 
-// 결제
-async function startPayment() {
-    const user = JSON.parse(sessionStorage.getItem("pi_user"));
-    if (!user) {
-        alert("먼저 로그인해주세요.");
-        return;
-    }
+// 결제 버튼 클릭 이벤트 (예시)
+payBtn.addEventListener('click', () => {
+  if (!user) {
+    alert('먼저 로그인해주세요.');
+    return;
+  }
+  status.innerText = '결제 진행...';
+  // 결제 로직 추가 예정
+});
 
-    const paymentData = {
-        amount: 1,
-        memo: "Me2Verse 결제 테스트",
-        metadata: { purpose: "test" }
-    };
-
-    Pi.createPayment(paymentData, {
-        onReadyForServerApproval: async function(paymentId) {
-            console.log("서버 승인 요청:", paymentId);
-            await fetch(`${backendUrl}/approve`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ paymentId })
-            });
-        },
-        onReadyForServerCompletion: async function(paymentId, txid) {
-            console.log("서버 결제 완료 요청:", paymentId, txid);
-            await fetch(`${backendUrl}/complete`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ paymentId, txid })
-            });
-        },
-        onCancel: function(paymentId) {
-            console.warn("결제 취소:", paymentId);
-        },
-        onError: function(error, payment) {
-            console.error("결제 오류:", error, payment);
-        }
-    });
-}
-
-// 미결제 처리
-function onIncompletePaymentFound(payment) {
-    console.log("미결제 발견:", payment);
-}
+// 페이지가 다 로드되면 SDK 초기화 함수 실행
+window.addEventListener('load', () => {
+  initializePiSdk();
+});
