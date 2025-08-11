@@ -1,15 +1,16 @@
-// Pi SDK 초기화 및 로그인, 결제 흐름 관리
-
 const loginBtn = document.getElementById('loginBtn');
 const payBtn = document.getElementById('payBtn');
 const status = document.getElementById('status');
 
+const APP_ID = 'abcd1234';    // 본인 Pi 앱 ID로 반드시 교체
+const APP_KEY = 'key5678xyz'; // 본인 Pi 앱 Key로 반드시 교체
+const API_URL = 'https://me2verse-1-backend.onrender.com'; // Render 백엔드 주소로 반드시 교체
+
 let user = null;
 
-// SDK 초기화
 async function initSDK() {
   try {
-    await Pi.init({ appId: 'YOUR_APP_ID', appKey: 'YOUR_APP_KEY' }); // 반드시 실제 앱 ID, 키로 교체
+    await Pi.init({ appId: APP_ID, appKey: APP_KEY });
     status.textContent = 'SDK 초기화 완료';
     loginBtn.disabled = false;
   } catch (error) {
@@ -17,7 +18,6 @@ async function initSDK() {
   }
 }
 
-// 로그인 처리
 async function login() {
   try {
     status.textContent = '로그인 중...';
@@ -35,20 +35,15 @@ async function login() {
   }
 }
 
-// 결제 처리
 async function pay() {
   try {
     status.textContent = '결제 진행 중...';
 
     const paymentData = {
-      // 실제 결제 요청 데이터 구성
       amount: 1,
       currency: 'PI',
-      // 추가 데이터 필요 시 삽입
     };
 
-    // 예시: 결제 승인 API 호출 (API_URL은 백엔드 주소)
-    const API_URL = 'https://me2verse-1-backend.onrender.com'; // 반드시 실제 백엔드 주소로 교체
     const response = await fetch(`${API_URL}/payment/approve`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
