@@ -3,110 +3,62 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Me2Verse-1 Pi 로그인 & 결제 테스트</title>
+  <title>me2verse-1 — Pi Login & Payment Demo</title>
+
   <style>
-    body { font-family: Arial, sans-serif; padding: 20px; background: #f0f4f8; color: #333; }
-    button { font-size: 18px; padding: 12px 24px; margin-right: 10px; border: none; border-radius: 6px; cursor: pointer; }
-    #loginBtn { background-color: #4caf50; color: white; }
-    #loginBtn:disabled { background-color: #9e9e9e; cursor: not-allowed; }
-    #payBtn { background-color: #2196f3; color: white; display: none; }
-    #payBtn:disabled { background-color: #9e9e9e; cursor: not-allowed; }
-    #status { margin-top: 20px; font-weight: bold; min-height: 24px; }
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background-color: #f0f4f8;
+      color: #333;
+    }
+    button {
+      font-size: 18px;
+      padding: 12px 24px;
+      margin: 10px 10px 10px 0;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    #loginBtn {
+      background-color: #4CAF50;
+      color: white;
+    }
+    #loginBtn:disabled {
+      background-color: #9E9E9E;
+      cursor: not-allowed;
+    }
+    #payBtn {
+      background-color: #2196F3;
+      color: white;
+      display: none; /* 로그인 성공 후 나타남 */
+    }
+    #payBtn:disabled {
+      background-color: #9E9E9E;
+      cursor: not-allowed;
+    }
+    #status {
+      margin-top: 20px;
+      font-weight: bold;
+      min-height: 24px;
+    }
   </style>
 
-  <!-- Pi SDK 반드시 defer로 가장 먼저 로드 -->
+  <!-- Pi SDK 반드시 이 주소, defer 속성으로 로드 순서 지킬 것 -->
   <script src="https://sdk.minepi.com/pi-sdk.js" defer></script>
 
   <!-- app.js -->
-  <script defer>
-    document.addEventListener('DOMContentLoaded', () => {
-      const loginBtn = document.getElementById('loginBtn');
-      const payBtn = document.getElementById('payBtn');
-      const status = document.getElementById('status');
-
-      let user = null;
-
-      async function initSDK() {
-        try {
-          if (!window.Pi) throw new Error("Pi SDK가 로드되지 않았습니다.");
-          await Pi.init(); // 인자 없이 호출
-          status.textContent = 'SDK 초기화 완료';
-          loginBtn.disabled = false;
-        } catch (error) {
-          status.textContent = 'SDK 초기화 실패: ' + error.message;
-          console.error(error);
-        }
-      }
-
-      async function login() {
-        try {
-          status.textContent = '로그인 중...';
-          user = await Pi.login();
-          if (user) {
-            status.textContent = `로그인 성공: ${user.username}`;
-            loginBtn.style.display = 'none';
-            payBtn.style.display = 'inline-block';
-            payBtn.disabled = false;
-          } else {
-            status.textContent = '로그인 실패';
-          }
-        } catch (error) {
-          status.textContent = '로그인 오류: ' + error.message;
-          console.error(error);
-        }
-      }
-
-      async function pay() {
-        try {
-          status.textContent = '결제 진행 중...';
-
-          // 결제 데이터 예시
-          const paymentData = {
-            amount: 1,
-            currency: 'PI',
-            username: user.username,
-          };
-
-          // 백엔드 URL: 실제 Render 배포 주소로 변경 필요
-          const API_URL = 'https://me2verse-1-backend.onrender.com';
-
-          const response = await fetch(`${API_URL}/payment/approve`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(paymentData),
-          });
-
-          if (!response.ok) {
-            throw new Error(`서버 오류: ${response.statusText}`);
-          }
-
-          const result = await response.json();
-
-          if (result.approved) {
-            status.textContent = '결제 승인 완료!';
-            payBtn.disabled = true;
-          } else {
-            status.textContent = '결제 승인 실패';
-          }
-        } catch (error) {
-          status.textContent = '결제 오류: ' + error.message;
-          console.error(error);
-        }
-      }
-
-      loginBtn.addEventListener('click', login);
-      payBtn.addEventListener('click', pay);
-
-      // SDK 초기화 시작
-      initSDK();
-    });
-  </script>
+  <script src="./app.js" defer></script>
 </head>
 <body>
-  <h1>Me2Verse-1 Pi 로그인 및 테스트 결제</h1>
+  <h1>me2verse-1 Pi 로그인 및 테스트 결제</h1>
+
   <button id="loginBtn" disabled>Pi 로그인</button>
   <button id="payBtn" disabled>테스트 결제 진행 (1 Pi)</button>
+
   <div id="status">SDK 초기화 중...</div>
+
   <p>※ Pi Browser 또는 Sandbox 환경에서 테스트하세요.</p>
 </body>
 </html>
