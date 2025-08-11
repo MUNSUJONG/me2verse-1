@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Me2Verse-1 backend + frontend (Pi SDK + Pi Payments demo)",
   "main": "backend/index.js",
+  "type": "module",
   "scripts": {
     "start": "node backend/index.js",
     "dev": "nodemon backend/index.js"
@@ -14,7 +15,8 @@
     "axios": "^1.4.0",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
-    "express": "^4.18.2"
+    "express": "^4.18.2",
+    "node-fetch": "^3.3.1"
   },
   "devDependencies": {
     "nodemon": "^2.0.22"
