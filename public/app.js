@@ -2,23 +2,44 @@ const loginBtn = document.getElementById('loginBtn');
 const payBtn = document.getElementById('payBtn');
 const status = document.getElementById('status');
 
-// 아래는 실제 배포 주소, API 키는 Render 배포 백엔드에 맞게 수정 필요
-const API_URL = 'https://me2verse-1-backend.onrender.com'; // 백엔드 주소
+const API_URL = 'https://me2verse-1-backend.onrender.com'; // 배포한 Render 백엔드 주소 반드시 맞게 수정하세요
 
 let user = null;
 
-async function initSDK() {
-  try {
-    if (!window.Pi) throw new Error("Pi SDK가 로드되지 않았습니다.");
-    await Pi.init();
-    status.textContent = 'SDK 초기화 완료';
-    loginBtn.disabled = false;
-  } catch (error) {
-    status.textContent = 'SDK 초기화 실패: ' + error.message;
-    console.error(error);
-  }
+// Pi SDK 안전 초기화 함수 (완전 로드 대기)
+function initPiSDK() {
+  return new Promise((resolve, reject) => {
+    let retries = 0;
+    const maxRetries = 20; // 최대 20번 시도
+    const interval = 500;
+
+    const checkPi = () => {
+      if (window.Pi && typeof window.Pi.init === 'function') {
+        window.Pi.init({ version: "2.0" }) // SDK 버전 명시
+          .then(() => {
+            status.textContent = 'SDK 초기화 완료';
+            loginBtn.disabled = false;
+            resolve();
+          })
+          .catch(err => {
+            reject(new Error('SDK 초기화 실패: ' + err.message));
+          });
+      } else {
+        retries++;
+        if (retries <= maxRetries) {
+          status.textContent = `SDK 로드 대기 중... (${retries}/${maxRetries})`;
+          setTimeout(checkPi, interval);
+        } else {
+          reject(new Error('Pi SDK 로드 실패: Pi 객체를 찾을 수 없음'));
+        }
+      }
+    };
+
+    checkPi();
+  });
 }
 
+// 로그인 처리
 async function login() {
   try {
     status.textContent = '로그인 중...';
@@ -36,6 +57,7 @@ async function login() {
   }
 }
 
+// 결제 처리
 async function pay() {
   try {
     status.textContent = '결제 진행 중...';
@@ -44,7 +66,6 @@ async function pay() {
       amount: 1,
       currency: 'PI',
       username: user.username,
-      // 추가로 필요시 더 넣을 수 있음
     };
 
     const response = await fetch(`${API_URL}/payment/approve`, {
@@ -67,11 +88,16 @@ async function pay() {
     }
   } catch (error) {
     status.textContent = '결제 오류: ' + error.message;
-    console.error(error);
   }
 }
 
+window.addEventListener('load', () => {
+  initPiSDK().catch(err => {
+    status.textContent = err.message;
+    alert('Pi SDK 로드 실패: Pi Browser에서 실행 중인지 확인하세요.');
+    console.error(err);
+  });
+});
+
 loginBtn.addEventListener('click', login);
 payBtn.addEventListener('click', pay);
-
-window.addEventListener('load', initSDK);
