@@ -8,16 +8,13 @@ const PORT = process.env.PORT || 10000;
 app.use(cors());
 app.use(express.json());
 
-// 상태 확인용 라우트
 app.get('/ping', (req, res) => {
   res.send('🟢 Me2Verse-1 Backend 정상 작동 중');
 });
 
-// 결제 승인 예시 라우트
 app.post('/payment/approve', (req, res) => {
-  console.log('Me2Verse-1 결제 승인 요청:', req.body);
-
-  // 실제 승인 로직은 여기서 처리
+  console.log('결제 승인 요청:', req.body);
+  // 실제 결제 승인 로직은 여기에 구현하세요
   res.json({ approved: true });
 });
 
