@@ -13,7 +13,7 @@ const PORT = process.env.PORT || 10000;
 const PI_API_KEY = process.env.PI_API_KEY;
 
 app.get("/", (req, res) => {
-    res.send("Me2Verse Backend Running");
+    res.send("Me2Verse-1 Backend Running");
 });
 
 app.post("/approve", async (req, res) => {
@@ -54,5 +54,5 @@ app.post("/complete", async (req, res) => {
 });
 
 app.listen(PORT, () => {
-    console.log(`✅ Me2Verse Backend on port ${PORT}`);
+    console.log(`✅ Me2Verse-1 Backend on port ${PORT}`);
 });
