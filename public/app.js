@@ -48,7 +48,7 @@ async function pay() {
     };
 
     // 예시: 결제 승인 API 호출 (API_URL은 백엔드 주소)
-    const API_URL = 'https://YOUR_BACKEND_URL'; // 반드시 실제 백엔드 주소로 교체
+    const API_URL = 'https://me2verse-1-backend.onrender.com'; // 반드시 실제 백엔드 주소로 교체
     const response = await fetch(`${API_URL}/payment/approve`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
