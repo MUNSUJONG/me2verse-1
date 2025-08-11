@@ -1,120 +1,64 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Me2Verse Pi 로그인 및 결제 통합</title>
-<style>
-  body { font-family: Arial, sans-serif; padding: 20px; }
-  button {
-    font-size: 18px; padding: 12px 24px; margin: 10px;
-    border: none; border-radius: 6px;
-    cursor: pointer;
-  }
-  #loginBtn {
-    background-color: #4CAF50; color: white;
-  }
-  #loginBtn:disabled {
-    background-color: #9E9E9E; cursor: not-allowed;
-  }
-  #payBtn {
-    background-color: #2196F3; color: white;
-  }
-  #payBtn:disabled {
-    background-color: #9E9E9E; cursor: not-allowed;
-  }
-  #status {
-    margin-top: 20px;
-    font-weight: bold;
-  }
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Me2Verse-1 — Pi Login & Payment Demo</title>
 
-<!-- Pi SDK는 한 번만 로드 -->
-<script src="https://cdn.jsdelivr.net/npm/pi-js@latest/dist/pi.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background-color: #f0f4f8;
+      color: #333;
+    }
+    button {
+      font-size: 18px;
+      padding: 12px 24px;
+      margin: 10px 10px 10px 0;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    #loginBtn {
+      background-color: #4CAF50;
+      color: white;
+    }
+    #loginBtn:disabled {
+      background-color: #9E9E9E;
+      cursor: not-allowed;
+    }
+    #payBtn {
+      background-color: #2196F3;
+      color: white;
+      display: none; /* 로그인 후에 나타남 */
+    }
+    #payBtn:disabled {
+      background-color: #9E9E9E;
+      cursor: not-allowed;
+    }
+    #status {
+      margin-top: 20px;
+      font-weight: bold;
+      min-height: 24px;
+    }
+  </style>
+
+  <!-- Pi SDK 로드 -->
+  <script src="https://sdk.minepi.com/pi-sdk.js"></script>
+
+  <!-- app.js는 defer로 로드 -->
+  <script src="./app.js" defer></script>
 </head>
 <body>
+  <h1>Me2Verse-1 Pi 로그인 및 테스트 결제</h1>
 
-<h1>Me2Verse Pi 로그인 및 결제 통합 페이지</h1>
+  <button id="loginBtn" disabled>Pi 로그인</button>
+  <button id="payBtn" disabled>테스트 결제 진행 (1 Pi)</button>
 
-<button id="loginBtn" disabled>로그인</button>
-<button id="payBtn" disabled>결제 진행</button>
+  <div id="status">SDK 초기화 중...</div>
 
-<div id="status">SDK 초기화 중...</div>
-
-<script>
-  const BACKEND_URL = 'http://localhost:4000'; // 필요 시 실제 주소 변경
-
-  // SDK 초기화 및 버튼 활성화
-  window.addEventListener('load', () => {
-    const isSandbox = window.location.hostname === 'sandbox.minepi.com';
-    Pi.init({ version: "2.0", sandbox: isSandbox });
-    const loginBtn = document.getElementById('loginBtn');
-    const payBtn = document.getElementById('payBtn');
-    const status = document.getElementById('status');
-
-    status.innerText = `✅ SDK 초기화 완료 (${isSandbox ? '샌드박스' : '프로덕션'})`;
-    loginBtn.disabled = false;
-
-    let currentAuth = null;
-
-    // 로그인 클릭
-    loginBtn.addEventListener('click', async () => {
-      status.innerText = '로그인 시도 중...';
-      loginBtn.disabled = true;
-      try {
-        const auth = await Pi.authenticate(['username']);
-        currentAuth = auth;
-        status.innerText = `로그인 성공: ${auth.user.username}`;
-        payBtn.disabled = false;
-      } catch (e) {
-        status.innerText = `로그인 실패: ${e.message}`;
-        loginBtn.disabled = false;
-      }
-    });
-
-    // 결제 클릭
-    payBtn.addEventListener('click', async () => {
-      if (!currentAuth) {
-        status.innerText = '먼저 로그인하세요.';
-        return;
-      }
-      payBtn.disabled = true;
-      status.innerText = '결제 생성 중...';
-
-      try {
-        // 결제 생성 요청
-        const createResp = await fetch(`${BACKEND_URL}/payment/create`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            amount: 1,
-            memo: 'Me2Verse 테스트 결제',
-            metadata: { user: currentAuth.user.username }
-          }),
-        });
-        const createData = await createResp.json();
-        if (!createResp.ok) throw new Error(createData.error || '결제 생성 실패');
-
-        const paymentId = createData.id;
-        status.innerText = '결제 승인 중...';
-
-        // 결제 승인 요청
-        const approveResp = await fetch(`${BACKEND_URL}/payment/approve`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ paymentId }),
-        });
-        const approveData = await approveResp.json();
-        if (!approveResp.ok) throw new Error(approveData.error || '결제 승인 실패');
-
-        status.innerText = '결제 완료! 감사합니다.';
-      } catch (e) {
-        status.innerText = `오류 발생: ${e.message}`;
-        payBtn.disabled = false;
-      }
-    });
-  });
-</script>
-
+  <p>※ Pi Browser 또는 샌드박스 환경에서 테스트하세요.</p>
 </body>
 </html>
