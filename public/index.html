@@ -1,25 +1,19 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Me2Verse 결제 테스트</title>
-  <link rel="stylesheet" href="style.css" />
-  <script src="https://sdk.minepi.com/pi-sdk.js"></script>
+    <meta charset="UTF-8">
+    <title>Me2Verse Pi 결제 테스트</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://sdk.minepi.com/pi-sdk.js"></script>
 </head>
 <body>
-  <div class="container">
-    <h1>Me2Verse Pi 테스트</h1>
+    <h1>Me2Verse Pi 결제 테스트</h1>
 
-    <!-- 로그인 버튼 -->
-    <button id="loginBtn">🔑 Pi 로그인</button>
+    <button id="loginBtn">Pi 로그인</button>
+    <button id="paymentBtn" disabled>테스트 결제</button>
 
-    <!-- 테스트 결제 버튼 -->
-    <button id="payBtn" disabled>💳 테스트 결제</button>
+    <div id="status"></div>
 
-    <p id="status">로그인 상태: ❌</p>
-  </div>
-
-  <script src="app.js"></script>
+    <script src="app.js"></script>
 </body>
 </html>
