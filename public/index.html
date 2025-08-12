@@ -1,64 +1,131 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>me2verse-1 — Pi Login & Payment Demo</title>
-
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      padding: 20px;
-      background-color: #f0f4f8;
-      color: #333;
-    }
-    button {
-      font-size: 18px;
-      padding: 12px 24px;
-      margin: 10px 10px 10px 0;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: background-color 0.3s ease;
-    }
-    #loginBtn {
-      background-color: #4CAF50;
-      color: white;
-    }
-    #loginBtn:disabled {
-      background-color: #9E9E9E;
-      cursor: not-allowed;
-    }
-    #payBtn {
-      background-color: #2196F3;
-      color: white;
-      display: none; /* 로그인 성공 후 나타남 */
-    }
-    #payBtn:disabled {
-      background-color: #9E9E9E;
-      cursor: not-allowed;
-    }
-    #status {
-      margin-top: 20px;
-      font-weight: bold;
-      min-height: 24px;
-    }
-  </style>
-
-  <!-- Pi SDK 반드시 이 주소, defer 속성으로 로드 순서 지킬 것 -->
-  <script src="https://sdk.minepi.com/pi-sdk.js" defer></script>
-
-  <!-- app.js -->
-  <script src="./app.js" defer></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Me2verse - Pi Network Integration</title>
+    <!-- Tailwind CSS for modern styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Use Inter font -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+    <!-- Pi SDK for interacting with the Pi Network -->
+    <!-- Important: The Pi SDK must be loaded from this URL -->
+    <script src="https://sdk.minepi.com/pi-sdk.js"></script>
 </head>
-<body>
-  <h1>me2verse-1 Pi 로그인 및 테스트 결제</h1>
+<body class="bg-gray-900 text-white min-h-screen flex items-center justify-center p-4">
+    <div class="bg-gray-800 p-8 rounded-lg shadow-xl w-full max-w-lg">
+        <h1 class="text-3xl font-bold mb-6 text-center text-teal-400">Me2vers-1</h1>
+        <p class="text-sm text-gray-400 text-center mb-8">
+            파이 브라우저에서 이 앱을 열고 아래 버튼을 눌러 파이 네트워크 기능을 테스트하세요.
+        </p>
 
-  <button id="loginBtn" disabled>Pi 로그인</button>
-  <button id="payBtn" disabled>테스트 결제 진행 (1 Pi)</button>
+        <!-- 로그인 버튼 -->
+        <button id="loginBtn" class="w-full bg-teal-500 hover:bg-teal-600 text-white font-bold py-3 px-4 rounded-lg shadow-md transition-colors duration-200 mb-4">
+            파이 계정으로 로그인
+        </button>
 
-  <div id="status">SDK 초기화 중...</div>
+        <!-- 결제 버튼 -->
+        <button id="paymentBtn" class="w-full bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg shadow-md transition-colors duration-200 mb-6">
+            테스트 결제 (1 Pi)
+        </button>
 
-  <p>※ Pi Browser 또는 Sandbox 환경에서 테스트하세요.</p>
+        <!-- 로그 메시지 출력 영역 -->
+        <div id="log" class="bg-gray-700 p-4 rounded-lg mt-6 overflow-auto text-sm max-h-64">
+            <h2 class="text-xl font-semibold mb-2">로그</h2>
+            <p id="initial-message" class="text-gray-400">여기에 메시지가 표시됩니다...</p>
+        </div>
+    </div>
+
+    <script>
+        // 이 코드는 Pi SDK와 상호작용하는 모든 로직을 담고 있습니다.
+
+        // 로그 메시지를 UI에 표시하는 함수
+        const logMessage = (message, isError = false) => {
+            const logDiv = document.getElementById('log');
+            const initialMessage = document.getElementById('initial-message');
+            if (initialMessage) {
+                initialMessage.remove();
+            }
+
+            const messageElement = document.createElement('p');
+            messageElement.classList.add('mb-1');
+            messageElement.textContent = message;
+
+            if (isError) {
+                messageElement.classList.add('text-red-400');
+            } else {
+                messageElement.classList.add('text-green-400');
+            }
+            logDiv.appendChild(messageElement);
+            logDiv.scrollTop = logDiv.scrollHeight; // 스크롤을 최신 로그로 이동
+        };
+
+        // DOM이 완전히 로드된 후 스크립트 실행
+        document.addEventListener('DOMContentLoaded', () => {
+            logMessage('앱이 로드되었습니다. 파이 브라우저에서 실행 중인지 확인하세요.');
+
+            // Pi SDK 초기화
+            // 'minepi.com'은 개발자 포털에 등록한 앱 URL과 일치해야 합니다.
+            // me2verse-1.netlify.app 도메인으로 앱을 등록해야 합니다.
+            try {
+                Pi.init({ version: "2.0", onReady: () => {
+                    logMessage('Pi SDK가 성공적으로 초기화되었습니다.');
+                }});
+            } catch (error) {
+                logMessage('Pi SDK 초기화 중 오류가 발생했습니다. 이 앱이 파이 브라우저에서 실행되고 있는지 확인하세요.', true);
+            }
+
+            // 로그인 버튼 이벤트 리스너
+            document.getElementById('loginBtn').addEventListener('click', async () => {
+                logMessage('로그인 요청 중...');
+                try {
+                    // Pi.authenticate()를 호출하여 사용자 인증 요청
+                    const authData = await Pi.authenticate(['username', 'payments']);
+                    
+                    // 성공적으로 인증되면 사용자 정보를 로그에 표시
+                    logMessage('로그인 성공!');
+                    logMessage(`- 사용자 ID: ${authData.user.uid}`);
+                    logMessage(`- 사용자 이름: ${authData.user.username}`);
+                    
+                    // 인증된 사용자의 액세스 토큰은 authData.accessToken에 있습니다.
+                } catch (error) {
+                    // 오류 발생 시 오류 메시지를 로그에 표시
+                    logMessage(`로그인 실패: ${error.message}`, true);
+                }
+            });
+
+            // 결제 버튼 이벤트 리스너
+            document.getElementById('paymentBtn').addEventListener('click', async () => {
+                logMessage('테스트 결제 요청 중...');
+                
+                try {
+                    // 결제 정보 객체
+                    const paymentData = {
+                        amount: 1, // 테스트 결제 금액 (예: 1 Pi)
+                        memo: "me2vers-1 앱 테스트 결제", // 결제 메모
+                        metadata: { 
+                            app: "me2vers-1", 
+                            item: "test_product_1" 
+                        } // 개발자가 사용하는 추가 데이터
+                    };
+
+                    // Pi.payments.createPayment()를 호출하여 결제 생성
+                    const payment = await Pi.payments.createPayment(paymentData);
+                    
+                    // 결제 성공 시
+                    logMessage('테스트 결제 성공!');
+                    logMessage(`- 결제 ID: ${payment.identifier}`);
+                    logMessage(`- 결제 상태: ${payment.status}`);
+                } catch (error) {
+                    // 오류 발생 시
+                    logMessage(`결제 실패: ${error.message}`, true);
+                }
+            });
+        });
+    </script>
 </body>
 </html>
