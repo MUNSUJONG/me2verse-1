@@ -1,138 +1,152 @@
-// src/App.js
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from 'react';
 
-function PiLoginButton({ onLogin }) {
-  const handleLogin = async () => {
-    if (!window.Pi) {
-      alert("Pi SDK가 로드되지 않았습니다. Pi 브라우저에서 접속해주세요.");
-      return;
-    }
-    try {
-      await window.Pi.authenticate({
-        app_name: "me2verse-1",
-        scope: ["username"]
-      });
-      onLogin(true);
-    } catch (err) {
-      console.error("로그인 실패:", err);
-      alert("로그인에 실패했습니다.");
-      onLogin(false);
-    }
+// Tailwind CSS를 사용하여 스타일링합니다.
+// Pi SDK는 Pi Browser에 내장되어 있으므로 별도의 import가 필요 없습니다.
+
+const App = () => {
+  // 상태 변수 정의
+  const [user, setUser] = useState(null);
+  const [statusLogs, setStatusLogs] = useState([]);
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  // 상태 로그에 메시지를 추가하는 헬퍼 함수
+  const addLog = (message, isError = false) => {
+    setStatusLogs(prevLogs => {
+      const newLog = `${new Date().toLocaleTimeString()} - ${message}`;
+      if (isError) {
+        return [...prevLogs, `[오류] ${newLog}`];
+      }
+      return [...prevLogs, newLog];
+    });
   };
 
-  return (
-    <button
-      onClick={handleLogin}
-      style={{
-        padding: "12px 24px",
-        backgroundColor: "#2563eb",
-        color: "#fff",
-        borderRadius: "6px",
-        border: "none",
-        fontSize: "16px",
-        cursor: "pointer"
-      }}
-    >
-      로그인
-    </button>
-  );
-}
-
-function PiPaymentButton({ loggedIn }) {
-  const handlePayment = async () => {
-    if (!loggedIn) {
-      alert("먼저 로그인을 해주세요.");
-      return;
-    }
-    if (!window.Pi) {
-      alert("Pi SDK가 로드되지 않았습니다. Pi 브라우저에서 접속해주세요.");
-      return;
-    }
-    try {
-      const result = await window.Pi.requestPay({
-        app_name: "me2verse-1",
-        title: "Me2Verse-1 결제 테스트",
-        value: "0.1",
-        currency: "Pi",
-        custom_identifier: "order_1234"
-      });
-      alert("결제가 완료되었습니다: " + JSON.stringify(result));
-    } catch (err) {
-      console.error("결제 실패:", err);
-      alert("결제에 실패했습니다.");
-    }
-  };
-
-  return (
-    <button
-      onClick={handlePayment}
-      style={{
-        padding: "12px 24px",
-        backgroundColor: "#059669",
-        color: "#fff",
-        borderRadius: "6px",
-        border: "none",
-        fontSize: "16px",
-        cursor: "pointer",
-        marginLeft: "16px"
-      }}
-    >
-      결제하기
-    </button>
-  );
-}
-
-function StatusMessage({ message }) {
-  if (!message) return null;
-  return (
-    <div
-      style={{
-        marginTop: "24px",
-        padding: "12px",
-        backgroundColor: "#f3f4f6",
-        borderRadius: "8px",
-        color: "#374151",
-        fontSize: "14px"
-      }}
-    >
-      {message}
-    </div>
-  );
-}
-
-export default function App() {
-  const [loggedIn, setLoggedIn] = useState(false);
-  const [statusMsg, setStatusMsg] = useState("");
-
+  // Pi SDK 초기화를 위한 useEffect 훅
   useEffect(() => {
-    if (!window.Pi) {
-      setStatusMsg("⚠️ Pi SDK를 감지하지 못했습니다. Pi 브라우저에서 접속해주세요.");
+    addLog('Pi SDK 초기화를 준비 중입니다...');
+    
+    // Pi SDK가 Pi 브라우저에 존재하는지 확인
+    if (typeof window.Pi === 'undefined') {
+      addLog('Pi SDK가 로드되지 않았습니다. Pi Browser에서 실행 중인지 확인하세요.', true);
       return;
     }
-    setStatusMsg("Pi SDK가 정상 로드되었습니다. 로그인을 진행해주세요.");
+
+    // 현재 URL의 호스트 이름을 기반으로 환경을 결정합니다.
+    const hostname = window.location.hostname;
+    let environment = 'Production';
+    if (hostname.includes('sandbox.minepi.com') || hostname.includes('sandbox')) {
+      environment = 'Sandbox';
+    }
+    addLog(`현재 감지된 환경: ${environment}`);
+
+    try {
+      window.Pi.init({
+        onIncompletePaymentFound: (payment) => {
+          // 미완료 결제를 처리하는 로직을 여기에 추가할 수 있습니다.
+          addLog(`미완료 결제 발견: ${payment.identifier}`);
+        }
+      }, {
+        environment: environment
+      });
+      setIsInitialized(true);
+      addLog('Pi SDK가 성공적으로 초기화되었습니다. 이제 로그인할 수 있습니다.');
+    } catch (error) {
+      addLog(`Pi SDK 초기화 실패: ${error.message}`, true);
+    }
   }, []);
 
+  // Pi 로그인 함수
+  const handleLogin = async () => {
+    if (!isInitialized) {
+      addLog('Pi SDK가 준비되지 않았습니다. 잠시만 기다려주세요.', true);
+      return;
+    }
+    addLog('로그인 요청 중...');
+    try {
+      // 'username'과 'payments' 권한을 요청합니다.
+      const authResult = await window.Pi.authenticate(['username', 'payments']);
+      setUser(authResult.user);
+      addLog(`로그인 성공! 사용자 ID: ${authResult.user.uid}, 사용자명: ${authResult.user.username}`);
+    } catch (error) {
+      addLog(`로그인 실패: ${error.message}`, true);
+    }
+  };
+
+  // Pi 테스트 결제 함수
+  const handlePayment = async () => {
+    if (!user) {
+      addLog('결제 전에 먼저 로그인해주세요.', true);
+      return;
+    }
+    addLog('테스트 결제 요청 중...');
+    
+    // window.Pi.createPayment가 정의되어 있는지 다시 확인합니다.
+    if (typeof window.Pi.createPayment === 'undefined') {
+      addLog("'createPayment' 함수가 존재하지 않습니다. Pi 브라우저의 버전 문제일 수 있습니다.", true);
+      return;
+    }
+
+    try {
+      const paymentData = {
+        amount: 1, // 테스트 금액
+        memo: 'Me2vers-1 테스트 결제',
+        metadata: { app: 'Me2vers-1', type: 'test_payment' }
+      };
+
+      await window.Pi.createPayment(paymentData, {
+        onReadyForServerApproval: (paymentId) => {
+          addLog(`서버 승인 대기중... 결제 ID: ${paymentId}`);
+        },
+        onReadyForServerCompletion: (paymentId, txid) => {
+          addLog(`결제 완료! 결제 ID: ${paymentId}, TXID: ${txid}`);
+        },
+        onCancel: (paymentId) => {
+          addLog(`사용자가 결제를 취소했습니다. 결제 ID: ${paymentId}`);
+        },
+        onError: (error, payment) => {
+          addLog(`결제 실패: ${error.message}`, true);
+        }
+      });
+    } catch (error) {
+      addLog(`테스트 결제 실패: ${error.message}`, true);
+    }
+  };
+
   return (
-    <div
-      style={{
-        maxWidth: 480,
-        margin: "60px auto",
-        padding: "0 20px",
-        textAlign: "center",
-        fontFamily: "'Noto Sans KR', sans-serif"
-      }}
-    >
-      <h1 style={{ marginBottom: "32px", color: "#1f2937" }}>Me2Verse-1 로그인 및 결제</h1>
-      <div>
-        <PiLoginButton
-          onLogin={(success) => {
-            setLoggedIn(success);
-            setStatusMsg(success ? "로그인에 성공했습니다!" : "로그인에 실패했습니다.");
-          }}
-        />
-        <PiPaymentButton loggedIn={loggedIn} />
+    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4 font-inter">
+      <div className="bg-white p-8 rounded-xl shadow-lg w-full max-w-md text-center">
+        <h1 className="text-3xl font-bold text-gray-800 mb-6">Pi Network 로그인 & 결제 테스트</h1>
+        
+        <div className="space-y-4">
+          <button
+            onClick={handleLogin}
+            disabled={!isInitialized || user}
+            className="w-full py-3 px-6 bg-green-500 hover:bg-green-600 text-white font-bold rounded-lg transition duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed shadow-md"
+          >
+            {user ? `로그인 완료: ${user.username}` : 'Pi 로그인'}
+          </button>
+          
+          <button
+            onClick={handlePayment}
+            disabled={!user}
+            className="w-full py-3 px-6 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-lg transition duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed shadow-md"
+          >
+            테스트 Pi 결제
+          </button>
+        </div>
+
+        <div className="mt-8 p-4 bg-gray-200 rounded-lg text-left text-sm text-gray-700 h-64 overflow-y-auto">
+          <h2 className="font-bold mb-2">상태 로그:</h2>
+          <div className="space-y-1">
+            {statusLogs.map((log, index) => (
+              <p key={index} className="break-words font-mono text-xs leading-tight">
+                {log}
+              </p>
+            ))}
+          </div>
+        </div>
       </div>
-      <StatusMessage message={statusMsg} />
     </div>
   );
-        }
+};
+
+export default App;
