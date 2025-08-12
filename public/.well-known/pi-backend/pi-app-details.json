@@ -1,11 +1,5 @@
 {
-  "name": "Me2verse-1",
-  "description": "Me2Verse 프로젝트 Pi 앱 샌드박스 및 프로덕션 테스트용",
-  "app_icon_url": "https://me2verse-1.netlify.app/icon.png",
-  "support_url": "https://me2verse-1.netlify.app/support.html",
-  "terms_of_service_url": "https://me2verse-1.netlify.app/terms.html",
-  "privacy_policy_url": "https://me2verse-1.netlify.app/privacy.html",
-  "app_url": "https://me2verse-1.netlify.app",
-  "redirect_url": "https://me2verse-1.netlify.app",
-  "networks": ["pi"]
+  "name": "me2verse-1",
+  "description": "me2verse-1",
+  "version": "1.0.0"
 }
