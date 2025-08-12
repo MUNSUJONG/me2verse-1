@@ -1,5 +1,9 @@
 {
-  "name": "me2verse-1",
-  "description": "me2verse-1",
-  "version": "1.0.0"
+  "name": "Me2verse-1",
+  "description": "Pi Network를 활용한 Me2verse-1 앱입니다.",
+  "iconUrl": "https://me2verse-1.netlify.app/icon.png",
+  "scopes": [
+    "username",
+    "payments"
+  ]
 }
