@@ -1,36 +1,63 @@
 body {
-    font-family: Arial, sans-serif;
+    font-family: sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    background-color: #f0f2f5;
+}
+
+.container {
+    background-color: #fff;
+    padding: 2rem;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     text-align: center;
-    background-color: #f4f8ff;
-    padding: 20px;
+    max-width: 400px;
+    width: 100%;
 }
 
-button {
-    padding: 12px 20px;
-    margin: 10px;
-    font-size: 16px;
+h1 {
+    color: #000;
+}
+
+.btn {
+    width: 100%;
+    padding: 1rem;
+    font-size: 1rem;
     border: none;
-    border-radius: 6px;
+    border-radius: 5px;
     cursor: pointer;
+    margin: 0.5rem 0;
+    color: #fff;
+    font-weight: bold;
 }
 
-#loginBtn {
-    background-color: #4CAF50;
-    color: white;
+.primary-btn {
+    background-color: #1abc9c;
 }
 
-#paymentBtn {
-    background-color: #2196F3;
-    color: white;
+.secondary-btn {
+    background-color: #3498db;
 }
 
-button:disabled {
-    background-color: gray;
+.btn:disabled {
+    background-color: #bdc3c7;
     cursor: not-allowed;
 }
 
-#status {
-    margin-top: 20px;
-    font-size: 14px;
-    color: #333;
+#status-box {
+    margin-top: 1.5rem;
+    padding: 1rem;
+    background-color: #ecf0f1;
+    border-radius: 5px;
+    text-align: left;
+    white-space: pre-wrap;
+}
+
+#status-box p {
+    margin: 0;
+    line-height: 1.5;
+    font-family: monospace;
 }
