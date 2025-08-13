@@ -1,1 +1,4 @@
-
+[build]
+  base = "me2verse-1/backend"
+  command = "npm install && npm run build"
+  publish = "build"
