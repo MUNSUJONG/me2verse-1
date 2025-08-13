@@ -1,7 +1,0 @@
-[build]
-  command = "backend/build-script.sh"
-  publish = "backend/build"
-
-[dev]
-  command = "npm start"
-  port = 10000
