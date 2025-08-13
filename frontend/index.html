@@ -3,219 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>me2verse-1 Pi Network 결제 테스트</title>
-    <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-            background-color: #f0f2f5;
-            color: #1c1e21;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
+    <title>Pi Network 결제 테스트</title>
+    <!-- Tailwind CSS CDN 로드 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Inter', 'sans-serif'],
+            },
+          }
         }
-        .container {
-            background-color: #fff;
-            padding: 2rem;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            text-align: center;
-            width: 90%;
-            max-width: 400px;
-        }
-        h1 {
-            color: #8a2be2; /* Pi Network Purple */
-        }
-        button {
-            background-color: #8a2be2;
-            color: white;
-            border: none;
-            padding: 12px 20px;
-            border-radius: 20px;
-            font-size: 16px;
-            cursor: pointer;
-            margin: 10px 0;
-            transition: background-color 0.3s ease;
-            width: 100%;
-        }
-        button:hover {
-            background-color: #7324b8;
-        }
-        button:disabled {
-            background-color: #ccc;
-            cursor: not-allowed;
-        }
-        #status-container {
-            margin-top: 20px;
-            padding: 15px;
-            border-radius: 6px;
-            background-color: #e7f3ff;
-            border: 1px solid #d1e7fd;
-            text-align: left;
-        }
-        #status-container p {
-            margin: 5px 0;
-            word-wrap: break-word;
-        }
-        .ok { color: #0f5132; }
-        .reject { color: #842029; }
-    </style>
-    <!-- Pi Network SDK 로드 -->
-    <script src="https://sdk.minepi.com/pi-sdk.js"></script>
+      }
+    </script>
+    <!-- 스타일 파일 연결 -->
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <div class="container">
-        <h1>me2verse-1 앱</h1>
-        <p>Pi Network 로그인 및 결제 테스트</p>
-        
-        <button id="login-button">Pi 브라우저로 로그인</button>
-        <button id="payment-button" disabled>1π 결제하기</button>
+    <!-- Pi SDK 로드 -->
+    <script src="https://sdk.minepi.com/pi-sdk.js"></script>
 
-        <div id="status-container">
-            <p><strong>상태:</strong> <span id="status-message">초기화 중...</span></p>
-            <p><strong>사용자 UID:</strong> <span id="user-uid">로그인 필요</span></p>
-            <p><strong>결제 ID:</strong> <span id="payment-id">대기 중</span></p>
-            <p><strong>결과:</strong> <span id="result-message"></span></p>
+    <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-sm mx-4">
+        <h1 class="text-3xl font-bold text-center mb-6 text-indigo-700">Pi Network Demo</h1>
+        <p class="text-center text-gray-600 mb-6">me2verse-1 결제 테스트</p>
+
+        <!-- 상태 메시지 출력 영역 -->
+        <div id="status" class="min-h-[4rem] p-4 mb-6 rounded-lg text-center font-medium transition-colors duration-300">
+            <span class="text-gray-500">대기 중...</span>
         </div>
+
+        <!-- 로그인 버튼 -->
+        <button id="loginBtn" class="w-full bg-indigo-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-indigo-700 transition-colors duration-300 shadow-md">
+            Pi Network 로그인
+        </button>
+
+        <!-- 결제 버튼 (초기에는 비활성화) -->
+        <button id="payBtn" class="w-full bg-emerald-500 text-white font-semibold py-3 px-4 rounded-lg mt-4 opacity-50 cursor-not-allowed shadow-md" disabled>
+            결제하기 (1 Pi)
+        </button>
     </div>
-
-    <script>
-        // --- DOM 요소 가져오기 ---
-        const loginButton = document.getElementById('login-button');
-        const paymentButton = document.getElementById('payment-button');
-        const statusMessage = document.getElementById('status-message');
-        const userUidSpan = document.getElementById('user-uid');
-        const paymentIdSpan = document.getElementById('payment-id');
-        const resultMessage = document.getElementById('result-message');
-
-        // 백엔드 서버 URL (실제 배포된 백엔드 주소로 변경해야 합니다)
-        // 로컬 테스트 시: 'http://localhost:3000'
-        // 배포 후: 'https://your-backend-url.com'
-        const BACKEND_URL = 'https://me2verse-pi-backend.glitch.me'; // 예시: Glitch 배포 URL
-
-        let currentUser = null;
-
-        // --- 상태 업데이트 함수 ---
-        function updateStatus(status, type = 'info', details = '') {
-            statusMessage.textContent = status;
-            resultMessage.textContent = details;
-            resultMessage.className = type; // 'ok' 또는 'reject' 클래스 적용
-        }
-
-        // --- Pi SDK 초기화 ---
-        try {
-            Pi.init({ version: "2.0", sandbox: true });
-            updateStatus('Pi SDK 초기화 완료');
-        } catch (err) {
-            updateStatus('REJECT: Pi SDK 초기화 실패', 'reject', err.message);
-            loginButton.disabled = true;
-        }
-
-        // --- 1. 로그인 기능 ---
-        loginButton.addEventListener('click', async () => {
-            updateStatus('Pi 로그인 시도 중...');
-            try {
-                const scopes = ['username', 'payments'];
-                // onIncompletePaymentFound: 미완료 결제 처리 콜백 (필수)
-                const onIncompletePaymentFound = (payment) => {
-                    console.log('미완료 결제 발견:', payment);
-                    updateStatus('미완료 결제가 있습니다. 해결 후 다시 시도하세요.', 'reject');
-                    // 여기서 미완료 결제를 완료하는 로직을 추가할 수 있습니다.
-                    // 예: return Pi.completePayment(payment.identifier, payment.transaction.txid);
-                };
-
-                const authResult = await Pi.authenticate(scopes, onIncompletePaymentFound);
-                currentUser = authResult.user;
-                
-                userUidSpan.textContent = currentUser.uid;
-                paymentButton.disabled = false;
-                loginButton.textContent = `로그인 완료 (${currentUser.username})`;
-                loginButton.disabled = true;
-                updateStatus('OK: 로그인 성공', 'ok');
-
-            } catch (err) {
-                currentUser = null;
-                updateStatus('REJECT: 로그인 실패', 'reject', err.message || '사용자가 로그인을 취소했습니다.');
-            }
-        });
-
-        // --- 2. 결제 기능 ---
-        paymentButton.addEventListener('click', () => {
-            if (!currentUser) {
-                updateStatus('REJECT: 결제를 위해 먼저 로그인하세요.', 'reject');
-                return;
-            }
-            updateStatus('결제 생성 중...');
-            paymentIdSpan.textContent = '대기 중';
-            resultMessage.textContent = '';
-
-            const paymentData = {
-                amount: 1.000, // 결제할 금액
-                memo: "me2verse-1 아이템 구매", // 사용자에게 보여질 메모
-                metadata: { orderId: 'test-order-123' } // 백엔드에서 사용할 데이터
-            };
-
-            const callbacks = {
-                // 3. 서버 승인 단계
-                onReadyForServerApproval: async function(paymentId) {
-                    updateStatus('서버 승인 대기 중...', 'info', `Payment ID: ${paymentId}`);
-                    paymentIdSpan.textContent = paymentId;
-                    try {
-                        const response = await fetch(`${BACKEND_URL}/api/payments/approve`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ paymentId: paymentId })
-                        });
-                        const data = await response.json();
-                        if (!response.ok) {
-                            throw new Error(data.message);
-                        }
-                        updateStatus('서버 승인 요청 완료. Pi 네트워크 처리 대기 중...', 'ok');
-                    } catch (err) {
-                        updateStatus('REJECT: 서버 승인 실패', 'reject', err.message);
-                        // 승인 실패 시 결제를 취소하도록 Pi.cancelPayment 호출을 고려할 수 있습니다.
-                    }
-                },
-
-                // 4. 서버 완료 단계
-                onReadyForServerCompletion: async function(paymentId, txid) {
-                    updateStatus('서버 완료 처리 중...', 'info', `TXID: ${txid}`);
-                    try {
-                        const response = await fetch(`${BACKEND_URL}/api/payments/complete`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ paymentId, txid })
-                        });
-                        const data = await response.json();
-                        if (!response.ok) {
-                            throw new Error(data.message);
-                        }
-                        updateStatus('OK: 결제 성공', 'ok', '모든 결제 과정이 완료되었습니다.');
-                    } catch (err) {
-                        updateStatus('REJECT: 서버 완료 실패', 'reject', err.message);
-                    }
-                },
-
-                // 5. 사용자가 결제를 취소한 경우
-                onCancel: function(paymentId) {
-                    updateStatus('REJECT: 사용자가 결제를 취소했습니다.', 'reject', `Payment ID: ${paymentId}`);
-                    paymentIdSpan.textContent = paymentId || 'N/A';
-                },
-
-                // 6. 오류 발생 시
-                onError: function(error, payment) {
-                    updateStatus('REJECT: 결제 오류 발생', 'reject', error.message);
-                    if (payment) {
-                        paymentIdSpan.textContent = payment.identifier || 'N/A';
-                    }
-                }
-            };
-            
-            // Pi 결제 시작
-            Pi.createPayment(paymentData, callbacks);
-        });
-    </script>
+    
+    <!-- 기능 파일 연결 -->
+    <script src="script.js"></script>
 </body>
 </html>
