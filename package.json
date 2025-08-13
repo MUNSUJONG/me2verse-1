@@ -1,10 +1,11 @@
 {
-  "name": "me2verse-1",  // 이름은 소문자와 하이픈만 사용
+  "name": "me2verse-1",
   "version": "1.0.0",
   "description": "Pi Network test app",
   "scripts": {
     "build": "echo 'No build required'"
   }
 }
+
 
     
