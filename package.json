@@ -3,8 +3,10 @@
   "version": "1.0.0",
   "description": "Pi Network test app",
   "scripts": {
-    "build": "echo 'No build required'"
+    "build": "echo 'No build required'",
+    "start": "node backend/index.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
   }
 }
-
-    
