@@ -1,3 +1,7 @@
 [build]
   command = "backend/build-script.sh"
-  publish = "/opt/build/repo/build
+  publish = "backend/build"
+
+[dev]
+  command = "npm start"
+  port = 8888
