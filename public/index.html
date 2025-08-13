@@ -1,51 +1,47 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pi Network 결제 테스트</title>
-    <!-- Tailwind CSS CDN 로드 -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-      tailwind.config = {
-        theme: {
-          extend: {
-            fontFamily: {
-              sans: ['Inter', 'sans-serif'],
-            },
-          }
-        }
-      }
-    </script>
-    <!-- 스타일 파일 연결 -->
-    <link rel="stylesheet" href="style.css">
-</head>
+<!-- public/index.html 파일의 버튼 ID 확인 -->
 <body>
+    ...
+    <!-- 로그인 버튼의 ID가 'loginBtn'인지 확인 -->
+    <button id="loginBtn" class="...">
+        Pi Network 로그인
+    </button>
 
-    <!-- Pi SDK 로드 -->
-    <script src="https://sdk.minepi.com/pi-sdk.js"></script>
-
-    <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-sm mx-4">
-        <h1 class="text-3xl font-bold text-center mb-6 text-indigo-700">Pi Network Demo</h1>
-        <p class="text-center text-gray-600 mb-6">me2verse-1 결제 테스트</p>
-
-        <!-- 상태 메시지 출력 영역 -->
-        <div id="status" class="min-h-[4rem] p-4 mb-6 rounded-lg text-center font-medium transition-colors duration-300">
-            <span class="text-gray-500">대기 중...</span>
-        </div>
-
-        <!-- 로그인 버튼 -->
-        <button id="loginBtn" class="w-full bg-indigo-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-indigo-700 transition-colors duration-300 shadow-md">
-            Pi Network 로그인
-        </button>
-
-        <!-- 결제 버튼 (초기에는 비활성화) -->
-        <button id="payBtn" class="w-full bg-emerald-500 text-white font-semibold py-3 px-4 rounded-lg mt-4 opacity-50 cursor-not-allowed shadow-md" disabled>
-            결제하기 (1 Pi)
-        </button>
-    </div>
-    
-    <!-- 기능 파일 연결 -->
+    <!-- 결제 버튼의 ID가 'payBtn'인지 확인 -->
+    <button id="payBtn" class="...">
+        결제하기 (1 Pi)
+    </button>
+    ...
+    <!-- script.js 파일이 body 닫는 태그 바로 위에 있는지 확인 -->
     <script src="script.js"></script>
 </body>
-</html>
+```javascript
+// public/script.js 파일의 버튼 ID 확인
+window.onload = function() {
+    // ID가 'loginBtn'과 'payBtn'으로 정확하게 입력되었는지 확인
+    const loginBtn = document.getElementById('loginBtn');
+    const payBtn = document.getElementById('payBtn');
+    const statusDiv = document.getElementById('status');
+    
+    // 만약 버튼을 찾지 못했다면, 이 시점에서 'loginBtn'과 'payBtn'은 'null'이 됩니다.
+    // Console에 'TypeError: Cannot read properties of null' 에러가 뜰 겁니다.
+
+    // 이벤트 리스너가 null이 아닌 요소에 연결되었는지 확인
+    if (window.Pi && loginBtn && payBtn) {
+        loginBtn.addEventListener('click', () => {
+            Pi.authenticate(['payments'], onAuthResult);
+        });
+
+        payBtn.addEventListener('click', () => {
+            if (accessToken) {
+                createPaymentOnBackend();
+            } else {
+                updateStatus('ERROR: 로그인 상태가 아닙니다.');
+            }
+        });
+    } else {
+        // 이 부분에 도달하면 버튼이 제대로 연결되지 않은 것입니다.
+        updateStatus('ERROR: Pi SDK 또는 버튼 요소가 로드되지 않았습니다.');
+        if (loginBtn) loginBtn.disabled = true;
+    }
+    // ... 나머지 코드
+};
