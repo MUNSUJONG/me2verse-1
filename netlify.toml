@@ -1,9 +1,3 @@
 [build]
-  publish = "public"
-  # 빌드 명령어가 없으면 아래 command 항목은 비워두거나 아예 삭제하세요.
-  # command = ""
-
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
+  publish = "build"    
+  command = "npm run build"
