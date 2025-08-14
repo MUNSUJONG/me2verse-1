@@ -10,12 +10,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   let user = null;
-
   const BACKEND_URL = 'https://me2verse-1.netlify.app'; // ✅ 실제 URL 적용
 
   // 로그인 버튼
   loginBtn.addEventListener('click', async () => {
     try {
+      // Pi SDK 초기화 (샌드박스 모드)
       await window.Pi.init({ appId: "me2verse-1", sandbox: true });
       user = await window.Pi.login();
       if (user) {
@@ -60,7 +60,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     const res = await fetch(`${BACKEND_URL}/ping`);
     const text = await res.text();
     console.log("서버 상태:", text);
+    statusDiv.innerText = text;
   } catch (err) {
     console.error("서버 상태 확인 실패:", err);
+    statusDiv.innerText = "서버 상태 확인 실패";
   }
 });
