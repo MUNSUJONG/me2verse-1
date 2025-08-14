@@ -10,9 +10,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   let user = null;
-  const BACKEND_URL = 'https://me2verse-1.netlify.app'; // ✅ 배포용 서버 URL
+  const BACKEND_URL = 'https://me2verse-1.netlify.app'; // 배포용 Render URL로 변경 가능
 
-  // 서버 상태 확인
   const checkServer = async () => {
     try {
       const res = await fetch(`${BACKEND_URL}/ping`);
@@ -27,7 +26,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   checkServer();
 
-  // 로그인 버튼
   loginBtn.addEventListener('click', async () => {
     try {
       await window.Pi.init({ appId: "me2verse-1", sandbox: true });
@@ -44,7 +42,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
-  // 결제 버튼
   payBtn.addEventListener('click', async () => {
     if (!user) {
       alert("먼저 로그인해주세요.");
