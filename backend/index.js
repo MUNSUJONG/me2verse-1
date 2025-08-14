@@ -15,16 +15,16 @@ if (!PI_API_KEY) {
   process.exit(1);
 }
 
-// 상태 확인용 라우트
+// 상태 확인용
 app.get('/ping', (req, res) => {
   res.send(`🟢 서버 정상 작동 중 - Pi API Key 로드됨 ✅`);
 });
 
-// Pi 결제 승인 예시 라우트
+// Pi 결제 승인 라우트
 app.post('/approve-payment', (req, res) => {
   const { txid, amount } = req.body;
   console.log(`[결제 승인 요청] txid=${txid}, amount=${amount}`);
-  
+
   // TODO: 실제 Pi Network API 호출
   res.json({ status: 'approved', txid, amount });
 });
