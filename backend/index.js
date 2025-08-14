@@ -1,35 +1,28 @@
-require('dotenv').config();
 const express = require('express');
-const cors = require('cors');
 const bodyParser = require('body-parser');
+const cors = require('cors');
 
 const app = express();
-app.use(cors());
+const PORT = 10000;
+
+// 미들웨어
+app.use(cors()); // 로컬 테스트 시 CORS 문제 방지
 app.use(bodyParser.json());
 
-const PORT = process.env.PORT || 3000;
-const PI_API_KEY = process.env.PI_API_KEY;
-
-if (!PI_API_KEY) {
-  console.error("❌ Pi API Key가 .env에 설정되지 않았습니다!");
-  process.exit(1);
-}
-
-// 상태 확인용
+// 상태 확인
 app.get('/ping', (req, res) => {
-  res.send(`🟢 서버 정상 작동 중 - Pi API Key 로드됨 ✅`);
+  res.send('🟢 로컬 서버 정상 작동 중');
 });
 
-// Pi 결제 승인 라우트
+// 결제 승인 샘플
 app.post('/approve-payment', (req, res) => {
   const { txid, amount } = req.body;
-  console.log(`[결제 승인 요청] txid=${txid}, amount=${amount}`);
-
-  // TODO: 실제 Pi Network API 호출
-  res.json({ status: 'approved', txid, amount });
+  console.log(`결제 승인 요청: txid=${txid}, amount=${amount}`);
+  // 실제 Pi 결제 API 호출 시 여기서 처리
+  res.json({ success: true, txid, amount });
 });
 
-app.listen(PORT, () => {
-  console.log(`서버 실행 중: http://localhost:${PORT}`);
-  console.log(`Pi API Key: ✅ Loaded`);
+// 서버 실행 (0.0.0.0 바인딩)
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`🟢 서버 실행 중: http://localhost:${PORT}`);
 });
