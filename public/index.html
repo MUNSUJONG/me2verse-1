@@ -3,49 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pi Network 결제 테스트</title>
-    <!-- Tailwind CSS CDN 로드 -->
+    <title>me2verse-1 Pi 결제 테스트</title>
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-      tailwind.config = {
-        theme: {
-          extend: {
-            fontFamily: {
-              sans: ['Inter', 'sans-serif'],
-            },
-          }
-        }
-      }
-    </script>
-    <!-- 스타일 파일 연결 -->
-    <link rel="stylesheet" href="style.css">
+    <!-- Pi SDK (Sandbox 테스트용) -->
+    <script src="https://sandbox.minepi.com/pi.js"></script>
 </head>
-<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+<body class="bg-gray-50 flex flex-col items-center justify-center min-h-screen p-6">
+    <h1 class="text-2xl font-bold mb-6">me2verse-1 Pi Network 결제 데모</h1>
 
-    <!-- Pi SDK 로드 -->
-    <script src="https://sdk.minepi.com/pi-sdk.js"></script>
+    <!-- 로그인 버튼 -->
+    <button id="loginBtn" 
+        class="mb-4 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+        Pi Network 로그인
+    </button>
 
-    <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-sm mx-4">
-        <h1 class="text-3xl font-bold text-center mb-6 text-indigo-700">Pi Network Demo</h1>
-        <p class="text-center text-gray-600 mb-6">me2verse-1 결제 테스트</p>
+    <!-- 결제 버튼 (처음에는 비활성화) -->
+    <button id="payBtn" disabled
+        class="mb-4 px-6 py-3 bg-gray-400 text-white rounded-lg opacity-50 cursor-not-allowed">
+        결제 요청
+    </button>
 
-        <!-- 상태 메시지 출력 영역 -->
-        <div id="status" class="min-h-[4rem] p-4 mb-6 rounded-lg text-center font-medium transition-colors duration-300 bg-gray-100 text-gray-700">
-            <span>대기 중...</span>
-        </div>
-
-        <!-- 로그인 버튼 -->
-        <button id="loginBtn" class="w-full bg-indigo-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-indigo-700 transition-colors duration-300 shadow-md">
-            Pi Network 로그인
-        </button>
-
-        <!-- 결제 버튼 (초기에는 비활성화) -->
-        <button id="payBtn" class="w-full bg-emerald-500 text-white font-semibold py-3 px-4 rounded-lg mt-4 opacity-50 cursor-not-allowed shadow-md" disabled>
-            결제하기 (1 Pi)
-        </button>
+    <!-- 상태 표시 영역 -->
+    <div id="status" 
+        class="bg-gray-100 text-gray-700 p-4 rounded-lg text-center font-medium w-full max-w-md">
+        상태 메시지가 여기에 표시됩니다.
     </div>
-    
-    <!-- 기능 파일 연결 -->
-    <script src="script.js"></script>
+
+    <!-- JavaScript 로직 -->
+    <script src="app.js"></script>
 </body>
 </html>
