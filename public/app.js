@@ -1,24 +1,66 @@
 document.addEventListener('DOMContentLoaded', async () => {
+  const statusDiv = document.getElementById('status');
+  const loginBtn = document.getElementById('loginBtn');
+  const payBtn = document.getElementById('payBtn');
+
   if (!window.Pi) {
     alert("Pi SDK가 로드되지 않았습니다. Pi Browser에서 접속하세요.");
+    statusDiv.innerText = "Pi SDK 로드 실패";
     return;
   }
 
-  try {
-    const initTimeout = 10000; // 최대 10초 대기
-    const initPromise = window.Pi.init({ appId: "me2verse-1", sandbox: true });
-    
-    const timer = new Promise((_, reject) => setTimeout(() => reject("Pi SDK 초기화 시간 초과"), initTimeout));
-    await Promise.race([initPromise, timer]);
+  let user = null;
 
-    const user = await window.Pi.login();
-    if (user) {
-      document.getElementById('status').innerText = `로그인 성공: ${user.username}`;
-    } else {
-      document.getElementById('status').innerText = "로그인 실패";
+  const BACKEND_URL = 'https://me2verse-1.netlify.app'; // ✅ 실제 URL 적용
+
+  // 로그인 버튼
+  loginBtn.addEventListener('click', async () => {
+    try {
+      await window.Pi.init({ appId: "me2verse-1", sandbox: true });
+      user = await window.Pi.login();
+      if (user) {
+        statusDiv.innerText = `로그인 성공: ${user.username}`;
+        console.log("로그인 성공", user);
+      } else {
+        statusDiv.innerText = "로그인 실패";
+      }
+    } catch (err) {
+      console.error("Pi SDK 로그인 오류:", err);
+      statusDiv.innerText = `로그인 오류: ${err}`;
     }
+  });
+
+  // 결제 버튼
+  payBtn.addEventListener('click', async () => {
+    if (!user) {
+      alert("먼저 로그인해주세요.");
+      return;
+    }
+
+    try {
+      const txid = `TEST-${Date.now()}`;
+      const amount = 3.14;
+
+      const res = await fetch(`${BACKEND_URL}/approve-payment`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ txid, amount })
+      });
+
+      const data = await res.json();
+      alert(`결제 승인됨: ${JSON.stringify(data)}`);
+    } catch (err) {
+      console.error("결제 승인 오류:", err);
+      alert(`결제 오류: ${err}`);
+    }
+  });
+
+  // 서버 상태 확인
+  try {
+    const res = await fetch(`${BACKEND_URL}/ping`);
+    const text = await res.text();
+    console.log("서버 상태:", text);
   } catch (err) {
-    console.error("Pi SDK 초기화 오류:", err);
-    document.getElementById('status').innerText = `Pi SDK 초기화 실패: ${err}`;
+    console.error("서버 상태 확인 실패:", err);
   }
 });
