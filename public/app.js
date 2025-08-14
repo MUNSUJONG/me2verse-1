@@ -3,7 +3,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   const loginBtn = document.getElementById('loginBtn');
   const payBtn = document.getElementById('payBtn');
 
-  // Pi SDK 로드 확인
   if (!window.Pi) {
     alert("Pi SDK가 로드되지 않았습니다. Pi Browser에서 접속하세요.");
     statusDiv.innerText = "Pi SDK 로드 실패";
@@ -11,7 +10,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   let user = null;
-  const BACKEND_URL = 'http://localhost:10000'; // 로컬 서버 URL
+  const BACKEND_URL = 'https://me2verse-1.netlify.app'; // ✅ 배포용 서버 URL
 
   // 서버 상태 확인
   const checkServer = async () => {
@@ -26,12 +25,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   };
 
-  checkServer(); // 초기 상태 확인
+  checkServer();
 
   // 로그인 버튼
   loginBtn.addEventListener('click', async () => {
     try {
-      // Pi SDK 초기화 (샌드박스 모드)
       await window.Pi.init({ appId: "me2verse-1", sandbox: true });
       user = await window.Pi.login();
       if (user) {
