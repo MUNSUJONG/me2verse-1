@@ -1,115 +1,142 @@
-// script.js - me2verse-1 프로젝트용
-window.onload = function() {
-    const loginBtn = document.getElementById('loginBtn');
-    const payBtn = document.getElementById('payBtn');
-    const statusDiv = document.getElementById('status');
-    let accessToken = null;
+import React, { useState, useEffect } from 'react';
 
-    // 상태 메시지 업데이트 함수
-    function updateStatus(message, isError = false) {
-        statusDiv.textContent = message;
-        if (isError) {
-            statusDiv.className = 'bg-red-100 text-red-700 p-4 rounded-lg text-center font-medium';
-        } else if (message.includes('OK')) {
-            statusDiv.className = 'bg-green-100 text-green-700 p-4 rounded-lg text-center font-medium';
-        } else {
-            statusDiv.className = 'bg-gray-100 text-gray-700 p-4 rounded-lg text-center font-medium';
-        }
+const App = () => {
+  const [user, setUser] = useState(null);
+  const [status, setStatus] = useState('Pi Network 준비 중...');
+  const [isInitialized, setIsInitialized] = useState(false);
+  const [accessToken, setAccessToken] = useState(null);
+
+  useEffect(() => {
+    if (!window.Pi) {
+      setStatus('❌ Pi SDK가 로드되지 않았습니다. Pi Browser에서 접속하세요.');
+      return;
     }
 
-    // Pi SDK 로드 확인 및 로그인/결제 이벤트 바인딩
-    function initPiSDK() {
-        if (!window.Pi) {
-            updateStatus('ERROR: Pi SDK가 로드되지 않았습니다.', true);
-            loginBtn.disabled = true;
-            payBtn.disabled = true;
-            return;
+    setStatus('🔄 Pi SDK 초기화 중...');
+    try {
+      window.Pi.init(
+        {
+          onIncompletePaymentFound: (payment) => {
+            setStatus(`⚠️ 미완료 결제 발견: ${payment.identifier}`);
+          }
+        },
+        {
+          environment: process.env.REACT_APP_PI_ENV || 'sandbox', // 'production'으로 변경 가능
         }
+      );
 
-        loginBtn.addEventListener('click', () => {
-            updateStatus('로그인 중...');
-            Pi.authenticate(['payments'], onAuthResult);
-        });
+      setIsInitialized(true);
+      setStatus('✅ Pi SDK 초기화 완료! 로그인 가능합니다.');
+    } catch (error) {
+      setStatus(`❌ Pi SDK 초기화 실패: ${error.message}`);
+    }
+  }, []);
 
-        payBtn.addEventListener('click', () => {
-            if (!accessToken) {
-                updateStatus('ERROR: 로그인 후 이용 가능합니다.', true);
-                return;
-            }
-            createPaymentOnBackend();
-        });
+  const handleLogin = async () => {
+    if (!isInitialized) {
+      setStatus('❌ SDK 초기화 전입니다.');
+      return;
     }
 
-    // 로그인 성공 콜백
-    function onAuthResult(authResult) {
-        if (authResult.accessToken) {
-            accessToken = authResult.accessToken;
-            updateStatus('OK: Pi Network 로그인 성공');
-            payBtn.disabled = false;
-            payBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-            payBtn.classList.add('bg-emerald-600', 'hover:bg-emerald-700');
-        } else {
-            updateStatus('ERROR: 로그인 실패', true);
-            payBtn.disabled = true;
-        }
+    setStatus('🔑 로그인 요청 중...');
+    try {
+      const authResult = await window.Pi.authenticate(['username', 'payments']);
+      setUser(authResult.user);
+      setAccessToken(authResult.accessToken);
+      setStatus(`✅ 로그인 성공! 사용자: ${authResult.user.username}`);
+    } catch (error) {
+      setStatus(`❌ 로그인 실패: ${error.message}`);
+    }
+  };
+
+  const handlePayment = async () => {
+    if (!user) {
+      setStatus('⚠️ 먼저 로그인하세요.');
+      return;
     }
 
-    // 결제 요청 백엔드 호출
-    async function createPaymentOnBackend() {
-        updateStatus('결제 요청 중...');
-        try {
-            const backendUrl = 'https://me2verse-backend.onrender.com/create-payment'; // Render 배포 URL
-            const response = await fetch(backendUrl, {
+    setStatus('💰 결제 요청 중...');
+    try {
+      await window.Pi.createPayment(
+        {
+          amount: 1,
+          memo: 'Me2verse-1 테스트 결제',
+          metadata: { app: 'Me2verse-1', type: 'test_payment' },
+        },
+        {
+          onReadyForServerApproval: async (paymentId) => {
+            setStatus(`📡 서버 승인 요청: ${paymentId}`);
+            // Render 백엔드에 승인 요청 보내기
+            try {
+              await fetch(`${process.env.REACT_APP_BACKEND_URL}/approve-payment`, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${accessToken}`
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${accessToken}`,
                 },
-                body: JSON.stringify({
-                    amount: 1.0,
-                    memo: 'Test payment for me2verse-1 app'
-                })
-            });
-
-            console.log('백엔드 응답:', response);
-
-            if (!response.ok) {
-                updateStatus(`ERROR: 서버 응답 실패 - ${response.statusText}`, true);
-                return;
+                body: JSON.stringify({ paymentId }),
+              });
+            } catch (err) {
+              setStatus(`❌ 서버 승인 실패: ${err.message}`);
             }
-
-            const result = await response.json();
-            console.log('결과:', result);
-
-            if (result.status === 'OK') {
-                const paymentId = result.payment.identifier;
-                updateStatus(`OK: 결제 ID 생성 성공 - ${paymentId}`);
-
-                // Pi SDK 결제 완료 후 콜백
-                Pi.onIncompletePayment(paymentId, (completedPaymentId) => {
-                    updateStatus(`OK: 결제 성공 - 결제 ID: ${completedPaymentId}`);
-                });
-            } else {
-                updateStatus(`ERROR: 백엔드 결제 생성 실패 - ${result.message}`, true);
+          },
+          onReadyForServerCompletion: async (paymentId, txid) => {
+            setStatus(`✅ 결제 완료! ID: ${paymentId}, TXID: ${txid}`);
+            try {
+              await fetch(`${process.env.REACT_APP_BACKEND_URL}/complete-payment`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${accessToken}`,
+                },
+                body: JSON.stringify({ paymentId, txid }),
+              });
+            } catch (err) {
+              setStatus(`❌ 결제 완료 전송 실패: ${err.message}`);
             }
-
-        } catch (error) {
-            console.error(error);
-            updateStatus(`ERROR: 백엔드 통신 실패 - ${error.message}`, true);
+          },
+          onCancel: (paymentId) => {
+            setStatus(`🚫 결제 취소됨: ${paymentId}`);
+          },
+          onError: (error, payment) => {
+            setStatus(`❌ 결제 실패: ${error.message}`);
+          },
         }
+      );
+    } catch (error) {
+      setStatus(`❌ 결제 요청 실패: ${error.message}`);
     }
+  };
 
-    // Pi SDK ready 시점에 초기화
-    if (window.Pi) {
-        Pi.ready().then(() => {
-            initPiSDK();
-            updateStatus('Pi SDK 로드 완료');
-        }).catch(() => {
-            updateStatus('ERROR: Pi SDK 초기화 실패', true);
-        });
-    } else {
-        updateStatus('ERROR: Pi SDK가 로드되지 않았습니다.', true);
-        loginBtn.disabled = true;
-        payBtn.disabled = true;
-    }
+  return (
+    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4 font-inter">
+      <div className="bg-white p-8 rounded-xl shadow-lg w-full max-w-md text-center">
+        <h1 className="text-2xl font-bold mb-4">Me2verse-1 Pi 결제 테스트</h1>
+
+        <div className="space-y-4">
+          <button
+            onClick={handleLogin}
+            disabled={!isInitialized || !!user}
+            className="w-full py-3 px-6 bg-green-500 hover:bg-green-600 text-white font-bold rounded-lg disabled:bg-gray-400"
+          >
+            {user ? '✅ 로그인 완료' : '🔑 Pi 로그인'}
+          </button>
+
+          <button
+            onClick={handlePayment}
+            disabled={!user}
+            className="w-full py-3 px-6 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-lg disabled:bg-gray-400"
+          >
+            💰 테스트 결제
+          </button>
+        </div>
+
+        <div className="mt-6 p-3 bg-gray-200 rounded text-left text-sm">
+          <p className="whitespace-pre-wrap">{status}</p>
+        </div>
+      </div>
+    </div>
+  );
 };
+
+export default App;
