@@ -1,68 +1,41 @@
-document.addEventListener('DOMContentLoaded', async () => {
-  const statusDiv = document.getElementById('status');
-  const loginBtn = document.getElementById('loginBtn');
-  const payBtn = document.getElementById('payBtn');
+const loginBtn = document.getElementById('pi-login');
+const payBtn = document.getElementById('pi-pay');
+const statusDiv = document.getElementById('status');
 
-  if (!window.Pi) {
-    alert("Pi SDK가 로드되지 않았습니다. Pi Browser에서 접속하세요.");
-    statusDiv.innerText = "Pi SDK 로드 실패";
+let user = null;
+
+// Pi 로그인
+loginBtn.addEventListener('click', async () => {
+  try {
+    user = await window.Pi.authenticate();
+    statusDiv.innerText = `로그인 성공: ${user.username}`;
+  } catch (err) {
+    statusDiv.innerText = `로그인 실패: ${err.message}`;
+  }
+});
+
+// Pi 결제
+payBtn.addEventListener('click', async () => {
+  if (!user) {
+    statusDiv.innerText = '먼저 로그인해주세요.';
     return;
   }
 
-  let user = null;
-  const BACKEND_URL = 'https://me2verse-1.netlify.app'; // 배포용 Render URL로 변경 가능
+  const amount = 0.1; // 테스트 금액
+  const txid = `tx-${Date.now()}`;
 
-  const checkServer = async () => {
-    try {
-      const res = await fetch(`${BACKEND_URL}/ping`);
-      const text = await res.text();
-      console.log("서버 상태:", text);
-      statusDiv.innerText = text;
-    } catch (err) {
-      console.error("서버 상태 확인 실패:", err);
-      statusDiv.innerText = "서버 상태 확인 실패";
-    }
-  };
-
-  checkServer();
-
-  loginBtn.addEventListener('click', async () => {
-    try {
-      await window.Pi.init({ appId: "me2verse-1", sandbox: true });
-      user = await window.Pi.login();
-      if (user) {
-        statusDiv.innerText = `로그인 성공: ${user.username}`;
-        console.log("로그인 성공", user);
-      } else {
-        statusDiv.innerText = "로그인 실패";
-      }
-    } catch (err) {
-      console.error("Pi SDK 로그인 오류:", err);
-      statusDiv.innerText = `로그인 오류: ${err}`;
-    }
-  });
-
-  payBtn.addEventListener('click', async () => {
-    if (!user) {
-      alert("먼저 로그인해주세요.");
-      return;
-    }
-
-    try {
-      const txid = `TEST-${Date.now()}`;
-      const amount = 3.14;
-
-      const res = await fetch(`${BACKEND_URL}/approve-payment`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ txid, amount })
-      });
-
-      const data = await res.json();
-      alert(`결제 승인됨: ${JSON.stringify(data)}`);
-    } catch (err) {
-      console.error("결제 승인 오류:", err);
-      alert(`결제 오류: ${err}`);
-    }
-  });
+  try {
+    const res = await fetch('https://me2verse-1-render-backend-url/approve-payment', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ txid, amount })
+    });
+    const data = await res.json();
+    statusDiv.innerText = data.success
+      ? `결제 승인 완료: ${data.txid}`
+      : '결제 실패';
+  } catch (err) {
+    statusDiv.innerText = `결제 오류: ${err.message}`;
+  }
 });
+
