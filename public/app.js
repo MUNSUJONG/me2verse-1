@@ -1,20 +1,24 @@
 document.addEventListener('DOMContentLoaded', async () => {
   if (!window.Pi) {
-    console.error("Pi SDK가 로드되지 않았습니다!");
-    alert("Pi SDK가 로드되지 않았습니다. 브라우저에서 Pi 앱으로 접속해주세요.");
+    alert("Pi SDK가 로드되지 않았습니다. Pi Browser에서 접속하세요.");
     return;
   }
 
-  // Pi SDK 초기화
-  await window.Pi.init({ appId: "me2verse-1" });
+  try {
+    const initTimeout = 10000; // 최대 10초 대기
+    const initPromise = window.Pi.init({ appId: "me2verse-1", sandbox: true });
+    
+    const timer = new Promise((_, reject) => setTimeout(() => reject("Pi SDK 초기화 시간 초과"), initTimeout));
+    await Promise.race([initPromise, timer]);
 
-  // 로그인
-  const user = await window.Pi.login();
-  if (user) {
-    console.log("로그인 성공:", user);
-    document.getElementById('status').innerText = `로그인 성공: ${user.username}`;
-  } else {
-    console.log("로그인 실패");
-    document.getElementById('status').innerText = "로그인 실패";
+    const user = await window.Pi.login();
+    if (user) {
+      document.getElementById('status').innerText = `로그인 성공: ${user.username}`;
+    } else {
+      document.getElementById('status').innerText = "로그인 실패";
+    }
+  } catch (err) {
+    console.error("Pi SDK 초기화 오류:", err);
+    document.getElementById('status').innerText = `Pi SDK 초기화 실패: ${err}`;
   }
 });
