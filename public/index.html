@@ -1,36 +1,32 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>me2verse-1 Pi 결제 테스트</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Pi SDK (Sandbox 테스트용) -->
-    <script src="https://sandbox.minepi.com/pi.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pi Network 로그인 & 결제 테스트</title>
+  <link rel="stylesheet" href="style.css" />
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-50 flex flex-col items-center justify-center min-h-screen p-6">
-    <h1 class="text-2xl font-bold mb-6">me2verse-1 Pi Network 결제 데모</h1>
-
-    <!-- 로그인 버튼 -->
-    <button id="loginBtn" 
-        class="mb-4 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-        Pi Network 로그인
-    </button>
-
-    <!-- 결제 버튼 (처음에는 비활성화) -->
-    <button id="payBtn" disabled
-        class="mb-4 px-6 py-3 bg-gray-400 text-white rounded-lg opacity-50 cursor-not-allowed">
-        결제 요청
-    </button>
-
-    <!-- 상태 표시 영역 -->
-    <div id="status" 
-        class="bg-gray-100 text-gray-700 p-4 rounded-lg text-center font-medium w-full max-w-md">
-        상태 메시지가 여기에 표시됩니다.
+<body class="bg-gray-100 flex items-center justify-center min-h-screen font-inter">
+  <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-md text-center">
+    <h1 class="text-3xl font-bold text-gray-800 mb-6">Pi Network 로그인 & 결제 테스트</h1>
+    
+    <div class="space-y-4">
+      <button id="loginBtn" class="w-full py-3 px-6 bg-green-500 hover:bg-green-600 text-white font-bold rounded-lg transition duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed shadow-md">
+        Pi 로그인
+      </button>
+      
+      <button id="paymentBtn" class="w-full py-3 px-6 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-lg transition duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed shadow-md" disabled>
+        테스트 Pi 결제
+      </button>
     </div>
 
-    <!-- JavaScript 로직 -->
-    <script src="app.js"></script>
+    <div id="statusLog" class="mt-8 p-4 bg-gray-200 rounded-lg text-left text-sm text-gray-700 whitespace-pre-wrap">
+      상태 로그: 초기화 대기 중...
+    </div>
+  </div>
+
+  <script src="app.js"></script>
 </body>
 </html>
