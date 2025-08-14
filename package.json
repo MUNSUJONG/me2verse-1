@@ -2,11 +2,17 @@
   "name": "me2verse-1",
   "version": "1.0.0",
   "description": "Pi Network test app",
+  "main": "backend/index.js",
   "scripts": {
     "build": "echo 'No build required'",
     "start": "node backend/index.js"
   },
   "dependencies": {
-    "express": "^4.18.2"
+    "express": "^4.18.2",
+    "dotenv": "^16.3.1"
+  },
+  "engines": {
+    "node": "22.16.0"
   }
 }
+
