@@ -1,32 +1,19 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Pi Network 로그인 & 결제 테스트</title>
-  <link rel="stylesheet" href="style.css" />
-  <!-- Tailwind CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
+  <meta charset="UTF-8">
+  <title>Me2Verse-1 결제 테스트</title>
+  <link rel="stylesheet" href="style.css">
 </head>
-<body class="bg-gray-100 flex items-center justify-center min-h-screen font-inter">
-  <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-md text-center">
-    <h1 class="text-3xl font-bold text-gray-800 mb-6">Pi Network 로그인 & 결제 테스트</h1>
-    
-    <div class="space-y-4">
-      <button id="loginBtn" class="w-full py-3 px-6 bg-green-500 hover:bg-green-600 text-white font-bold rounded-lg transition duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed shadow-md">
-        Pi 로그인
-      </button>
-      
-      <button id="paymentBtn" class="w-full py-3 px-6 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-lg transition duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed shadow-md" disabled>
-        테스트 Pi 결제
-      </button>
-    </div>
+<body>
+  <h1>Me2Verse-1 결제 테스트</h1>
+  <div id="status">서버 상태 확인 중...</div>
+  <button id="loginBtn">로그인</button>
+  <button id="payBtn">결제하기</button>
 
-    <div id="statusLog" class="mt-8 p-4 bg-gray-200 rounded-lg text-left text-sm text-gray-700 whitespace-pre-wrap">
-      상태 로그: 초기화 대기 중...
-    </div>
-  </div>
-
+  <!-- Pi SDK 먼저 로드 -->
+  <script src="https://sandbox.minepi.com/pi.js"></script>
+  <!-- 앱 JS 로드 -->
   <script src="app.js"></script>
 </body>
 </html>
