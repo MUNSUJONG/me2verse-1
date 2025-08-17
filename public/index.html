@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MeVerse Pi</title>
+  <title>MeVerse-1 Pi</title>
   <script src="https://sandbox.minepi.com/pi-sdk.js"></script>
 </head>
 <body>
@@ -17,10 +17,9 @@
 
     const statusDiv = document.getElementById("status");
 
-    // 1. 자동 로그인
+    // 자동 로그인
     (async function autoLogin() {
       try {
-        // 서버에서 발급한 OAuth/세션 토큰으로 인증
         const scopes = ['username','payments'];
         const auth = await Pi.authenticate(scopes);
         statusDiv.innerText = "자동 로그인 성공: " + auth.user.username;
@@ -29,7 +28,7 @@
       }
     })();
 
-    // 2. 결제 버튼
+    // 결제
     document.getElementById("pi-pay").addEventListener("click", async () => {
       try {
         const payment = await Pi.createPayment({
@@ -50,7 +49,6 @@
             statusDiv.innerText = "결제 에러: " + err;
           }
         });
-
         console.log("결제 객체:", payment);
       } catch (err) {
         statusDiv.innerText = "결제 실패: " + err;
