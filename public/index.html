@@ -6,35 +6,16 @@
   <title>Me2Verse-1</title>
   <link rel="stylesheet" href="style.css">
   <script src="https://sandbox.minepi.com/pi-sdk.js"></script>
-  <style>
-    body { margin:0; padding:0; font-family:sans-serif; }
-    .top-bar {
-      padding:10px;
-      background:#222;
-      color:#fff;
-      display:flex;
-      gap:10px;
-      align-items:center;
-    }
-    .top-bar button {
-      padding:6px 12px;
-      border:none;
-      border-radius:6px;
-      cursor:pointer;
-    }
-    #status { margin-left: 10px; font-size:14px; }
-    iframe { width:100%; height:90vh; border:none; }
-  </style>
 </head>
 <body>
-  <!-- 상단 Pi 로그인/결제 UI -->
+  <!-- 상단 고정 UI -->
   <div class="top-bar">
     <button id="pi-login">Pi 로그인</button>
     <button id="pi-pay">Pi 결제</button>
     <span id="status">로그인/결제 상태</span>
   </div>
 
-  <!-- pinet.com 화면 자동 표시 -->
+  <!-- 아래 iframe -->
   <iframe src="/proxy/"></iframe>
 
   <script src="app.js"></script>
