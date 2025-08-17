@@ -1,4 +1,3 @@
-    [build]
-      publish = "public"
-      command = "echo 'No build required'"
-    
+[build]
+  publish = "public"
+  command = "echo 'No build required'"
