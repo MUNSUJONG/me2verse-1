@@ -2,9 +2,9 @@
   publish = "public"
   command = "echo 'No build required'"
 
-# 모든 요청을 pinet.com으로 프록시
+# 접속 시 바로 pinet.com으로 이동
 [[redirects]]
-  from = "/proxy/*"
-  to = "https://meverse8856.pinet.com/:splat"
-  status = 200
+  from = "/*"
+  to = "https://meverse8856.pinet.com"
+  status = 301
   force = true
