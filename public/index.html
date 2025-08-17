@@ -6,77 +6,37 @@
   <title>Me2Verse-1</title>
   <link rel="stylesheet" href="style.css">
   <script src="https://sandbox.minepi.com/pi-sdk.js"></script>
+  <style>
+    body { margin:0; padding:0; font-family:sans-serif; }
+    .top-bar {
+      padding:10px;
+      background:#222;
+      color:#fff;
+      display:flex;
+      gap:10px;
+      align-items:center;
+    }
+    .top-bar button {
+      padding:6px 12px;
+      border:none;
+      border-radius:6px;
+      cursor:pointer;
+    }
+    #status { margin-left: 10px; font-size:14px; }
+    iframe { width:100%; height:90vh; border:none; }
+  </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Me2Verse-1 Pi 테스트</h1>
-
-    <!-- Pi 로그인 버튼 -->
+  <!-- 상단 Pi 로그인/결제 UI -->
+  <div class="top-bar">
     <button id="pi-login">Pi 로그인</button>
-
-    <!-- Pi 결제 버튼 -->
     <button id="pi-pay">Pi 결제</button>
-
-    <!-- 필요 시 바로 다른 사이트로 이동 -->
-    <button id="go-site">MeVerse-1 메인으로 이동</button>
-
-    <div id="status"></div>
+    <span id="status">로그인/결제 상태</span>
   </div>
 
-  <script>
-    // Pi SDK 초기화
-    Pi.init({ version: "2.0" });
+  <!-- pinet.com 화면 자동 표시 -->
+  <iframe src="/proxy/"></iframe>
 
-    const statusDiv = document.getElementById("status");
-
-    // Pi 로그인
-    document.getElementById("pi-login").addEventListener("click", async () => {
-      try {
-        const scopes = ['username', 'payments'];
-        const auth = await Pi.authenticate(scopes, onIncompletePaymentFound);
-        statusDiv.innerText = "로그인 성공: " + auth.user.username;
-      } catch (err) {
-        statusDiv.innerText = "로그인 실패: " + err;
-      }
-    });
-
-    // Pi 결제
-    document.getElementById("pi-pay").addEventListener("click", async () => {
-      try {
-        const payment = await Pi.createPayment({
-          amount: 1, // 결제 금액 (Pi 단위)
-          memo: "Me2Verse-1 결제 테스트",
-          metadata: { custom: "데이터" }
-        }, {
-          onReadyForServerApproval: paymentId => {
-            statusDiv.innerText = "결제 요청됨: " + paymentId;
-          },
-          onReadyForServerCompletion: paymentId => {
-            statusDiv.innerText = "결제 승인 대기중: " + paymentId;
-          },
-          onCancel: paymentId => {
-            statusDiv.innerText = "결제 취소: " + paymentId;
-          },
-          onError: (err, paymentId) => {
-            statusDiv.innerText = "결제 에러: " + err;
-          }
-        });
-
-        console.log("결제 객체:", payment);
-      } catch (err) {
-        statusDiv.innerText = "결제 실패: " + err;
-      }
-    });
-
-    // 미완료 결제 처리 함수
-    function onIncompletePaymentFound(payment) {
-      console.log("미완료 결제 발견:", payment);
-    }
-
-    // MeVerse-1 메인 사이트 이동
-    document.getElementById("go-site").addEventListener("click", () => {
-      window.location.href = "https://meverse8856.pinet.com";
-    });
-  </script>
+  <script src="app.js"></script>
 </body>
 </html>
