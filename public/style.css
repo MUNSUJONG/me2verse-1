@@ -12,6 +12,26 @@ header {
   text-align: center;
 }
 
+nav {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin: 1rem 0;
+}
+
+nav button {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 6px;
+  background-color: #4a90e2;
+  color: white;
+  cursor: pointer;
+}
+
+nav button:hover {
+  background-color: #357ab8;
+}
+
 main {
   padding: 2rem;
   display: grid;
@@ -33,7 +53,7 @@ main {
   margin-bottom: 0.5rem;
 }
 
-button {
+button.back-btn {
   margin-top: 1rem;
   padding: 0.5rem 1rem;
   border: none;
@@ -43,6 +63,6 @@ button {
   cursor: pointer;
 }
 
-button:hover {
+button.back-btn:hover {
   background-color: #e65550;
 }
