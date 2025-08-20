@@ -1,46 +1,18 @@
-/* 전체 화면, 상단 UI + iframe 레이아웃 */
-html, body {
+body {
   margin: 0;
-  padding: 0;
-  height: 100%;
-  overflow: hidden;
-  font-family: sans-serif;
+  font-family: 'Arial', sans-serif;
+  background-color: #f0f2f5;
+  color: #333;
 }
 
-.top-bar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 50px;       /* 고정 높이 */
-  background: #222;
-  color: #fff;
-  display: flex;
-  align-items: center;
-  padding: 0 10px;
-  gap: 10px;
-  z-index: 1000;
+header {
+  background-color: #4a90e2;
+  color: white;
+  padding: 1rem;
+  text-align: center;
+  font-size: 1.5rem;
 }
 
-.top-bar button {
-  padding: 6px 12px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  background: #4CAF50;
-  color: #fff;
-  font-weight: bold;
-}
-
-#status {
-  font-size: 14px;
-}
-
-iframe {
-  position: absolute;
-  top: 50px;      /* 상단 바 높이만큼 띄우기 */
-  left: 0;
-  width: 100%;
-  bottom: 0;
-  border: none;
+main {
+  padding: 2rem;
 }
