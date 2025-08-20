@@ -2,9 +2,9 @@
   publish = "public"
   command = "echo 'No build required'"
 
-# 접속 시 me2verse-1.netlify.app으로 이동
-[[redirects]]
-  from = "/*"
-  to = "https://me2verse-1.netlify.app"
-  status = 301
-  force = true
+# 내부 배포용은 리디렉션 제거
+# [[redirects]]
+#   from = "/*"
+#   to = "https://me2verse-1.netlify.app"
+#   status = 301
+#   force = true
