@@ -2,7 +2,7 @@
 export function renderLove(root){
   const loves=[
     {name:"연애",desc:"가상 연애 체험",img:"./images/love.jpg",fee:"0.05 Pi",usage:"연애 체험 5분",nft:true},
-    {name:"결혼",desc:"메타버스 결혼 체험",img:"./images/wedding.jpg",fee:"0.1 Pi",usage:"결혼식 체험 10분",nft:true}
+    {name:"결혼",desc:"메타버스 결혼식 체험",img:"./images/wedding.jpg",fee:"0.1 Pi",usage:"결혼식 체험 10분",nft:true}
   ];
   renderCards(root,loves,renderLove);
 }
