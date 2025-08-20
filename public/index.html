@@ -19,12 +19,13 @@ button.back-btn { margin-top:1rem; padding:.5rem 1rem; border:none; border-radiu
 button.back-btn { background:#ff6f61; }
 button.back-btn:hover { background:#e65550; }
 .simulation { margin-top:1rem; padding:0.5rem; background:#f0f0f0; border-radius:6px; font-weight:bold; }
+.choice-btn { margin:0.3rem; padding:0.3rem 0.6rem; border-radius:6px; border:none; cursor:pointer; }
 </style>
 </head>
 <body>
 <header>
 <h1>🌟 Me2verse-1</h1>
-<p>메타버스 체험형 SPA</p>
+<p>AI 디렉터와 함께하는 몰입형 메타버스</p>
 </header>
 
 <nav>
@@ -36,7 +37,6 @@ button.back-btn:hover { background:#e65550; }
 <main id="root"></main>
 
 <script type="module">
-
 // -------------------- 모듈 데이터 --------------------
 const modules = {
   hobby:[
@@ -57,9 +57,9 @@ const modules = {
 };
 
 // -------------------- 렌더 함수 --------------------
-const root = document.getElementById("root");
+const root=document.getElementById("root");
 
-function renderCards(items, moduleName){
+function renderCards(items,moduleName){
   root.innerHTML="";
   items.forEach(item=>{
     const card=document.createElement("div");
@@ -81,7 +81,7 @@ function renderDetail(item,moduleName){
     <p>사용료: ${item.fee}</p>
     <p>사용방법: ${item.usage}</p>
     <p>NFT 필요: ${item.nft?"예":"아니오"}</p>
-    <div class="simulation" id="simulation">체험 준비 중...</div>
+    <div class="simulation" id="simulation">AI 디렉터 준비 중...</div>
   `;
   const backBtn=document.createElement("button");
   backBtn.className="back-btn";
@@ -89,45 +89,75 @@ function renderDetail(item,moduleName){
   backBtn.addEventListener("click",()=>renderCards(modules[moduleName],moduleName));
   d.appendChild(backBtn);
   root.appendChild(d);
-  simulateExperience(item);
+
+  // AI 디렉터 호출
+  if(moduleName==="love") aiDirectorLoveSimulation(item);
+  else aiDirectorSimulation(item,moduleName);
 }
 
-// -------------------- 시뮬레이션 --------------------
-function simulateExperience(item){
+// -------------------- AI 디렉터 시뮬레이션 --------------------
+function aiDirectorSimulation(item,moduleName){
   const sim=document.getElementById("simulation");
   if(!sim) return;
-  let progress=0;
-  let intervalTime=300;
-  switch(item.name){
-    // 하비
-    case "자동차":
-      intervalTime=500; break;
-    case "레이싱":
-      intervalTime=400; break;
-    case "낚시":
-      intervalTime=300; break;
-    case "캠핑":
-      intervalTime=400; break;
-    // 컬쳐
-    case "음악":
-      intervalTime=400; break;
-    case "영화":
-      intervalTime=500; break;
-    case "전시":
-      intervalTime=400; break;
-    // 러브
-    case "연애":
-      intervalTime=400; break;
-    case "결혼":
-      intervalTime=500; break;
-    default:
-      intervalTime=300;
+  let step=0;
+  const steps=[];
+  if(moduleName==="hobby"){
+    steps.push(`AI: ${item.name} 체험 준비 중...`);
+    steps.push(`AI: 난이도 조정 완료!`);
+    steps.push(`AI: 몰입형 체험 시작!`);
+    steps.push(`AI: ${item.name} 체험 완료! NFT: ${item.nft?"예":"아니오"}`);
+  } else if(moduleName==="culture"){
+    steps.push(`AI: ${item.name} 환경 구성 중...`);
+    steps.push(`AI: 몰입도 최적화`);
+    steps.push(`AI: 체험 진행 중...`);
+    steps.push(`AI: ${item.name} 체험 완료! NFT: ${item.nft?"예":"아니오"}`);
   }
-  const intv=setInterval(()=>{
-    progress+=10;
-    sim.textContent=`${item.name} 체험 중... ${progress}%`;
-    if(progress>=100){clearInterval(intv); sim.textContent=`${item.name} 완료! NFT: ${item.nft?"예":"아니오"}`;}
-  },intervalTime);
+  const interval=setInterval(()=>{
+    if(step>=steps.length){clearInterval(interval); return;}
+    sim.textContent=steps[step];
+    step++;
+  },800);
+}
+
+// -------------------- 미투러브 확장 --------------------
+function aiDirectorLoveSimulation(item){
+  const sim=document.getElementById("simulation");
+  if(!sim) return;
+  let step=0;
+  let intimacy=50;
+  sim.textContent="AI 디렉터: 연애 시뮬레이션 시작...";
+
+  function nextStep(){
+    switch(step){
+      case 0:
+        sim.textContent="AI: 데이트 장소를 선택하세요!";
+        ["카페","공원","영화관"].forEach(place=>{
+          const btn=document.createElement("button");
+          btn.textContent=place;
+          btn.className="choice-btn";
+          btn.onclick=()=>{
+            intimacy += place==="카페"?5: place==="공원"?3:2;
+            sim.textContent=`데이트 선택: ${place} (친밀도 ${intimacy})`;
+            step++; setTimeout(nextStep,1000);
+          };
+          sim.appendChild(btn);
+        });
+        break;
+      case 1:
+        sim.innerHTML="AI: 특별 이벤트 발생! 서로 대화를 진행 중...";
+        intimacy += Math.floor(Math.random()*10);
+        step++; setTimeout(nextStep,1500);
+        break;
+      case 2:
+        if(intimacy>=60){
+          sim.textContent=`친밀도 ${intimacy} → 결혼 이벤트 발생! NFT:${item.nft?"예":"아니오"}`;
+        } else {
+          sim.textContent=`친밀도 ${intimacy} → 추가 연애 체험 필요`;
+        }
+        break;
+    }
+  }
+  nextStep();
 }
 
 // -------------------- 네비 버튼 --------------------
@@ -135,9 +165,7 @@ function showModule(moduleName){
   renderCards(modules[moduleName],moduleName);
 }
 
-// 초기 화면: 미투하비
 showModule("hobby");
-
 document.getElementById("btnHobby").addEventListener("click",()=>showModule("hobby"));
 document.getElementById("btnCulture").addEventListener("click",()=>showModule("culture"));
 document.getElementById("btnLove").addEventListener("click",()=>showModule("love"));
