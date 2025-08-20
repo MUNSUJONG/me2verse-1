@@ -6,26 +6,27 @@ export function renderHobby(root) {
     { name: "캠핑", description: "메타버스 캠핑 체험", img: "./images/camping.jpg" }
   ];
 
-  root.innerHTML = ""; // 기존 내용 초기화
+  renderCards(root, hobbies, renderHobby);
+}
 
-  hobbies.forEach(hobby => {
+function renderCards(root, items, backFunc) {
+  root.innerHTML = "";
+
+  items.forEach(item => {
     const card = document.createElement("div");
     card.className = "card";
 
     const img = document.createElement("img");
-    img.src = hobby.img;
-    img.alt = hobby.name;
+    img.src = item.img;
+    img.alt = item.name;
 
     const title = document.createElement("h2");
-    title.textContent = hobby.name;
+    title.textContent = item.name;
 
     const desc = document.createElement("p");
-    desc.textContent = hobby.description;
+    desc.textContent = item.description;
 
-    // 카드 클릭 시 상세 화면
-    card.addEventListener("click", () => {
-      renderDetail(root, hobby);
-    });
+    card.addEventListener("click", () => renderDetail(root, item, backFunc));
 
     card.appendChild(img);
     card.appendChild(title);
@@ -34,26 +35,26 @@ export function renderHobby(root) {
   });
 }
 
-// 상세 화면 렌더링
-function renderDetail(root, hobby) {
-  root.innerHTML = ""; // 초기화
+function renderDetail(root, item, backFunc) {
+  root.innerHTML = "";
 
   const container = document.createElement("div");
   container.className = "detail";
 
   const img = document.createElement("img");
-  img.src = hobby.img;
-  img.alt = hobby.name;
+  img.src = item.img;
+  img.alt = item.name;
 
   const title = document.createElement("h2");
-  title.textContent = hobby.name;
+  title.textContent = item.name;
 
   const desc = document.createElement("p");
-  desc.textContent = hobby.description + " (상세 설명 추가 가능)";
+  desc.textContent = item.description + " (상세 설명 추가 가능)";
 
   const backBtn = document.createElement("button");
+  backBtn.className = "back-btn";
   backBtn.textContent = "← 돌아가기";
-  backBtn.addEventListener("click", () => renderHobby(root));
+  backBtn.addEventListener("click", () => backFunc(root));
 
   container.appendChild(img);
   container.appendChild(title);
