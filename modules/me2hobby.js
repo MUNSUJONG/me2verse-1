@@ -49,7 +49,7 @@ function renderDetail(root, item, backFunc) {
   title.textContent = item.name;
 
   const desc = document.createElement("p");
-  desc.textContent = item.description + " (상세 설명 추가 가능)";
+  desc.textContent = item.description + " (상세 설명 가능)";
 
   const backBtn = document.createElement("button");
   backBtn.className = "back-btn";
