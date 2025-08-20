@@ -3,57 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MeVerse-1 Pi</title>
-  <script src="https://sandbox.minepi.com/pi-sdk.js"></script>
+  <title>Me2verse-1</title>
+  <!-- 기존 절대경로 제거, 상대경로로 변경 -->
+  <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
-  <h1>MeVerse-1 Pi 결제</h1>
-  <button id="pi-pay">Pi 결제</button>
-  <div id="status">로그인/결제 상태</div>
+  <div id="root"></div>
 
-  <script>
-    // Pi SDK 초기화
-    Pi.init({ version: "2.0" });
-
-    const statusDiv = document.getElementById("status");
-
-    // 자동 로그인
-    (async function autoLogin() {
-      try {
-        const scopes = ['username','payments'];
-        const auth = await Pi.authenticate(scopes);
-        statusDiv.innerText = "자동 로그인 성공: " + auth.user.username;
-      } catch (err) {
-        statusDiv.innerText = "자동 로그인 실패: " + err;
-      }
-    })();
-
-    // 결제
-    document.getElementById("pi-pay").addEventListener("click", async () => {
-      try {
-        const payment = await Pi.createPayment({
-          amount: 1,
-          memo: "Me2Verse-1 결제 테스트",
-          metadata: { custom: "데이터" }
-        }, {
-          onReadyForServerApproval: paymentId => {
-            statusDiv.innerText = "결제 요청됨: " + paymentId;
-          },
-          onReadyForServerCompletion: paymentId => {
-            statusDiv.innerText = "결제 승인 대기중: " + paymentId;
-          },
-          onCancel: paymentId => {
-            statusDiv.innerText = "결제 취소: " + paymentId;
-          },
-          onError: (err, paymentId) => {
-            statusDiv.innerText = "결제 에러: " + err;
-          }
-        });
-        console.log("결제 객체:", payment);
-      } catch (err) {
-        statusDiv.innerText = "결제 실패: " + err;
-      }
-    });
-  </script>
+  <!-- app.js도 상대경로로 연결 -->
+  <script src="./app.js"></script>
 </body>
 </html>
