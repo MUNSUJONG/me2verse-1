@@ -4,7 +4,20 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Me2verse-1</title>
-<link rel="stylesheet" href="./styles.css">
+<style>
+body { margin:0; font-family:Arial,sans-serif; background:#eef2f5; color:#333; }
+header { background:#ff6f61; color:white; padding:1.5rem; text-align:center; }
+nav { display:flex; justify-content:center; gap:1rem; margin:1rem 0; }
+nav button { padding:.5rem 1rem; border:none; border-radius:6px; background:#4a90e2; color:white; cursor:pointer; }
+nav button:hover { background:#357ab8; }
+main { padding:2rem; display:grid; grid-template-columns:repeat(auto-fit, minmax(250px,1fr)); gap:1.5rem; }
+.card, .detail { background:white; border-radius:12px; padding:1rem; box-shadow:0 4px 6px rgba(0,0,0,.1); text-align:center; transition: transform .2s; }
+.card:hover { transform: scale(1.03); cursor:pointer; }
+.card img, .detail img { max-width:100%; border-radius:8px; margin-bottom:.5rem; }
+button.back-btn { margin-top:1rem; padding:.5rem 1rem; border:none; background:#ff6f61; color:white; border-radius:6px; cursor:pointer; }
+button.back-btn:hover { background:#e65550; }
+.simulation { margin-top:1rem; padding:0.5rem; background:#f0f0f0; border-radius:6px; font-weight:bold; }
+</style>
 </head>
 <body>
 <header>
@@ -20,6 +33,160 @@
 
 <main id="root"></main>
 
-<script type="module" src="./app.js"></script>
-</body>
-</html>
+<script type="module">
+
+// -------------------- 모듈 데이터 --------------------
+const modules = {
+  hobby:[
+    {name:"자동차",desc:"메타버스 자동차 드라이브",img:"./images/car.jpg",fee:"0.05 Pi",usage:"운전 체험 5분",nft:true},
+    {name:"레이싱",desc:"친구들과 레이싱 즐기기",img:"./images/racing.jpg",fee:"0.08 Pi",usage:"레이싱 3분",nft:true},
+    {name:"낚시",desc:"가상 호수에서 낚시 체험",img:"./images/fishing.jpg",fee:"0.03 Pi",usage:"낚시 5분",nft:false},
+    {name:"캠핑",desc:"메타버스 캠핑 체험",img:"./images/camping.jpg",fee:"0.02 Pi",usage:"캠핑 10분",nft:false}
+  ],
+  culture:[
+    {name:"음악",desc:"메타버스 콘서트 관람",img:"./images/music.jpg",fee:"0.04 Pi",usage:"콘서트 5분",nft:true},
+    {name:"영화",desc:"가상 영화관 체험",img:"./images/movie.jpg",fee:"0.03 Pi",usage:"영화 10분",nft:false},
+    {name:"전시",desc:"가상 전시회 관람",img:"./images/exhibition.jpg",fee:"0.02 Pi",usage:"전시 7분",nft:false}
+  ],
+  love:[
+    {name:"연애",desc:"가상 연애 체험",img:"./images/love.jpg",fee:"0.05 Pi",usage:"연애 체험 5분",nft:true},
+    {name:"결혼",desc:"메타버스 결혼식 체험",img:"./images/wedding.jpg",fee:"0.1 Pi",usage:"결혼식 체험 10분",nft:true}
+  ]
+};
+
+// -------------------- 렌더 함수 --------------------
+const root = document.getElementById("root");
+
+function renderCards(items, backFunc){
+  root.innerHTML="";
+  items.forEach(item=>{
+    const card=document.createElement("div");
+    card.className="card";
+    card.innerHTML=`<img src="${item.img}" alt="${item.name}"><h2>${item.name}</h2><p>${item.desc}</p><p>사용료: ${item.fee}</p>`;
+    card.addEventListener("click",()=>renderDetail(item, backFunc));
+    root.appendChild(card);
+  });
+}
+
+function renderDetail(item, backFunc){
+  root.innerHTML="";
+  const d=document.createElement("div");
+  d.className="detail";
+  d.innerHTML=`
+    <img src="${item.img}" alt="${item.name}">
+    <h2>${item.name}</h2>
+    <p>${item.desc}</p>
+    <p>사용료: ${item.fee}</p>
+    <p>사용방법: ${item.usage}</p>
+    <p>NFT 필요: ${item.nft?"예":"아니오"}</p>
+    <div class="simulation" id="simulation">체험 준비 중...</div>
+  `;
+  const backBtn=document.createElement("button");
+  backBtn.className="back-btn";
+  backBtn.textContent="← 돌아가기";
+  backBtn.addEventListener("click",()=>backFunc());
+  d.appendChild(backBtn);
+  root.appendChild(d);
+
+  simulateExperience(item);
+}
+
+// -------------------- 인터랙티브 시뮬레이션 --------------------
+function simulateExperience(item){
+  const sim=document.getElementById("simulation");
+  switch(item.name){
+    // --- 하비 인터랙션 ---
+    case "자동차":
+      sim.textContent="🚗 자동차 출발!";
+      let prog1=0;
+      const int1=setInterval(()=>{
+        prog1+=20;
+        sim.textContent=`🚗 자동차 주행 중... ${prog1}%`;
+        if(prog1>=100){clearInterval(int1); sim.textContent=`🚗 드라이브 완료! NFT 소유: ${item.nft?"가능":"불가"}`;}
+      },500);
+      break;
+    case "레이싱":
+      sim.textContent="🏎️ 레이싱 시작!";
+      setTimeout(()=>{
+        const score=Math.floor(Math.random()*100)+1;
+        sim.textContent=`🏎️ 레이싱 완료! 점수: ${score} / NFT 소유: ${item.nft?"가능":"불가"}`;
+      },2000);
+      break;
+    case "낚시":
+      sim.textContent="🎣 낚시 시작!";
+      setTimeout(()=>{
+        const fish=Math.floor(Math.random()*3)+1;
+        sim.textContent=`🎣 낚시 완료! 잡은 물고기: ${fish} / NFT 소유: ${item.nft?"가능":"불가"}`;
+      },2000);
+      break;
+    case "캠핑":
+      sim.textContent="🏕️ 캠핑 준비 중...";
+      setTimeout(()=>{sim.textContent="🔥 모닥불 점화!";},1000);
+      setTimeout(()=>{sim.textContent=`🏕️ 캠핑 완료! NFT 소유: ${item.nft?"가능":"불가"}`;},3000);
+      break;
+
+    // --- 컬쳐 인터랙션 ---
+    case "음악":
+      sim.textContent="🎵 콘서트 시작!";
+      let progMusic=0;
+      const intMusic=setInterval(()=>{
+        progMusic+=15;
+        sim.textContent=`🎵 음악 체험 중... ${progMusic}%`;
+        if(progMusic>=100){clearInterval(intMusic); sim.textContent=`🎵 콘서트 완료! NFT 소유: ${item.nft?"가능":"불가"}`;}
+      },400);
+      break;
+    case "영화":
+      sim.textContent="🎬 영화 상영 중...";
+      let progMovie=0;
+      const intMovie=setInterval(()=>{
+        progMovie+=10;
+        sim.textContent=`🎬 영화 체험 중... ${progMovie}%`;
+        if(progMovie>=100){clearInterval(intMovie); sim.textContent=`🎬 영화 관람 완료! NFT 소유: ${item.nft?"가능":"불가"}`;}
+      },500);
+      break;
+    case "전시":
+      sim.textContent="🖼️ 전시 관람 중...";
+      let progExh=0;
+      const intExh=setInterval(()=>{
+        progExh+=12;
+        sim.textContent=`🖼️ 전시 체험 중... ${progExh}%`;
+        if(progExh>=100){clearInterval(intExh); sim.textContent=`🖼️ 전시 완료! NFT 소유: ${item.nft?"가능":"불가"}`;}
+      },400);
+      break;
+
+    // --- 러브 인터랙션 ---
+    case "연애":
+      sim.textContent="💖 연애 체험 시작!";
+      let progLove=0;
+      const intLove=setInterval(()=>{
+        progLove+=20;
+        sim.textContent=`💖 연애 체험 중... ${progLove}%`;
+        if(progLove>=100){clearInterval(intLove); sim.textContent=`💖 연애 완료! NFT 소유: ${item.nft?"가능":"불가"}`;}
+      },400);
+      break;
+    case "결혼":
+      sim.textContent="💍 결혼식 진행 중...";
+      let progWed=0;
+      const intWed=setInterval(()=>{
+        progWed+=15;
+        sim.textContent=`💍 결혼 체험 중... ${progWed}%`;
+        if(progWed>=100){clearInterval(intWed); sim.textContent=`💍 결혼 완료! NFT 소유: ${item.nft?"가능":"불가"}`;}
+      },500);
+      break;
+
+    default:
+      sim.textContent="체험 준비 중...";
+  }
+}
+
+// -------------------- 네비 버튼 --------------------
+function showModule(moduleName){
+  renderCards(modules[moduleName], ()=>showModule(moduleName));
+}
+
+// 초기 화면: 미투하비
+showModule("hobby");
+
+document.getElementById("btnHobby").addEventListener("click",()=>showModule("hobby"));
+document.getElementById("btnCulture").addEventListener("click",()=>showModule("culture"));
+document.getElementById("btnLove").addEventListener
