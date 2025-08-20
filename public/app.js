@@ -1,6 +1,8 @@
-import { renderHobby } from "../modules/me2hobby.js";
-import { renderCulture } from "../modules/me2culture.js";
-import { renderLove } from "../modules/me2love.js";
+// app.js (퍼블릭 안 모듈 기준)
+
+import { renderHobby } from "./me2hobby.js";
+import { renderCulture } from "./me2culture.js";
+import { renderLove } from "./me2love.js";
 
 const root = document.getElementById("root");
 
