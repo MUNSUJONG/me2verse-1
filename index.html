@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Me2verse – WebXR VR Prototype</title>
+  <style>
+    html, body { margin:0; height:100%; overflow:hidden; background:#0b1020; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans KR", Arial; }
+    #ui { position: fixed; top: 12px; left: 12px; z-index: 10; color: #e8ecff; background: rgba(11,16,32,.6); border: 1px solid rgba(255,255,255,.08); padding: 10px 12px; border-radius: 12px; backdrop-filter: blur(6px); }
+    #legend { font-size: 12px; line-height: 1.4; opacity: .85; }
+    a#repo { color:#9cc2ff; text-decoration:none; }
+    .tag { display:inline-block; padding:2px 8px; font-size:11px; border-radius:999px; background:#18213d; margin-right:6px; }
+    canvas { display:block; }
+  </style>
+</head>
+<body>
+  <div id="ui">
+    <div style="font-weight:700; font-size:14px; margin-bottom:6px;">Me2verse – WebXR Prototype</div>
+    <div id="legend">
+      • 데스크톱: 마우스로 오브젝트를 클릭<br/>
+      • VR 기기: 컨트롤러 트리거로 선택<br/>
+      • 바닥의 <b>Teleport Pad</b>를 선택하면 이동합니다
+    </div>
+    <div style="margin-top:6px;">
+      <span class="tag">Love</span>
+      <span class="tag">Culture</span>
+      <span class="tag">Enter</span>
+      <span class="tag">Space</span>
+      <span class="tag">Ocean</span>
+      <span class="tag">Hobby</span>
+      <span class="tag">Travel</span>
+      <span class="tag">Learn</span>
+    </div>
+  </div>
+
+  <script type="module">
+    import * as THREE from 'https://unpkg.com/three@0.158.0/build/three.module.js';
+    import { OrbitControls } from 'https://unpkg.com/three@0.158.0/examples/jsm/controls/OrbitControls.js';
+    import { VRButton } from 'https://unpkg.com/three@0.158.0/examples/jsm/webxr/VRButton.js';
+
+    // ----- Renderer & Scene -----
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    renderer.setSize(innerWidth, innerHeight);
+    renderer.xr.enabled = true;
+    document.body.appendChild(renderer.domElement);
+    document.body.appendChild(VRButton.createButton(renderer));
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x0b1020);
+
+    const camera = new THREE.PerspectiveCamera(70, innerWidth/innerHeight, 0.1, 100);
+    camera.position.set(0, 1.6, 3);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.target.set(0,1.4,0);
+    controls.enableDamping = true;
+
+    // Player rig (for teleport)
+    const player = new THREE.Group();
+    player.add(camera);
+    scene.add(player);
+
+    // ----- Lights -----
+    const hemi = new THREE.HemisphereLight(0xbfd6ff, 0x1a2140, 0.8);
+    scene.add(hemi);
+    const key = new THREE.DirectionalLight(0xffffff, 0.9);
+    key.position.set(3, 6, 2);
+    key.castShadow = true;
+    scene.add(key);
+
+    // ----- Room / Floor -----
+    const floorGeo = new THREE.CircleGeometry(12, 64);
+    const floorMat = new THREE.MeshStandardMaterial({ color: 0x101a3a, metalness: 0.1, roughness: 0.9 });
+    const floor = new THREE.Mesh(floorGeo, floorMat);
+    floor.rotation.x = -Math.PI/2;
+    floor.receiveShadow = true;
+    scene.add(floor);
+
+    // Subtle grid
+    const grid = new THREE.GridHelper(24, 48, 0x26335c, 0x162042);
+    grid.position.y = 0.002;
+    scene.add(grid);
+
+    // Curved walls (ring segment)
+    const wallGeo = new THREE.RingGeometry(10.8, 11.2, 64, 1, Math.PI*0.2, Math.PI*1.6);
+    const wallMat = new THREE.MeshBasicMaterial({ color: 0x0f1733, side: THREE.DoubleSide, transparent:true, opacity:0.7 });
+    const walls = new THREE.Mesh(wallGeo, wallMat);
+    walls.rotation.x = Math.PI/2;
+    walls.position.y = 2.2;
+    scene.add(walls);
+
+    // ----- Teleport Pads -----
+    const pads = [];
+    const padMat = new THREE.MeshStandardMaterial({ color: 0x3d8bfd, emissive: 0x0f3a88, emissiveIntensity: 0.4, metalness: 0.4, roughness: 0.4 });
+    for (let i=0; i<6; i++) {
+      const geo = new THREE.CylinderGeometry(0.35, 0.35, 0.02, 24);
+      const mesh = new THREE.Mesh(geo, padMat.clone());
+      const angle = i * (Math.PI*2/6);
+      mesh.position.set(Math.cos(angle)*3.5, 0.01, Math.sin(angle)*3.5);
+      mesh.userData.type = 'pad';
+      mesh.userData.label = `Pad #${i+1}`;
+      mesh.castShadow = false; mesh.receiveShadow = true;
+      scene.add(mesh);
+      pads.push(mesh);
+    }
+
+    // ----- Interactive Kiosks (Modules) -----
+    const kiosks = [];
+    const modules = [
+      { name:'Love', color:0xff6b9b, pos:[-3.2, 1.2, -1.6], tip:'감정·관계·행복 코칭으로 이동' },
+      { name:'Culture', color:0xffc857, pos:[-2.0, 1.2, 2.6], tip:'세계 문화·축제 체험으로 이동' },
+      { name:'Enter', color:0x8affc1, pos:[0.0, 1.2, 3.5], tip:'아이돌/영화 제작 스튜디오' },
+      { name:'Space', color:0x7fb0ff, pos:[2.2, 1.2, 2.6], tip:'우주 탐험 시뮬레이터' },
+      { name:'Ocean', color:0x5bd6ff, pos:[3.2, 1.2, -1.2], tip:'심해 & 해양 생태 탐험' },
+      { name:'Learn', color:0xcaa0ff, pos:[0.6, 1.2, -3.4], tip:'언어/법률/지식 학습 허브' },
+    ];
+
+    const kioskGeo = new THREE.BoxGeometry(0.9, 1.0, 0.3);
+    const screenGeo = new THREE.PlaneGeometry(0.8, 0.45);
+
+    const textCanvas = (label, color= '#ffffff')=>{
+      const c = document.createElement('canvas');
+      c.width = 512; c.height = 256;
+      const ctx = c.getContext('2d');
+      ctx.fillStyle = 'rgba(15,23,51,0.85)';
+      ctx.fillRect(0,0,c.width,c.height);
+      ctx.fillStyle = color;
+      ctx.font = 'bold 54px system-ui';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(label, c.width/2, c.height/2);
+      return new THREE.CanvasTexture(c);
+    };
+
+    modules.forEach((m, idx)=>{
+      const body = new THREE.Mesh(
+        kioskGeo,
+        new THREE.MeshStandardMaterial({ color: new THREE.Color(m.color).multiplyScalar(0.4) })
+      );
+      body.position.set(...m.pos);
+      body.castShadow = true; body.receiveShadow = true;
+      body.userData.type = 'kiosk';
+      body.userData.module = m.name;
+      body.userData.tip = m.tip;
+
+      // Screen
+      const screen = new THREE.Mesh(
+        screenGeo,
+        new THREE.MeshBasicMaterial({ map: textCanvas(m.name) })
+      );
+      screen.position.set(0, 0.15, 0.16);
+      body.add(screen);
+
+      scene.add(body);
+      kiosks.push(body);
+    });
+
+    // ----- Marketplace Terminal (Pi Economy demo) -----
+    const term = new THREE.Group();
+    term.position.set(-0.2, 1.0, -1.6);
+
+    const termBase = new THREE.Mesh(new THREE.CylinderGeometry(0.35,0.5,0.2,32), new THREE.MeshStandardMaterial({color:0x1f2d55, metalness:0.6, roughness:0.4}));
+    termBase.position.y = 0.1; term.add(termBase);
+
+    const termScreen = new THREE.Mesh(new THREE.PlaneGeometry(0.8,0.5), new THREE.MeshBasicMaterial({ map: textCanvas('Marketplace') }));
+    termScreen.position.set(0, 0.65, 0);
+    term.add(termScreen);
+
+    term.userData.type = 'market';
+    term.userData.tip = '아이템 매매 & 수수료 시뮬레이터';
+    scene.add(term);
+
+    // ----- HUD Tooltip (3D Sprites) -----
+    const tooltipTex = textCanvas('');
+    const tooltip = new THREE.Sprite(new THREE.SpriteMaterial({ map: tooltipTex, transparent:true, opacity:0.95 }));
+    tooltip.scale.set(1.0, 0.5, 1);
+    tooltip.visible = false;
+    scene.add(tooltip);
+
+    function showTooltip(text, worldPos){
+      const ctx = tooltipTex.image.getContext('2d');
+      ctx.clearRect(0,0,tooltipTex.image.width, tooltipTex.image.height);
+      ctx.fillStyle = 'rgba(20,28,60,0.9)';
+      ctx.fillRect(0,0,tooltipTex.image.width, tooltipTex.image.height);
+      ctx.fillStyle = '#cfe1ff';
+      ctx.font = 'bold 40px system-ui';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(text, tooltipTex.image.width/2, tooltipTex.image.height/2);
+      tooltipTex.needsUpdate = true;
+      tooltip.position.copy(worldPos.clone().add(new THREE.Vector3(0, 0.6, 0)));
+      tooltip.visible = true;
+      clearTimeout(showTooltip._t);
+      showTooltip._t = setTimeout(()=> tooltip.visible=false, 1600);
+    }
+
+    // ----- Raycasting (mouse + controllers) -----
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+    const interactables = [...pads, ...kiosks, term];
+
+    function pick(clientX, clientY){
+      mouse.x = (clientX / innerWidth) * 2 - 1;
+      mouse.y = -(clientY / innerHeight) * 2 + 1;
+      raycaster.setFromCamera(mouse, camera);
+      return raycaster.intersectObjects(interactables, true)[0];
+    }
+
+    addEventListener('click', (e)=>{
+      const hit = pick(e.clientX, e.clientY);
+      if (hit) onHit(hit.object);
+    });
+
+    function onHit(obj){
+      const root = obj.userData.type ? obj : obj.parent; // screen->kiosk body
+      if (!root || !root.userData) return;
+      const { type } = root.userData;
+      if (type === 'pad') {
+        // Teleport
+        const p = root.position.clone();
+        player.position.set(p.x, 0, p.z);
+        showTooltip(root.userData.label + ' 이동', root.position);
+      } else if (type === 'kiosk') {
+        showTooltip(`${root.userData.module}: ${root.userData.tip}`, root.position);
+      } else if (type === 'market') {
+        showTooltip('거래 수수료 2.5% 예시 · NFT 지원 예정', root.position);
+      }
+    }
+
+    // ----- WebXR Controllers -----
+    const controller1 = renderer.xr.getController(0);
+    const controller2 = renderer.xr.getController(1);
+    controller1.addEventListener('selectstart', onSelectStart);
+    controller1.addEventListener('selectend', onSelectEnd);
+    controller2.addEventListener('selectstart', onSelectStart);
+    controller2.addEventListener('selectend', onSelectEnd);
+    scene.add(controller1); scene.add(controller2);
+
+    const controllerGeo = new THREE.RingGeometry(0.02, 0.03, 32);
+    controllerGeo.rotateX(-Math.PI/2);
+    const controllerMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+
+    const reticle1 = new THREE.Mesh(controllerGeo, controllerMat);
+    const reticle2 = new THREE.Mesh(controllerGeo.clone(), controllerMat.clone());
+    reticle1.visible = false; reticle2.visible = false;
+    controller1.add(reticle1); controller2.add(reticle2);
+
+    function onSelectStart(){ this.userData.isSelecting = true; }
+    function onSelectEnd(){ this.userData.isSelecting = false; }
+
+    // XR Raycaster from controller
+    const tempMatrix = new THREE.Matrix4();
+    function xrCast(ctrl){
+      tempMatrix.identity().extractRotation(ctrl.matrixWorld);
+      const rayOrigin = new THREE.Vector3().setFromMatrixPosition(ctrl.matrixWorld);
+      const rayDir = new THREE.Vector3(0,0,-1).applyMatrix4(tempMatrix);
+      raycaster.set(rayOrigin, rayDir);
+      const hit = raycaster.intersectObjects(interactables, true)[0];
+      if (hit) {
+        const target = hit.object.userData.type ? hit.object : hit.object.parent;
+        const ret = ctrl.children[0];
+        ret.visible = true; ret.position.copy(hit.point);
+        if (ctrl.userData.isSelecting) onHit(target);
+      } else {
+        const ret = ctrl.children[0];
+        ret.visible = false;
+      }
+    }
+
+    // ----- Animate -----
+    const clock = new THREE.Clock();
+    function animate(){
+      const t = clock.getElapsedTime();
+      requestAnimationFrame(animate);
+      controls.update();
+
+      // subtle kiosk animation
+      kiosks.forEach((k, i)=>{
+        k.rotation.y = Math.sin(t*0.4 + i)*0.05;
+      });
+
+      // XR raycasts
+      if (renderer.xr.isPresenting) {
+        xrCast(controller1);
+        xrCast(controller2);
+      }
+
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    // Resize
+    addEventListener('resize', ()=>{
+      camera.aspect = innerWidth/innerHeight; camera.updateProjectionMatrix();
+      renderer.setSize(innerWidth, innerHeight);
+    });
+  </script>
+</body>
+</html>
