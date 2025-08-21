@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<title>Me2Verse VR 프로젝트 앱 (태극기 양쪽 + 스토리)</title>
+<title>Me2Verse VR 프로젝트 앱 (파이코인 + 몰입형)</title>
 <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
 <style>
   body{margin:0;padding:0;font-family:Arial,sans-serif;background:#f0f0f0;}
@@ -21,8 +21,8 @@
   #questLog{margin-top:15px;background:rgba(255,255,255,0.8);padding:10px;border-radius:5px;width:80%;max-width:400px;font-size:14px;max-height:150px;overflow-y:auto;}
   #story{margin-top:15px;background:rgba(255,255,255,0.9);padding:10px;border-radius:5px;width:90%;max-width:500px;font-size:15px;}
   a-scene{width:100%;height:100vh;}
-  #flagLeft,#flagRight{width:60px;margin:5px;}
-  #flagContainer{display:flex;justify-content:space-between;width:100%;max-width:400px;}
+  #flagContainer{display:flex;justify-content:space-between;width:100%;max-width:400px;margin-bottom:10px;}
+  #flagLeft,#flagRight{width:60px;}
 </style>
 </head>
 <body>
@@ -36,7 +36,7 @@
 <img id="flagRight" src="https://upload.wikimedia.org/wikipedia/commons/0/09/Flag_of_South_Korea.svg" alt="태극기 우">
 </div>
 <h1>🚀 Me2Verse VR 프로젝트 앱</h1>
-<p>로그인 → 결제 → 모듈 선택 → VR 체험 → 뒤로가기</p>
+<p>로그인 → 결제(파이코인) → 모듈 선택 → VR 체험 → 뒤로가기</p>
 <input type="text" id="username" placeholder="유저 이름 입력">
 <select id="amount">
 <option value="1000">₩1,000</option>
@@ -53,6 +53,7 @@
 <button class="moduleBtn" id="loveModule">연애 모듈</button>
 <button class="moduleBtn" id="spaceModule">우주체험 모듈</button>
 <button class="moduleBtn" id="hobbyModule">취미 모듈</button>
+<button class="moduleBtn" id="extraModule">미스터리 모듈</button>
 </div>
 <div id="moduleDetail" style="margin-top:20px;">
 <h3 id="moduleTitle"></h3>
@@ -80,7 +81,7 @@
 </div>
 
 <script>
-alert("✅ Me2Verse VR 프로젝트 앱 실행!");
+alert("✅ Me2Verse VR 몰입형 업그레이드 실행!");
 
 // DOM
 const statusEl=document.getElementById("status");
@@ -99,10 +100,10 @@ const storyEl=document.getElementById("story");
 
 let points=0, items=[], currentModule="", logMessages=[];
 
-function updateScore(){ scoreEl.textContent=`포인트: ${points} | 아이템: ${items.length?items.join(", "):"없음"`; }
+function updateScore(){ scoreEl.textContent=`포인트: ${points} | 아이템: ${items.length?items.join(", "):"없음"}`; }
 function logQuest(msg){ logMessages.push(msg); questLog.innerHTML=logMessages.map(m=>`• ${m}`).join("<br>"); }
 
-// 로그인 + 결제
+// 로그인 + 결제 (파이코인)
 document.getElementById("autoBtn").addEventListener("click",()=>{
   const username=document.getElementById("username").value.trim();
   const amount=document.getElementById("amount").value;
@@ -110,32 +111,37 @@ document.getElementById("autoBtn").addEventListener("click",()=>{
   statusEl.textContent=`상태: ${username} 로그인 중...`;
   setTimeout(()=>{
     statusEl.textContent=`상태: ${username} 로그인 성공! 🎉`;
-    statusEl.textContent=`상태: ${amount}원 결제 처리 중...`;
+    statusEl.textContent=`상태: ${amount} 파이코인 결제 처리 중...`;
     setTimeout(()=>{
       statusEl.textContent=`상태: ${username} 결제 완료! 💰`;
-      alert(`${username}님의 ${amount}원 결제가 완료되었습니다!`);
+      alert(`${username}님의 ${amount} 파이코인 결제가 완료되었습니다!`);
       homeScreen.style.display="none";
       moduleScreen.style.display="flex";
     },1500);
   },1000);
 });
 
-// 모듈 정의 + 스토리
+// 모듈 정의
 const modules={
 love:{
 title:"연애 모듈",
-desc:"첫 만남의 공원에서 캐릭터와 상호작용하며 연애 체험! 하트를 모아보세요.",
-story:"봄날 공원. 벤치에 앉아 있는 두 캐릭터와 대화하며 하트를 모으고 미션을 완료하세요.",
+desc:"공원에서 캐릭터와 상호작용하며 연애 체험! 하트를 모아보세요.",
+story:"봄날 공원. 벤치에 앉아 있는 캐릭터와 대화하며 미션 수행!",
 sky:"#FFC0CB",
 avatars:[
 {type:"box", pos:"-1 1 -3", color:"#FF69B4", log:"💌 캐릭터1 대화 완료! +10점, 하트 획득", points:10, item:"하트", anim:true},
 {type:"box", pos:"1 1 -3", color:"#FF1493", log:"💌 캐릭터2 대화 완료! +10점, 하트 획득", points:10, item:"하트", anim:true}],
 props:[
 {type:"cone", pos:"0 0 -4", color:"#FFB6C1", height:1, radius:0.5, log:"🌸 꽃 관찰 완료! +5점, 꽃 획득", points:5, item:"꽃", anim:true},
-{type:"sphere", pos:"0 2 -5", color:"#FFD700", radius:0.3, log:"🎁 보너스 선물 발견! +20점, 초코 획득", points:20, item:"초코", anim:true}]
+{type:"sphere", pos:"0 2 -5", color:"#FFD700", radius:0.3, log:"🎁 선물 발견! +20점, 초코 획득", points:20, item:"초코", anim:true}]
 },
 space:{
 title:"우주체험 모듈",
 desc:"탐사선 탑승 → 행성 탐험 → 지도, 아이템 수집!",
-story:"우주선 안에서 행성을 탐험하고 아이템을 모아 미션을 달성하세요.",
-sky:"#
+story:"우주선 안에서 행성을 탐험하며 아이템을 모으세요!",
+sky:"#000022",
+avatars:[
+{type:"sphere", pos:"-1 1.5 -4", color:"#FFA500", log:"🪐 행성1 탐험 완료! +15점, 행성 지도 획득", points:15, item:"행성 지도", anim:true},
+{type:"sphere", pos:"1 2 -5", color:"#00FFFF", log:"🪐 행성2 탐험 완료! +15점, 행성 지도 획득", points:15, item:"행성 지도", anim:true}],
+props:[
+{type
