@@ -2,47 +2,41 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<title>Me2Verse 완전 메타버스 앱</title>
+<title>Me2Verse VR 완성형</title>
 <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
 <style>
-body{margin:0;font-family:Arial,sans-serif;background:#f0f0f0;}
-#status{position:fixed;top:10px;left:50%;transform:translateX(-50%);background:rgba(255,255,255,0.85);padding:5px 10px;border-radius:5px;font-size:16px;z-index:5;}
-#score{position:fixed;bottom:10px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.6);color:white;padding:5px 10px;border-radius:5px;font-size:16px;z-index:5;}
-.screen{width:100%;height:100vh;display:flex;justify-content:center;align-items:center;flex-direction:column;transition:all 0.5s;position:absolute;top:0;left:0;}
-#homeScreen{background:white;z-index:4;}
-#moduleScreen{background:#fafafa;display:none;z-index:3;}
-#vrScreen{background:black;display:none;z-index:2;}
-input,select,button{padding:10px 15px;margin:5px;font-size:16px;border-radius:5px;border:1px solid #ccc;}
-button{cursor:pointer;border:none;color:white;}
-#autoBtn{background-color:#2196F3;}
-.moduleBtn{background-color:#4CAF50;}
-#startVRBtn{background-color:#9C27B0;display:none;margin-top:10px;}
-#backBtn{background-color:#FF5722;display:none;margin-top:15px;}
-#questLog{margin-top:15px;background:rgba(255,255,255,0.8);padding:10px;border-radius:5px;width:80%;max-width:400px;font-size:14px;max-height:150px;overflow-y:auto;}
-#flagContainer{position:fixed;top:10px;width:100%;display:flex;justify-content:space-between;padding:0 20px;z-index:5;}
-#flagContainer img{width:80px;}
-a-scene{width:100%;height:100vh;}
+  body { margin:0; padding:0; font-family: Arial,sans-serif; background:#f0f0f0; }
+  #status{position:fixed;top:10px;left:50%;transform:translateX(-50%);background:rgba(255,255,255,0.85);padding:5px 10px;border-radius:5px;font-size:16px;z-index:3;}
+  #score{position:fixed;bottom:10px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.6);color:white;padding:5px 10px;border-radius:5px;font-size:16px;z-index:3;}
+  .screen{width:100%;height:100vh;display:flex;justify-content:center;align-items:center;flex-direction:column;transition:all 0.5s;position:absolute;top:0;left:0;}
+  #homeScreen{background:white;z-index:3;}
+  #moduleScreen{background:#fafafa;display:none;z-index:2;}
+  #vrScreen{background:black;display:none;z-index:1;}
+  input,select,button{padding:10px 15px;margin:5px;font-size:16px;border-radius:5px;border:1px solid #ccc;}
+  button{cursor:pointer;border:none;color:white;}
+  #autoBtn{background-color:#2196F3;}
+  .moduleBtn{background-color:#4CAF50;}
+  #startVRBtn{background-color:#9C27B0;display:none;margin-top:10px;}
+  #backBtn{background-color:#FF5722;display:none;margin-top:15px;}
+  #questLog{margin-top:15px;background:rgba(255,255,255,0.8);padding:10px;border-radius:5px;width:80%;max-width:400px;font-size:14px;max-height:150px;overflow-y:auto;}
+  a-scene{width:100%;height:100vh;}
+  #flag{width:80px;margin-bottom:10px;}
 </style>
 </head>
 <body>
-
-<div id="flagContainer">
-<img src="https://upload.wikimedia.org/wikipedia/commons/0/09/Flag_of_South_Korea.svg" alt="태극기">
-<img src="https://upload.wikimedia.org/wikipedia/commons/0/09/Flag_of_South_Korea.svg" alt="태극기">
-</div>
-
 <div id="status">상태: 대기 중</div>
-<div id="score">Pi코인: 0 | 아이템: 없음</div>
+<div id="score">포인트: 0 | 아이템: 없음</div>
 
 <!-- 홈 화면 -->
 <div id="homeScreen" class="screen">
-<h1>🚀 Me2Verse 메타버스</h1>
-<p>로그인 → Pi코인 결제 → 모듈 선택 → VR 체험</p>
+<img id="flag" src="https://upload.wikimedia.org/wikipedia/commons/0/09/Flag_of_South_Korea.svg" alt="태극기">
+<h1>🚀 Me2Verse VR 프로젝트 앱</h1>
+<p>로그인 → 결제(Pi코인) → 모듈 선택 → VR 체험 → 뒤로가기</p>
 <input type="text" id="username" placeholder="유저 이름 입력">
 <select id="amount">
-<option value="1">1 Pi코인</option>
-<option value="5">5 Pi코인</option>
-<option value="10">10 Pi코인</option>
+<option value="1000">₿1,000</option>
+<option value="5000">₿5,000</option>
+<option value="10000">₿10,000</option>
 </select><br/>
 <button id="autoBtn">자동 로그인 + 결제</button>
 </div>
@@ -95,10 +89,10 @@ const questLog=document.getElementById("questLog");
 
 let points=0, items=[], currentModule="", logMessages=[];
 
-function updateScore(){ scoreEl.textContent=`Pi코인: ${points} | 아이템: ${items.length?items.join(", "):"없음"}`; }
+function updateScore(){ scoreEl.textContent=`포인트: ${points} | 아이템: ${items.length?items.join(", "):"없음"}`; }
 function logQuest(msg){ logMessages.push(msg); questLog.innerHTML=logMessages.map(m=>`• ${m}`).join("<br>"); }
 
-// 로그인 + Pi코인 결제
+// 로그인 + 결제(Pi코인)
 document.getElementById("autoBtn").addEventListener("click",()=>{
   const username=document.getElementById("username").value.trim();
   const amount=document.getElementById("amount").value;
@@ -106,54 +100,42 @@ document.getElementById("autoBtn").addEventListener("click",()=>{
   statusEl.textContent=`상태: ${username} 로그인 중...`;
   setTimeout(()=>{
     statusEl.textContent=`상태: ${username} 로그인 성공! 🎉`;
-    statusEl.textContent=`상태: ${amount} Pi코인 결제 처리 중...`;
+    statusEl.textContent=`상태: ${amount} 결제 처리 중...`;
     setTimeout(()=>{
       statusEl.textContent=`상태: ${username} 결제 완료! 💰`;
-      alert(`${username}님의 ${amount} Pi코인 결제가 완료되었습니다!`);
+      alert(`${username}님의 ${amount} 결제가 완료되었습니다!`);
       homeScreen.style.display="none";
       moduleScreen.style.display="flex";
     },1500);
   },1000);
 });
 
-// 모듈 정의 (GLB 아바타, 시나리오)
+// 모듈 정의 (실제 아바타 모델 적용 가능)
 const modules={
-love:{
-title:"연애 모듈",
-desc:"공원에서 캐릭터와 상호작용하며 연애 체험! 하트를 모아보세요.",
-sky:"#FFC0CB",
+love:{title:"연애 모듈", desc:"공원에서 캐릭터와 상호작용하며 연애 체험! 하트를 모아보세요.", sky:"#FFC0CB",
 avatars:[
-{model:"https://cdn.jsdelivr.net/gh/KhronosGroup/glTF-Sample-Models/2.0/Avocado/glTF/Avocado.gltf", pos:"-1 0 -3", log:"💌 캐릭터1 대화 완료! +10점, 하트 획득", points:10, item:"하트"},
-{model:"https://cdn.jsdelivr.net/gh/KhronosGroup/glTF-Sample-Models/2.0/Duck/glTF/Duck.gltf", pos:"1 0 -3", log:"💌 캐릭터2 대화 완료! +10점, 하트 획득", points:10, item:"하트"}
+{type:"a-entity", model:"https://cdn.aframe.io/test-models/models/boombox/boombox.gltf", pos:"-1 0 -3", log:"💌 캐릭터1 대화 완료! +10점, 하트 획득", points:10, item:"하트"},
+{type:"a-entity", model:"https://cdn.aframe.io/test-models/models/boombox/boombox.gltf", pos:"1 0 -3", log:"💌 캐릭터2 대화 완료! +10점, 하트 획득", points:10, item:"하트"}
 ],
 props:[
-{model:"https://cdn.jsdelivr.net/gh/KhronosGroup/glTF-Sample-Models/2.0/Cube/glTF/Cube.gltf", pos:"0 0 -4", log:"🌸 꽃 관찰 완료! +5점, 꽃 획득", points:5, item:"꽃"}
-]
-},
-space:{
-title:"우주체험 모듈",
-desc:"탐사선 탑승 → 행성 탐험 → 지도, 아이템 수집!",
-sky:"#000022",
+{type:"a-box", pos:"0 0 -4", color:"#FFB6C1", log:"🌸 꽃 관찰 완료! +5점, 꽃 획득", points:5, item:"꽃"}
+]},
+space:{title:"우주체험 모듈", desc:"탐사선 탑승 → 행성 탐험 → 지도, 아이템 수집!", sky:"#000022",
 avatars:[
-{model:"https://cdn.jsdelivr.net/gh/KhronosGroup/glTF-Sample-Models/2.0/Avocado/glTF/Avocado.gltf", pos:"-1 0 -4", log:"🪐 행성1 탐험 완료! +15점, 지도 획득", points:15, item:"행성 지도"},
-{model:"https://cdn.jsdelivr.net/gh/KhronosGroup/glTF-Sample-Models/2.0/Duck/glTF/Duck.gltf", pos:"1 0 -4", log:"🪐 행성2 탐험 완료! +15점, 지도 획득", points:15, item:"행성 지도"}
+{type:"a-sphere", pos:"-1 1 -4", color:"#FFA500", log:"🪐 행성1 탐험 완료! +15점, 행성 지도 획득", points:15, item:"행성 지도"},
+{type:"a-sphere", pos:"1 2 -5", color:"#00FFFF", log:"🪐 행성2 탐험 완료! +15점, 행성 지도 획득", points:15, item:"행성 지도"}
 ],
 props:[
-{model:"https://cdn.jsdelivr.net/gh/KhronosGroup/glTF-Sample-Models/2.0/Cube/glTF/Cube.gltf", pos:"0 0 -5", log:"🎁 보너스 장비 획득! +25점, 우주 장비", points:25, item:"우주 장비"}
-]
-},
-hobby:{
-title:"취미 모듈",
-desc:"숲속 산책과 취미 활동 VR 체험! 꽃과 커피를 수집하세요.",
-sky:"#A0E0A0",
+{type:"a-box", pos:"0 1 -6", color:"#8A2BE2", log:"🎁 보너스 발견! +25점, 우주 장비 획득", points:25, item:"우주 장비"}
+]},
+hobby:{title:"취미 모듈", desc:"숲속 산책과 취미 활동 VR 체험! 꽃과 커피를 수집하세요.", sky:"#A0E0A0",
 avatars:[
-{model:"https://cdn.jsdelivr.net/gh/KhronosGroup/glTF-Sample-Models/2.0/Avocado/glTF/Avocado.gltf", pos:"-1 0 -3", log:"🌳 꽃 관찰 완료! +5점, 꽃 획득", points:5, item:"꽃"},
-{model:"https://cdn.jsdelivr.net/gh/KhronosGroup/glTF-Sample-Models/2.0/Duck/glTF/Duck.gltf", pos:"1 0 -3", log:"🪑 벤치 휴식 완료! +5점, 커피 획득", points:5, item:"커피"}
+{type:"a-cone", pos:"-1 0.5 -3", color:"#228B22", log:"🌳 꽃 관찰 완료! +5점, 꽃 획득", points:5, item:"꽃"},
+{type:"a-box", pos:"1 0.3 -3", color:"#8B4513", log:"🪑 벤치 휴식 완료! +5점, 커피 획득", points:5, item:"커피"}
 ],
 props:[
-{model:"https://cdn.jsdelivr.net/gh/KhronosGroup/glTF-Sample-Models/2.0/Cube/glTF/Cube.gltf", pos:"0 0 -4", log:"🎁 보너스 열매 발견! +15점, 열매 획득", points:15, item:"열매"}
-]
-}
+{type:"a-sphere", pos:"0 1.5 -4", color:"#FF4500", log:"🎁 보너스 열매 발견! +15점, 열매 획득", points:15, item:"열매"}
+]}
 };
 
 function selectModule(name){
@@ -183,11 +165,10 @@ vrSky.setAttribute("color",mod.sky);
 
 // 아바타 생성
 mod.avatars.forEach(obj=>{
-const el=document.createElement("a-entity");
-el.setAttribute("gltf-model",obj.model);
+const el=document.createElement(obj.type);
+if(obj.model) el.setAttribute("gltf-model",obj.model);
 el.setAttribute("position",obj.pos);
-el.setAttribute("scale","0.5 0.5 0.5");
-el.setAttribute("animation__hover","property=rotation;to=0 360 0;loop=true;dur=4000;easing=linear");
+if(obj.color) el.setAttribute("color",obj.color);
 el.addEventListener("click",()=>{
 points+=obj.points; items.push(obj.item); updateScore(); logQuest(obj.log);
 });
@@ -196,10 +177,27 @@ moduleContent.appendChild(el);
 
 // 소품 생성
 mod.props.forEach(obj=>{
-const el=document.createElement("a-entity");
-el.setAttribute("gltf-model",obj.model);
+const el=document.createElement(obj.type);
 el.setAttribute("position",obj.pos);
-el.setAttribute("scale","0.3 0.3 0.3");
-el.setAttribute("animation__hover","property=rotation;to=0 360 0;loop=true;dur=4000;easing=linear");
+if(obj.color) el.setAttribute("color",obj.color);
 el.addEventListener("click",()=>{
-points+=obj.points; items.push(obj.item); updateScore(); logQuest(obj
+points+=obj.points; items.push(obj.item); updateScore(); logQuest(obj.log);
+});
+moduleContent.appendChild(el);
+});
+});
+
+// 뒤로가기
+backBtn.addEventListener("click",()=>{
+vrScreen.style.display="none";
+moduleScreen.style.display="flex";
+backBtn.style.display="none";
+startVRBtn.style.display="none";
+moduleContent.innerHTML="";
+logMessages=[];
+questLog.innerHTML="";
+statusEl.textContent="상태: 대기 중";
+});
+</script>
+</body>
+</html>
