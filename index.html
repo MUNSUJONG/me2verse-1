@@ -2,32 +2,30 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>Me2Verse VR 체험 강화</title>
+  <title>Me2Verse VR 체험 앱</title>
   <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
   <style>
-    body { font-family: Arial, sans-serif; margin:0; padding:0; background:#f0f0f0; }
-    #container, #vrSceneContainer {
-      width:100%; height:100vh; display:flex; justify-content:center; align-items:center;
-      flex-direction:column; transition:all 0.5s ease;
-    }
-    #container { background:white; z-index:2; position:absolute; top:0; left:0; }
-    #vrSceneContainer { background:black; display:none; position:absolute; top:0; left:0; z-index:1; }
-    input, select, button { padding:10px 15px; margin:10px; font-size:16px; border-radius:5px; border:1px solid #ccc; }
+    body { margin:0; padding:0; font-family: Arial, sans-serif; background:#f0f0f0; }
+    #status { position:fixed; top:10px; left:50%; transform:translateX(-50%); background:rgba(255,255,255,0.85); padding:5px 10px; border-radius:5px; font-size:16px; z-index:3; }
+    #container, #vrSceneContainer { width:100%; height:100vh; display:flex; justify-content:center; align-items:center; flex-direction:column; transition:all 0.5s; position:absolute; top:0; left:0; }
+    #container { background:white; z-index:2; }
+    #vrSceneContainer { background:black; display:none; z-index:1; }
+    input, select, button { padding:10px 15px; margin:5px; font-size:16px; border-radius:5px; border:1px solid #ccc; }
     button { cursor:pointer; border:none; color:white; }
     #autoBtn { background-color:#2196F3; }
     .moduleBtn { background-color:#4CAF50; }
-    #backBtn { background-color:#FF5722; display:none; }
-    #status { margin-top:20px; font-size:18px; color:#3F51B5; position:fixed; top:10px; left:50%; transform:translateX(-50%); background:rgba(255,255,255,0.8); padding:5px 10px; border-radius:5px; z-index:3; }
+    #backBtn { background-color:#FF5722; display:none; margin-top:15px; }
+    #score { position:fixed; bottom:10px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.6); color:white; padding:5px 10px; border-radius:5px; font-size:16px; z-index:3; }
     a-scene { width:100%; height:100vh; }
   </style>
 </head>
 <body>
   <div id="status">상태: 대기 중</div>
+  <div id="score">포인트: 0 | 아이템: 없음</div>
 
   <div id="container">
-    <h1>🚀 Me2Verse VR 체험 강화</h1>
+    <h1>🚀 Me2Verse VR 체험 앱</h1>
     <p>자동 로그인 → 결제 → 모듈 선택 → VR 체험 → 뒤로가기</p>
-
     <input type="text" id="username" placeholder="유저 이름 입력">
     <select id="amount">
       <option value="1000">₩1,000</option>
@@ -36,13 +34,11 @@
     </select>
     <br/>
     <button id="autoBtn">자동 로그인 + 결제</button>
-
-    <div style="margin-top:20px;">
+    <div style="margin-top:15px;">
       <button class="moduleBtn" id="loveModule">연애 모듈</button>
       <button class="moduleBtn" id="spaceModule">우주체험 모듈</button>
       <button class="moduleBtn" id="hobbyModule">취미 모듈</button>
     </div>
-
     <button id="backBtn">🏠 뒤로가기</button>
   </div>
 
@@ -50,18 +46,29 @@
     <a-scene id="vrScene">
       <a-entity id="moduleContent"></a-entity>
       <a-sky id="vrSky" color="#ECECEC"></a-sky>
+      <a-entity id="cameraRig" position="0 1.6 0">
+        <a-camera wasd-controls-enabled="true" look-controls="true"></a-camera>
+      </a-entity>
     </a-scene>
   </div>
 
   <script>
-    alert("✅ JS 실행 성공!");
+    alert("✅ Me2Verse VR 앱 JS 실행!");
 
     const statusEl = document.getElementById("status");
+    const scoreEl = document.getElementById("score");
     const container = document.getElementById("container");
     const vrSceneContainer = document.getElementById("vrSceneContainer");
     const moduleContent = document.getElementById("moduleContent");
     const vrSky = document.getElementById("vrSky");
     const backBtn = document.getElementById("backBtn");
+
+    let points = 0;
+    let items = [];
+
+    function updateScore() {
+      scoreEl.textContent = `포인트: ${points} | 아이템: ${items.length ? items.join(", ") : "없음"}`;
+    }
 
     // 자동 로그인 + 결제
     document.getElementById("autoBtn").addEventListener("click", ()=>{
@@ -87,67 +94,74 @@
       backBtn.style.display="inline-block";
       moduleContent.innerHTML="";
 
+      // 초기화
+      points = 0; items = [];
+      updateScore();
+
       if(module==="love"){
-        statusEl.textContent="상태: 연애 모듈 VR 테스트 중...";
+        statusEl.textContent="상태: 연애 모듈 VR 체험 중...";
         vrSky.setAttribute("color","#FFC0CB");
 
-        // 캐릭터 1
         const char1=document.createElement("a-box");
-        char1.setAttribute("position","-1 1 -3");
-        char1.setAttribute("color","#FF69B4");
+        char1.setAttribute("position","-1 1 -3"); char1.setAttribute("color","#FF69B4");
         char1.setAttribute("depth","1"); char1.setAttribute("height","2"); char1.setAttribute("width","1");
-        char1.addEventListener("click",()=>alert("💌 캐릭터1과 대화 시작! 하트 +1"));
+        char1.addEventListener("click",()=>{
+          points+=10; items.push("하트"); updateScore();
+          alert("💌 캐릭터1과 대화! 하트 획득 +10점");
+        });
         moduleContent.appendChild(char1);
 
-        // 캐릭터 2
         const char2=document.createElement("a-box");
-        char2.setAttribute("position","1 1 -3");
-        char2.setAttribute("color","#FF1493");
+        char2.setAttribute("position","1 1 -3"); char2.setAttribute("color","#FF1493");
         char2.setAttribute("depth","1"); char2.setAttribute("height","2"); char2.setAttribute("width","1");
-        char2.addEventListener("click",()=>alert("💌 캐릭터2와 대화 시작! 하트 +1"));
+        char2.addEventListener("click",()=>{
+          points+=10; items.push("하트"); updateScore();
+          alert("💌 캐릭터2과 대화! 하트 획득 +10점");
+        });
         moduleContent.appendChild(char2);
       }
       else if(module==="space"){
-        statusEl.textContent="상태: 우주체험 모듈 VR 테스트 중...";
+        statusEl.textContent="상태: 우주체험 모듈 VR 체험 중...";
         vrSky.setAttribute("color","#000022");
 
-        // 행성 1
         const planet1=document.createElement("a-sphere");
-        planet1.setAttribute("position","-1 1.5 -4");
-        planet1.setAttribute("radius","1");
+        planet1.setAttribute("position","-1 1.5 -4"); planet1.setAttribute("radius","1");
         planet1.setAttribute("color","#FFA500");
-        planet1.addEventListener("click",()=>alert("🪐 행성1 탐험 완료!"));
+        planet1.addEventListener("click",()=>{
+          points+=15; items.push("행성 지도"); updateScore();
+          alert("🪐 행성1 탐험 완료! +15점");
+        });
         moduleContent.appendChild(planet1);
 
-        // 행성 2
         const planet2=document.createElement("a-sphere");
-        planet2.setAttribute("position","1 2 -5");
-        planet2.setAttribute("radius","1.2");
+        planet2.setAttribute("position","1 2 -5"); planet2.setAttribute("radius","1.2");
         planet2.setAttribute("color","#00FFFF");
-        planet2.addEventListener("click",()=>alert("🪐 행성2 탐험 완료!"));
+        planet2.addEventListener("click",()=>{
+          points+=15; items.push("행성 지도"); updateScore();
+          alert("🪐 행성2 탐험 완료! +15점");
+        });
         moduleContent.appendChild(planet2);
       }
       else if(module==="hobby"){
-        statusEl.textContent="상태: 취미 모듈 VR 테스트 중...";
+        statusEl.textContent="상태: 취미 모듈 VR 체험 중...";
         vrSky.setAttribute("color","#A0E0A0");
 
-        // 나무
         const tree=document.createElement("a-cone");
-        tree.setAttribute("position","-1 0.5 -3");
-        tree.setAttribute("radius-bottom","0.5");
-        tree.setAttribute("height","2");
+        tree.setAttribute("position","-1 0.5 -3"); tree.setAttribute("radius-bottom","0.5"); tree.setAttribute("height","2");
         tree.setAttribute("color","#228B22");
-        tree.addEventListener("click",()=>alert("🌳 나무 관찰 완료!"));
+        tree.addEventListener("click",()=>{
+          points+=5; items.push("꽃"); updateScore();
+          alert("🌳 꽃 관찰 완료! +5점");
+        });
         moduleContent.appendChild(tree);
 
-        // 벤치
         const bench=document.createElement("a-box");
-        bench.setAttribute("position","1 0.3 -3");
-        bench.setAttribute("depth","0.5");
-        bench.setAttribute("height","0.5");
-        bench.setAttribute("width","2");
+        bench.setAttribute("position","1 0.3 -3"); bench.setAttribute("depth","0.5"); bench.setAttribute("height","0.5"); bench.setAttribute("width","2");
         bench.setAttribute("color","#8B4513");
-        bench.addEventListener("click",()=>alert("🪑 벤치에 앉아 쉬기!"));
+        bench.addEventListener("click",()=>{
+          points+=5; items.push("커피"); updateScore();
+          alert("🪑 벤치에서 휴식! +5점");
+        });
         moduleContent.appendChild(bench);
       }
     }
@@ -163,7 +177,6 @@
       moduleContent.innerHTML="";
       statusEl.textContent="상태: 대기 중";
     });
-
   </script>
 </body>
 </html>
