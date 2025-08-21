@@ -2,52 +2,70 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>Me2Verse Test</title>
+  <title>Me2Verse 완성 테스트</title>
   <style>
-    body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
-    button {
-      padding: 12px 25px;
-      margin: 15px;
+    body { font-family: Arial, sans-serif; text-align: center; padding: 50px; background-color: #f5f5f5; }
+    h1 { color: #E53935; }
+    input, select, button {
+      padding: 10px 15px;
+      margin: 10px;
       font-size: 16px;
-      cursor: pointer;
-      border: none;
       border-radius: 5px;
+      border: 1px solid #ccc;
     }
-    #loginBtn { background-color: #4CAF50; color: white; }
-    #payBtn { background-color: #FF5722; color: white; }
-    #status { margin-top: 20px; font-size: 18px; color: blue; }
+    button { cursor: pointer; border: none; color: white; }
+    #loginBtn { background-color: #4CAF50; }
+    #payBtn { background-color: #FF5722; }
+    #autoBtn { background-color: #2196F3; }
+    #status { margin-top: 20px; font-size: 18px; color: #3F51B5; }
+    #container { background-color: white; padding: 30px; border-radius: 10px; display: inline-block; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
   </style>
 </head>
 <body>
-  <h1 style="color:red;">🚀 Me2Verse 테스트 화면</h1>
-  <p>이 문장이 보이면 index.html은 정상적으로 배포된 것입니다.</p>
+  <div id="container">
+    <h1>🚀 Me2Verse 완성 테스트</h1>
+    <p>유저 이름과 결제 금액을 선택 후 자동 테스트를 진행할 수 있습니다.</p>
 
-  <button id="loginBtn">자동 로그인</button>
-  <button id="payBtn">테스트 결제</button>
+    <input type="text" id="username" placeholder="유저 이름 입력" />
+    <select id="amount">
+      <option value="1000">₩1,000</option>
+      <option value="5000">₩5,000</option>
+      <option value="10000">₩10,000</option>
+    </select>
+    <br/>
 
-  <div id="status">상태: 대기 중</div>
+    <button id="autoBtn">자동 로그인 + 결제</button>
+
+    <div id="status">상태: 대기 중</div>
+  </div>
 
   <script>
     alert("✅ JS 실행 성공!");
 
     const statusEl = document.getElementById("status");
 
-    // 자동 로그인 시뮬레이션
-    document.getElementById("loginBtn").addEventListener("click", function() {
-      statusEl.textContent = "상태: 로그인 중...";
-      setTimeout(() => {
-        statusEl.textContent = "상태: 로그인 성공! 🎉";
-        alert("자동 로그인 완료!");
-      }, 1000); // 1초 후 로그인 성공 표시
-    });
+    document.getElementById("autoBtn").addEventListener("click", function() {
+      const username = document.getElementById("username").value.trim();
+      const amount = document.getElementById("amount").value;
 
-    // 테스트 결제 시뮬레이션
-    document.getElementById("payBtn").addEventListener("click", function() {
-      statusEl.textContent = "상태: 결제 처리 중...";
+      if (!username) {
+        alert("유저 이름을 입력해주세요!");
+        return;
+      }
+
+      statusEl.textContent = `상태: ${username} 로그인 중...`;
+
+      // 로그인 시뮬레이션
       setTimeout(() => {
-        statusEl.textContent = "상태: 결제 완료! 💰";
-        alert("테스트 결제 완료!");
-      }, 1500); // 1.5초 후 결제 완료 표시
+        statusEl.textContent = `상태: ${username} 로그인 성공! 🎉`;
+
+        // 결제 시뮬레이션
+        statusEl.textContent = `상태: ${amount}원 결제 처리 중...`;
+        setTimeout(() => {
+          statusEl.textContent = `상태: ${username} 결제 완료! 💰`;
+          alert(`${username}님의 ${amount}원 결제가 완료되었습니다!`);
+        }, 1500);
+      }, 1000);
     });
   </script>
 </body>
