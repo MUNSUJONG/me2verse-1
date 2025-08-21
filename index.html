@@ -2,25 +2,31 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>Me2Verse Full VR Test</title>
+  <title>Me2Verse VR 체험 강화</title>
   <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
   <style>
-    body { font-family: Arial, sans-serif; text-align: center; padding: 20px; background: #f0f0f0; }
-    h1 { color: #E53935; }
-    input, select, button { padding: 10px 15px; margin: 10px; font-size: 16px; border-radius: 5px; border: 1px solid #ccc; }
-    button { cursor: pointer; border: none; color: white; }
-    #autoBtn { background-color: #2196F3; }
-    .moduleBtn { background-color: #4CAF50; }
-    #backBtn { background-color: #FF5722; display: none; }
-    #status { margin-top: 20px; font-size: 18px; color: #3F51B5; }
-    #vrScene { width: 100%; height: 500px; margin-top: 20px; display: none; }
-    #container { background-color: white; padding: 30px; border-radius: 10px; display: inline-block; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+    body { font-family: Arial, sans-serif; margin:0; padding:0; background:#f0f0f0; }
+    #container, #vrSceneContainer {
+      width:100%; height:100vh; display:flex; justify-content:center; align-items:center;
+      flex-direction:column; transition:all 0.5s ease;
+    }
+    #container { background:white; z-index:2; position:absolute; top:0; left:0; }
+    #vrSceneContainer { background:black; display:none; position:absolute; top:0; left:0; z-index:1; }
+    input, select, button { padding:10px 15px; margin:10px; font-size:16px; border-radius:5px; border:1px solid #ccc; }
+    button { cursor:pointer; border:none; color:white; }
+    #autoBtn { background-color:#2196F3; }
+    .moduleBtn { background-color:#4CAF50; }
+    #backBtn { background-color:#FF5722; display:none; }
+    #status { margin-top:20px; font-size:18px; color:#3F51B5; position:fixed; top:10px; left:50%; transform:translateX(-50%); background:rgba(255,255,255,0.8); padding:5px 10px; border-radius:5px; z-index:3; }
+    a-scene { width:100%; height:100vh; }
   </style>
 </head>
 <body>
+  <div id="status">상태: 대기 중</div>
+
   <div id="container">
-    <h1>🚀 Me2Verse VR 체험</h1>
-    <p>자동 로그인 → 결제 → 모듈 선택 → VR 체험 → 뒤로가기까지 테스트 가능합니다.</p>
+    <h1>🚀 Me2Verse VR 체험 강화</h1>
+    <p>자동 로그인 → 결제 → 모듈 선택 → VR 체험 → 뒤로가기</p>
 
     <input type="text" id="username" placeholder="유저 이름 입력">
     <select id="amount">
@@ -38,97 +44,124 @@
     </div>
 
     <button id="backBtn">🏠 뒤로가기</button>
-    <div id="status">상태: 대기 중</div>
   </div>
 
-  <!-- VR 씬 -->
-  <a-scene id="vrScene">
-    <a-entity id="moduleContent"></a-entity>
-    <a-sky id="vrSky" color="#ECECEC"></a-sky>
-  </a-scene>
+  <div id="vrSceneContainer">
+    <a-scene id="vrScene">
+      <a-entity id="moduleContent"></a-entity>
+      <a-sky id="vrSky" color="#ECECEC"></a-sky>
+    </a-scene>
+  </div>
 
   <script>
     alert("✅ JS 실행 성공!");
 
     const statusEl = document.getElementById("status");
-    const vrScene = document.getElementById("vrScene");
+    const container = document.getElementById("container");
+    const vrSceneContainer = document.getElementById("vrSceneContainer");
     const moduleContent = document.getElementById("moduleContent");
     const vrSky = document.getElementById("vrSky");
     const backBtn = document.getElementById("backBtn");
 
     // 자동 로그인 + 결제
-    document.getElementById("autoBtn").addEventListener("click", function() {
+    document.getElementById("autoBtn").addEventListener("click", ()=>{
       const username = document.getElementById("username").value.trim();
       const amount = document.getElementById("amount").value;
+      if(!username){ alert("유저 이름 입력 필요!"); return; }
 
-      if (!username) {
-        alert("유저 이름을 입력해주세요!");
-        return;
-      }
-
-      statusEl.textContent = `상태: ${username} 로그인 중...`;
-      setTimeout(() => {
-        statusEl.textContent = `상태: ${username} 로그인 성공! 🎉`;
-        statusEl.textContent = `상태: ${amount}원 결제 처리 중...`;
-        setTimeout(() => {
-          statusEl.textContent = `상태: ${username} 결제 완료! 💰`;
+      statusEl.textContent=`상태: ${username} 로그인 중...`;
+      setTimeout(()=>{
+        statusEl.textContent=`상태: ${username} 로그인 성공! 🎉`;
+        statusEl.textContent=`상태: ${amount}원 결제 처리 중...`;
+        setTimeout(()=>{
+          statusEl.textContent=`상태: ${username} 결제 완료! 💰`;
           alert(`${username}님의 ${amount}원 결제가 완료되었습니다!`);
-        }, 1500);
-      }, 1000);
+        },1500);
+      },1000);
     });
 
-    // VR 모듈 로딩 함수
-    function loadModule(module) {
-      vrScene.style.display = "block";
-      backBtn.style.display = "inline-block";
-      moduleContent.innerHTML = ""; // 기존 콘텐츠 제거
+    // 모듈 로딩
+    function loadModule(module){
+      container.style.display="none";
+      vrSceneContainer.style.display="flex";
+      backBtn.style.display="inline-block";
+      moduleContent.innerHTML="";
 
-      if(module === "love"){
-        statusEl.textContent = "상태: 연애 모듈 VR 테스트 중...";
-        vrSky.setAttribute("color", "#FFC0CB");
-        const box = document.createElement("a-box");
-        box.setAttribute("position", "0 1 -3");
-        box.setAttribute("color", "#FF69B4");
-        box.setAttribute("depth", "1");
-        box.setAttribute("height", "2");
-        box.setAttribute("width", "1");
-        box.addEventListener("click", () => alert("💌 캐릭터와 대화 시작!"));
-        moduleContent.appendChild(box);
+      if(module==="love"){
+        statusEl.textContent="상태: 연애 모듈 VR 테스트 중...";
+        vrSky.setAttribute("color","#FFC0CB");
+
+        // 캐릭터 1
+        const char1=document.createElement("a-box");
+        char1.setAttribute("position","-1 1 -3");
+        char1.setAttribute("color","#FF69B4");
+        char1.setAttribute("depth","1"); char1.setAttribute("height","2"); char1.setAttribute("width","1");
+        char1.addEventListener("click",()=>alert("💌 캐릭터1과 대화 시작! 하트 +1"));
+        moduleContent.appendChild(char1);
+
+        // 캐릭터 2
+        const char2=document.createElement("a-box");
+        char2.setAttribute("position","1 1 -3");
+        char2.setAttribute("color","#FF1493");
+        char2.setAttribute("depth","1"); char2.setAttribute("height","2"); char2.setAttribute("width","1");
+        char2.addEventListener("click",()=>alert("💌 캐릭터2와 대화 시작! 하트 +1"));
+        moduleContent.appendChild(char2);
       }
-      else if(module === "space"){
-        statusEl.textContent = "상태: 우주체험 모듈 VR 테스트 중...";
-        vrSky.setAttribute("color", "#000022");
-        const planet = document.createElement("a-sphere");
-        planet.setAttribute("position", "0 1.5 -4");
-        planet.setAttribute("radius", "1.2");
-        planet.setAttribute("color", "#FFA500");
-        planet.addEventListener("click", () => alert("🪐 행성 탐험 시작!"));
-        moduleContent.appendChild(planet);
+      else if(module==="space"){
+        statusEl.textContent="상태: 우주체험 모듈 VR 테스트 중...";
+        vrSky.setAttribute("color","#000022");
+
+        // 행성 1
+        const planet1=document.createElement("a-sphere");
+        planet1.setAttribute("position","-1 1.5 -4");
+        planet1.setAttribute("radius","1");
+        planet1.setAttribute("color","#FFA500");
+        planet1.addEventListener("click",()=>alert("🪐 행성1 탐험 완료!"));
+        moduleContent.appendChild(planet1);
+
+        // 행성 2
+        const planet2=document.createElement("a-sphere");
+        planet2.setAttribute("position","1 2 -5");
+        planet2.setAttribute("radius","1.2");
+        planet2.setAttribute("color","#00FFFF");
+        planet2.addEventListener("click",()=>alert("🪐 행성2 탐험 완료!"));
+        moduleContent.appendChild(planet2);
       }
-      else if(module === "hobby"){
-        statusEl.textContent = "상태: 취미 모듈 VR 테스트 중...";
-        vrSky.setAttribute("color", "#A0E0A0");
-        const tree = document.createElement("a-cone");
-        tree.setAttribute("position", "-1 0.5 -3");
-        tree.setAttribute("radius-bottom", "0.5");
-        tree.setAttribute("height", "2");
-        tree.setAttribute("color", "#228B22");
-        tree.addEventListener("click", () => alert("🌳 공원 탐험 시작!"));
+      else if(module==="hobby"){
+        statusEl.textContent="상태: 취미 모듈 VR 테스트 중...";
+        vrSky.setAttribute("color","#A0E0A0");
+
+        // 나무
+        const tree=document.createElement("a-cone");
+        tree.setAttribute("position","-1 0.5 -3");
+        tree.setAttribute("radius-bottom","0.5");
+        tree.setAttribute("height","2");
+        tree.setAttribute("color","#228B22");
+        tree.addEventListener("click",()=>alert("🌳 나무 관찰 완료!"));
         moduleContent.appendChild(tree);
+
+        // 벤치
+        const bench=document.createElement("a-box");
+        bench.setAttribute("position","1 0.3 -3");
+        bench.setAttribute("depth","0.5");
+        bench.setAttribute("height","0.5");
+        bench.setAttribute("width","2");
+        bench.setAttribute("color","#8B4513");
+        bench.addEventListener("click",()=>alert("🪑 벤치에 앉아 쉬기!"));
+        moduleContent.appendChild(bench);
       }
     }
 
-    // 모듈 버튼 이벤트
-    document.getElementById("loveModule").addEventListener("click", () => loadModule("love"));
-    document.getElementById("spaceModule").addEventListener("click", () => loadModule("space"));
-    document.getElementById("hobbyModule").addEventListener("click", () => loadModule("hobby"));
+    document.getElementById("loveModule").addEventListener("click",()=>loadModule("love"));
+    document.getElementById("spaceModule").addEventListener("click",()=>loadModule("space"));
+    document.getElementById("hobbyModule").addEventListener("click",()=>loadModule("hobby"));
 
-    // 뒤로가기 버튼 이벤트
-    backBtn.addEventListener("click", () => {
-      vrScene.style.display = "none";
-      backBtn.style.display = "none";
-      moduleContent.innerHTML = "";
-      statusEl.textContent = "상태: 대기 중";
+    backBtn.addEventListener("click",()=>{
+      vrSceneContainer.style.display="none";
+      container.style.display="flex";
+      backBtn.style.display="none";
+      moduleContent.innerHTML="";
+      statusEl.textContent="상태: 대기 중";
     });
 
   </script>
