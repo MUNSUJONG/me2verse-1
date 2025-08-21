@@ -2,44 +2,13 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>Me2Verse-1 - Debug Test</title>
-  <style>
-    body { margin:0; overflow:hidden; }
-    canvas { display:block; }
-  </style>
+  <title>Me2Verse Test</title>
 </head>
 <body>
-<script src="https://cdn.jsdelivr.net/npm/three@0.160/build/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.160/examples/js/controls/OrbitControls.js"></script>
-<script>
-// 장면 & 카메라
-let scene = new THREE.Scene();
-scene.background = new THREE.Color(0x3399ff); // 파란 배경
-
-let camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
-camera.position.set(0, 1.6, 3);
-
-let renderer = new THREE.WebGLRenderer({antialias:true});
-renderer.setSize(window.innerWidth, window.innerHeight);
-document.body.appendChild(renderer.domElement);
-
-// 컨트롤
-let controls = new THREE.OrbitControls(camera, renderer.domElement);
-
-// 테스트용 박스 (무조건 보임)
-let geometry = new THREE.BoxGeometry(1,1,1);
-let material = new THREE.MeshBasicMaterial({color:0xff0000});
-let cube = new THREE.Mesh(geometry, material);
-cube.position.set(0,1,0);
-scene.add(cube);
-
-// 애니메이션
-function animate() {
-  requestAnimationFrame(animate);
-  cube.rotation.y += 0.01; // 회전
-  renderer.render(scene, camera);
-}
-animate();
-</script>
+  <h1 style="color:red;">🚀 Me2Verse 테스트 화면</h1>
+  <p>이 문장이 보이면 index.html은 정상적으로 배포된 것입니다.</p>
+  <script>
+    alert("✅ JS 실행 성공!");
+  </script>
 </body>
 </html>
