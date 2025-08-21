@@ -2,325 +2,499 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8" />
-<title>Me2Verse – 로그인/결제 유지 + 스토리 체험(웹)</title>
+<title>Me2Verse 메타버스 (스토리 확장 · Pi코인 결제)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
 <style>
-  :root { --card:#ffffff; --ink:#222; --muted:#666; --brand:#7C3AED; --ok:#4CAF50; --warn:#FF5722; --pi:#6A1B9A; }
-  * { box-sizing: border-box; }
-  body { margin:0; font-family: Arial, system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans KR", sans-serif; background:#f5f6fa; color:var(--ink); }
-  a { color:inherit; text-decoration:none; }
-  .screen { width:100%; min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px; position:absolute; inset:0; transition:opacity .25s ease; }
-  #homeScreen { background:linear-gradient(180deg,#fff, #f0f4ff); z-index:3; }
-  #moduleScreen { background:linear-gradient(180deg,#fafafa,#eef1f4); z-index:2; display:none; }
-  .card { width:100%; max-width:960px; background:var(--card); border-radius:16px; box-shadow:0 10px 30px rgba(0,0,0,.08); padding:20px; }
-  .row { display:flex; gap:16px; flex-wrap:wrap; }
-  .col { flex:1 1 280px; }
-
-  /* 헤더 정보 */
-  #status { position:fixed; top:10px; left:50%; transform:translateX(-50%); background:rgba(255,255,255,.9);
-            padding:6px 10px; border-radius:8px; font-size:14px; z-index:10; box-shadow:0 4px 10px rgba(0,0,0,.06); }
-  #score  { position:fixed; bottom:10px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,.75); color:#fff;
-            padding:6px 10px; border-radius:8px; font-size:14px; z-index:10; }
-
-  /* 홈 */
-  #flagContainer { display:flex; justify-content:space-between; gap:24px; align-items:center; margin-bottom:16px; }
-  #flagContainer img { width:90px; height:auto; filter:drop-shadow(0 2px 6px rgba(0,0,0,.15)); }
-  .title { font-size:26px; font-weight:800; margin:4px 0 8px; letter-spacing:-.2px; }
-  .subtitle { color:var(--muted); margin:0 0 20px; }
-  .inputs { display:flex; gap:8px; flex-wrap:wrap; margin:8px 0 12px; }
-  input, select, button { font-size:16px; padding:12px 14px; border-radius:10px; border:1px solid #e5e7eb; }
-  button { border:0; color:#fff; cursor:pointer; font-weight:700; }
-  #autoBtn { background:#2196F3; }
-  .hint { font-size:12px; color:var(--muted); margin-top:6px; }
-
-  /* 모듈 */
-  .modules { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:14px; margin-top:12px; }
-  .moduleBtn { background:var(--ok); width:100%; }
-  .moduleCard { background:#fff; border:1px solid #eef; border-radius:14px; padding:14px; }
-  .moduleCard h3 { margin:0 0 6px; font-size:18px; }
-  .moduleCard p { margin:0; color:var(--muted); font-size:14px; }
-
-  .detail { margin-top:18px; display:grid; grid-template-columns: 1.2fr .8fr; gap:14px; }
-  @media (max-width:800px){ .detail{ grid-template-columns:1fr; } }
-  .storyBox, .questBox { background:#fff; border:1px solid #e8eaf6; border-radius:14px; padding:14px; }
-  .storyBox h4, .questBox h4 { margin:0 0 8px; }
-  .badge { display:inline-flex; align-items:center; gap:6px; font-size:12px; padding:4px 8px; border-radius:999px; background:#eef2ff; color:#3730a3; margin-right:6px; }
-  .actions { display:flex; gap:8px; margin-top:10px; flex-wrap:wrap; }
-  #startStoryBtn { background:var(--brand); }
-  #backBtn { background:var(--warn); }
-  .questLog { border:1px dashed #d1d5db; padding:10px; border-radius:10px; background:#fafafa; max-height:220px; overflow:auto; font-size:13px; }
-  .questLog b { color:#111; }
-  .pill { display:inline-flex; align-items:center; gap:8px; padding:8px 10px; border-radius:12px; border:1px solid #eee; background:#fff; }
-  .emoji { font-size:18px; }
-  .divider { height:1px; background:#eee; margin:10px 0; }
+  :root{
+    --bg:#f7f7fb; --card:#ffffff; --text:#111; --muted:#666; --brand:#6C5CE7; --ok:#2ecc71; --warn:#ff9800; --danger:#ef5350; --chip:#eef1ff;
+  }
+  [data-theme="dark"]{
+    --bg:#0f1115; --card:#151924; --text:#f5f7ff; --muted:#aab1c5; --brand:#8e8aff; --ok:#49d48a; --warn:#ffb547; --danger:#ff6f6f; --chip:#1e2230;
+  }
+  *{box-sizing:border-box}
+  body{margin:0; font-family:system-ui, -apple-system, "Segoe UI", Arial, sans-serif; background:var(--bg); color:var(--text);}
+  .screen{position:absolute; inset:0; display:none; padding:20px; overflow:auto;}
+  .screen.active{display:block;}
+  .center{display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100dvh;}
+  .container{width:min(1200px, 92%); margin:0 auto;}
+  .card{background:var(--card); border-radius:16px; box-shadow:0 6px 30px rgba(0,0,0,.08); padding:20px;}
+  h1,h2,h3{margin:.3em 0}
+  .row{display:flex; gap:12px; flex-wrap:wrap; align-items:center}
+  .flags{display:flex; justify-content:space-between; width:min(420px, 92vw); margin:8px auto 12px;}
+  .flags img{width:84px; height:auto; filter:drop-shadow(0 2px 4px rgba(0,0,0,.2))}
+  input, select, button{font-size:16px; padding:10px 14px; border-radius:10px; border:1px solid #d6daf5; background:var(--card); color:var(--text);}
+  input, select{min-width:210px}
+  button{cursor:pointer; border:none; background:var(--brand); color:white;}
+  button.ghost{background:transparent; border:1px solid #8690ff; color:var(--brand)}
+  button.success{background:var(--ok)} button.warn{background:var(--warn)} button.danger{background:var(--danger)}
+  .status, .score{
+    position:fixed; left:50%; transform:translateX(-50%); z-index:10; padding:8px 12px; border-radius:10px;
+    background:rgba(255,255,255,.75); color:#111; font-weight:600; backdrop-filter:blur(6px); border:1px solid rgba(0,0,0,.05);
+  }
+  [data-theme="dark"] .status, [data-theme="dark"] .score{background:rgba(18,22,33,.6); color:#e9ecff; border-color:#000}
+  .status{top:12px;} .score{bottom:12px;}
+  .score small{opacity:.8; font-weight:500}
+  .grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(260px,1fr)); gap:16px;}
+  .story-card{display:flex; flex-direction:column; gap:10px}
+  .thumb{aspect-ratio:16/9; width:100%; border-radius:12px; background:#cfd4ff; overflow:hidden; position:relative}
+  .thumb span{position:absolute; right:10px; top:10px; background:var(--chip); color:var(--brand); padding:6px 10px; border-radius:999px; font-weight:700}
+  .chips{display:flex; gap:6px; flex-wrap:wrap}
+  .chip{background:var(--chip); color:var(--muted); padding:6px 10px; border-radius:999px; font-size:12px; font-weight:700}
+  .muted{color:var(--muted)}
+  .toolbar{display:flex; gap:8px; flex-wrap:wrap; align-items:center; justify-content:space-between; margin:8px 0 14px}
+  .left, .right{display:flex; gap:8px; flex-wrap:wrap; align-items:center}
+  .kbd{font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12px; padding:2px 6px; border-radius:6px; background:var(--chip); color:var(--muted)}
+  /* Quest log */
+  #questLog{position:fixed; right:16px; bottom:84px; width:min(360px, 92vw); max-height:44vh; overflow:auto; z-index:9}
+  /* Toast */
+  .toast{position:fixed; right:16px; top:16px; display:grid; gap:8px; z-index:11}
+  .toast .t{background:var(--card); border:1px solid #e3e6ff22; padding:10px 12px; border-radius:12px; box-shadow:0 6px 24px rgba(0,0,0,.12)}
 </style>
 </head>
-<body>
-  <div id="status">상태: 대기 중</div>
-  <div id="score">포인트: 0 | 아이템: 없음</div>
+<body data-theme="light">
 
-  <!-- 홈 화면 -->
-  <section id="homeScreen" class="screen">
-    <div class="card">
-      <div id="flagContainer">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/0/09/Flag_of_South_Korea.svg" alt="태극기 왼쪽">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/0/09/Flag_of_South_Korea.svg" alt="태극기 오른쪽">
+<!-- 고정 HUD -->
+<div id="status" class="status">상태: 대기 중</div>
+<div id="score" class="score">포인트: <b id="points">0</b> | 아이템: <b id="items">없음</b> <small class="kbd">π Pi 결제</small></div>
+<div id="questLog" class="container"></div>
+<div id="toast" class="toast"></div>
+
+<!-- 홈(로그인/결제) -->
+<section id="homeScreen" class="screen active">
+  <div class="center container">
+    <div class="flags">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/0/09/Flag_of_South_Korea.svg" alt="태극기(좌)">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/0/09/Flag_of_South_Korea.svg" alt="태극기(우)">
+    </div>
+    <div class="card" style="text-align:center; width:min(560px, 96vw);">
+      <h1>🚀 Me2Verse 메타버스</h1>
+      <p class="muted">로그인 → <b>π Pi코인</b> 결제 → 모듈 선택 → 스토리 체험</p>
+      <div class="row" style="justify-content:center; margin-top:6px">
+        <input type="text" id="username" placeholder="유저 이름 입력" />
+        <select id="amount">
+          <option value="1">1 Pi코인</option>
+          <option value="5">5 Pi코인</option>
+          <option value="10">10 Pi코인</option>
+        </select>
       </div>
-      <div class="title">🚀 Me2Verse (웹 체험판)</div>
-      <p class="subtitle">로그인 → <b style="color:var(--pi)">Pi 코인</b> 결제 → 모듈 선택 → 스토리 체험</p>
+      <div style="margin-top:4px">
+        <button id="autoBtn">자동 로그인 + 결제</button>
+        <button id="toggleTheme" class="ghost">다크모드</button>
+      </div>
+      <p id="homeHint" class="muted" style="margin-top:10px">결제 시 표시: <span class="kbd">π</span> 아이콘과 함께 알림으로 안내됩니다.</p>
+    </div>
+  </div>
+</section>
 
-      <div class="row">
-        <div class="col">
-          <div class="moduleCard">
-            <h3>로그인 & 결제</h3>
-            <p>아래 정보 입력 후 <b>자동 로그인 + 결제</b>를 눌러 진행하세요. (Pi 코인)</p>
-            <div class="inputs">
-              <input type="text" id="username" placeholder="유저 이름 입력" />
-              <select id="amount">
-                <option value="1000">1 Pi코인</option>
-                <option value="5000">5 Pi코인</option>
-                <option value="10000">10 Pi코인</option>
-              </select>
-              <button id="autoBtn">자동 로그인 + 결제</button>
-            </div>
-            <div class="hint">※ 실제 결제가 아닌 데모 시뮬레이션입니다.</div>
-          </div>
-        </div>
-
-        <div class="col">
-          <div class="moduleCard">
-            <h3>구성 안내</h3>
-            <p><span class="badge">연애</span><span class="badge">우주</span><span class="badge">취미</span> 3개 모듈의
-              스토리를 <b>클릭 미션</b>으로 체험하고 포인트와 아이템을 획득하세요.</p>
-            <div class="divider"></div>
-            <div class="pill"><span class="emoji">🪙</span><b>결제 단위</b> : Pi 코인</div>
-            <div class="pill"><span class="emoji">🏳️</span><b>태극기</b> : 상단 양쪽 배치</div>
-            <div class="pill"><span class="emoji">📜</span><b>퀘스트 로그</b> : 진행 상황 실시간 기록</div>
-          </div>
-        </div>
+<!-- 모듈 선택 -->
+<section id="moduleScreen" class="screen">
+  <div class="container">
+    <div class="toolbar">
+      <div class="left">
+        <h2 style="margin-right:6px">모듈 선택</h2>
+        <span class="chip">연애</span><span class="chip">엔터</span><span class="chip">우주</span><span class="chip">취미</span><span class="chip">도시/사회</span>
+      </div>
+      <div class="right">
+        <input id="searchInput" placeholder="스토리 검색 (예: 결혼, 우주선...)" />
+        <select id="sortSelect">
+          <option value="popular">인기순</option>
+          <option value="new">최신순</option>
+          <option value="easy">쉬운 순</option>
+          <option value="hard">어려운 순</option>
+          <option value="short">짧은 플레이</option>
+          <option value="long">긴 플레이</option>
+        </select>
+        <button id="backToHome" class="ghost">← 홈</button>
       </div>
     </div>
-  </section>
 
-  <!-- 모듈 화면 -->
-  <section id="moduleScreen" class="screen">
-    <div class="card">
-      <div class="title">모듈 선택</div>
-      <p class="subtitle">원하는 모듈을 고르고, 스토리를 <b>바로</b> 체험하세요. (VR 제거 버전)</p>
+    <div class="row" style="margin-bottom:10px">
+      <button class="ghost" data-module="romance">💞 연애 & 결혼</button>
+      <button class="ghost" data-module="entertain">🎤 엔터테인먼트</button>
+      <button class="ghost" data-module="space">🪐 우주</button>
+      <button class="ghost" data-module="hobby">🎨 취미/창작</button>
+      <button class="ghost" data-module="city">🏙 도시/사회</button>
+    </div>
 
-      <div class="modules">
-        <button class="moduleBtn" id="loveModule">💘 연애 모듈</button>
-        <button class="moduleBtn" id="spaceModule">🪐 우주체험 모듈</button>
-        <button class="moduleBtn" id="hobbyModule">🌲 취미 모듈</button>
+    <div id="moduleTitleWrap" class="row" style="align-items:baseline">
+      <h3 id="moduleTitle" style="margin-right:8px">카테고리를 선택하세요</h3>
+      <span id="moduleMeta" class="muted"></span>
+    </div>
+
+    <div id="storiesGrid" class="grid" style="margin-top:10px"></div>
+  </div>
+</section>
+
+<!-- 스토리 플레이 -->
+<section id="playScreen" class="screen">
+  <div class="container">
+    <div class="toolbar">
+      <div class="left">
+        <button id="backToModule" class="ghost">← 목록</button>
+        <h2 id="playTitle" style="margin-left:6px"></h2>
       </div>
-
-      <div class="detail">
-        <div class="storyBox">
-          <h4 id="moduleTitle">모듈을 선택하면 스토리가 표시됩니다.</h4>
-          <p id="moduleDesc"></p>
-
-          <div id="storySteps"></div>
-
-          <div class="actions">
-            <button id="startStoryBtn" style="display:none">체험 시작</button>
-            <button id="backBtn" style="display:none">🏠 뒤로가기</button>
-          </div>
-        </div>
-
-        <div class="questBox">
-          <h4>퀘스트 로그</h4>
-          <div id="questLog" class="questLog">• 아직 진행 내역이 없습니다.</div>
-        </div>
+      <div class="right">
+        <span class="chip" id="playDiff"></span>
+        <span class="chip" id="playTime"></span>
+        <span class="chip" id="playReward"></span>
       </div>
     </div>
-  </section>
+
+    <div class="card">
+      <div id="playThumb" class="thumb" style="margin-bottom:10px;">
+        <span id="playBadge">STORY</span>
+      </div>
+      <p id="playDesc" class="muted"></p>
+      <div id="playSteps" class="row" style="margin-top:10px"></div>
+      <div class="row" style="margin-top:10px">
+        <button id="startStory" class="success">시작</button>
+        <button id="completeStory" class="warn" disabled>완료 처리</button>
+      </div>
+    </div>
+  </div>
+</section>
 
 <script>
-  const statusEl = document.getElementById("status");
-  const scoreEl  = document.getElementById("score");
-  const homeScreen   = document.getElementById("homeScreen");
-  const moduleScreen = document.getElementById("moduleScreen");
-
-  const moduleTitle = document.getElementById("moduleTitle");
-  const moduleDesc  = document.getElementById("moduleDesc");
-  const storySteps  = document.getElementById("storySteps");
-  const questLogEl  = document.getElementById("questLog");
-
-  const startStoryBtn = document.getElementById("startStoryBtn");
-  const backBtn       = document.getElementById("backBtn");
-
-  let points = 0;
-  let items = [];
-  let logMessages = [];
-  let currentModule = "";
-  let currentStepIndex = 0;
-
-  function updateScore(){
-    scoreEl.textContent = `포인트: ${points} | 아이템: ${items.length ? items.join(", ") : "없음"}`;
+/* ===== 전역 상태 ===== */
+const els = {
+  status: document.getElementById('status'),
+  points: document.getElementById('points'),
+  items: document.getElementById('items'),
+  toast: document.getElementById('toast'),
+  questLog: document.getElementById('questLog'),
+  screens: {
+    home: document.getElementById('homeScreen'),
+    module: document.getElementById('moduleScreen'),
+    play: document.getElementById('playScreen'),
+  },
+  inputs: {
+    username: document.getElementById('username'),
+    amount: document.getElementById('amount'),
+    search: document.getElementById('searchInput'),
+    sort: document.getElementById('sortSelect'),
+  },
+  module: {
+    title: document.getElementById('moduleTitle'),
+    meta: document.getElementById('moduleMeta'),
+    grid: document.getElementById('storiesGrid'),
+  },
+  play: {
+    title: document.getElementById('playTitle'),
+    diff: document.getElementById('playDiff'),
+    time: document.getElementById('playTime'),
+    reward: document.getElementById('playReward'),
+    thumb: document.getElementById('playThumb'),
+    badge: document.getElementById('playBadge'),
+    desc: document.getElementById('playDesc'),
+    steps: document.getElementById('playSteps'),
+    start: document.getElementById('startStory'),
+    complete: document.getElementById('completeStory'),
+  },
+  buttons: {
+    auto: document.getElementById('autoBtn'),
+    backHome: document.getElementById('backToHome'),
+    backModule: document.getElementById('backToModule'),
+    theme: document.getElementById('toggleTheme'),
   }
-  function log(msg){
-    logMessages.push(msg);
-    questLogEl.innerHTML = logMessages.map(m => `• ${m}`).join("<br>");
-  }
+};
 
-  // ========= 로그인 + 결제 (요청대로 기존 로직 유지) =========
-  document.getElementById("autoBtn").addEventListener("click", ()=>{
-    const username = document.getElementById("username").value.trim();
-    const amount   = document.getElementById("amount").value;
-    if(!username){ alert("유저 이름 입력 필요!"); return; }
+let state = {
+  loggedIn: false,
+  user: null,
+  points: 0,
+  items: [],
+  currentModule: null,
+  currentStory: null,
+  progress: {}, // storyId -> completed
+  theme: 'light',
+};
 
-    statusEl.textContent=`상태: ${username} 로그인 중...`;
+function setStatus(msg){ els.status.textContent = msg; }
+function toast(msg){
+  const t = document.createElement('div'); t.className='t'; t.textContent = msg;
+  els.toast.appendChild(t); setTimeout(()=>{ t.remove(); }, 2600);
+}
+function hudUpdate(){
+  els.points.textContent = state.points;
+  els.items.textContent = state.items.length ? state.items.join(', ') : '없음';
+}
+function logQuest(msg){
+  const wrap = document.createElement('div');
+  wrap.className = 'card';
+  wrap.innerHTML = `<b>퀘스트</b><br>${msg}`;
+  els.questLog.prepend(wrap);
+  setTimeout(()=>{ wrap.style.opacity=.9; }, 10);
+}
+
+/* ===== 로그인 + 결제 (요청대로 기존 흐름 유지, 문구만 Pi코인) ===== */
+document.getElementById("autoBtn").addEventListener("click", ()=>{
+  const username = els.inputs.username.value.trim();
+  const amount = els.inputs.amount.value;
+  if(!username){ alert("유저 이름 입력 필요!"); return; }
+  setStatus(`상태: ${username} 로그인 중...`);
+  setTimeout(()=>{
+    setStatus(`상태: ${username} 로그인 성공! 🎉`);
+    setStatus(`상태: ${amount} Pi코인 결제 처리 중...`);
     setTimeout(()=>{
-      statusEl.textContent=`상태: ${username} 로그인 성공! 🎉`;
-      statusEl.textContent=`상태: ${amount} Pi코인 결제 처리 중...`;
-      setTimeout(()=>{
-        statusEl.textContent=`상태: ${username} 결제 완료! 💰`;
-        alert(`${username}님의 ${amount} Pi코인 결제가 완료되었습니다!`);
-        // 결제 완료 후 모듈 화면으로
-        homeScreen.style.display="none";
-        moduleScreen.style.display="flex";
-      },1500);
-    },1000);
+      setStatus(`상태: ${username} 결제 완료! 💰`);
+      alert(`${username}님의 ${amount} Pi코인 결제가 완료되었습니다! π`);
+      state.loggedIn = true; state.user = username;
+      switchScreen('home', 'module');
+      toast('환영합니다! 모듈을 선택해 스토리를 시작하세요.');
+    },1500);
+  },1000);
+});
+
+/* ===== 화면 전환 ===== */
+function switchScreen(from, to){
+  els.screens[from].classList.remove('active');
+  els.screens[to].classList.add('active');
+}
+document.getElementById('backToHome').addEventListener('click', ()=> switchScreen('module','home'));
+document.getElementById('backToModule').addEventListener('click', ()=> switchScreen('play','module'));
+
+/* ===== 테마 ===== */
+document.getElementById('toggleTheme').addEventListener('click', ()=>{
+  state.theme = (state.theme === 'light') ? 'dark' : 'light';
+  document.body.setAttribute('data-theme', state.theme);
+});
+
+/* ===== 데이터: 모듈/스토리 10개씩 ===== */
+const DB = {
+  romance: {
+    title:'💞 연애 & 결혼',
+    stories:[
+      s('첫사랑과의 재회','공원에서 우연히 재회, 대화를 통해 신뢰 포인트를 모아보세요.','쉬움','5분','하트 목걸이',[
+        step('공원 입장','인사를 건넨다','무시한다','인사 성공! 친밀도 +1','기분 상함…'),
+        step('카페 제안','카페로 이동','다음에 보자','따뜻한 라떼로 대화 +1','기회가 멀어진다')
+      ]),
+      s('국제 연애 체험','다른 문화권 파트너와 데이트 코스 맞추기','보통','7분','번역기 뱃지'),
+      s('가상 결혼식 준비','식장 고르기·청첩장·리허설을 마치자','보통','10분','웨딩 초대권'),
+      s('부모님 설득 작전','가치관 대화와 이벤트로 호감 올리기','어려움','12분','가족의 축복'),
+      s('데이트 코스 투어','야경/전시/놀이공원 중 선택형 루트','쉬움','6분','폴라로이드'),
+      s('장거리 연애 챌린지','일정/선물/영상통화 관리 미션','보통','8분','택배 쿠폰'),
+      s('친구와 연애 경쟁','공정 플레이로 신뢰 지키기','어려움','9분','공정의 휘장'),
+      s('가상 아이 양육','일정·놀이·교육 밸런스 맞추기','보통','10분','육아 노하우'),
+      s('결혼 10주년 이벤트','추억 회상 퀘스트로 깜짝 파티','쉬움','5분','기념 반지'),
+      s('위기 극복: 신뢰 회복','오해 해소 대화 트리 클리어','어려움','12분','신뢰의 약속')
+    ]
+  },
+  entertain:{
+    title:'🎤 엔터테인먼트',
+    stories:[
+      s('오디션 합격의 순간','보컬/댄스/연기를 선택하고 평가 받기','보통','8분','연습실 키'),
+      s('첫 무대 데뷔','카메라 동선/안무 타이밍 맞추기','어려움','10분','무대 의상'),
+      s('팬미팅 이벤트','포토부스·사인회·QnA 운영','쉬움','6분','팬 감사패'),
+      s('앨범 제작','곡 선정·녹음·마스터링 완료','보통','12분','한정 포토카드'),
+      s('뮤비 촬영','로케이션/콘티/컷 편집','보통','9분','감독의 슬레이트'),
+      s('팀 해체 위기','갈등 중재와 목표 재정립','어려움','12분','팀워크 휘장'),
+      s('솔로 데뷔','컨셉 기획과 무대 연출','어려움','11분','솔로 크라운'),
+      s('해외 투어','비자·숙소·장비 체크리스트','보통','10분','투어 패치'),
+      s('팬과 소통','라이브·댓글 관리 매너 점수','쉬움','7분','소통 배지'),
+      s('스타 루머 대응','팩트 체크·공식입장 수립','어려움','10분','신뢰 배지')
+    ]
+  },
+  space:{
+    title:'🪐 우주',
+    stories:[
+      s('달 착륙','연료/각도/속도 제어 미니 시뮬','보통','8분','월석 파편'),
+      s('화성 개척','거주 모듈·수분 추출·작물 재배','어려움','12분','개척자 휘장'),
+      s('블랙홀 탐험','과학적 한계 내 시뮬 체험','어려움','10분','중력 기록'),
+      s('외계 문명 조우','신호 해독 및 의전 프로토콜','보통','9분','외교 배지'),
+      s('우주선 조종','항법·워프 테스트','보통','9분','조종 면허'),
+      s('인류 이주 프로젝트','행성 평가·위험 관리','어려움','12분','개척 청사진'),
+      s('우주 호텔','무중력 서비스 운영','쉬움','6분','호텔 키카드'),
+      s('무중력 스포츠','규칙 적응 및 리그 참가','보통','8분','스포츠 메달'),
+      s('태양 플레어 대응','실드 가동·승무원 보호','어려움','10분','구조 휘장'),
+      s('AI 로봇 동반','탐사 임무 협업','보통','8분','동반자 칩')
+    ]
+  },
+  hobby:{
+    title:'🎨 취미/창작',
+    stories:[
+      s('가상 전시회','큐레이션/배치/오프닝 진행','보통','8분','오프닝 초대장'),
+      s('미술 경매','작품 감정·입찰 전략','어려움','10분','경매 망치'),
+      s('요리 대회','레시피·타이밍·플레이팅','보통','9분','금빛 국자'),
+      s('메타 패션쇼','룩 구성·런웨이 운영','보통','9분','스타일 배지'),
+      s('건축가 체험','도면 설계·심사 대응','어려움','12분','건축 트로피'),
+      s('댄스 배틀','콤보·박자·연출 포인트','보통','8분','댄스 토큰'),
+      s('영화 제작','시나리오·촬영·편집','보통','10분','클래퍼보드'),
+      s('소설 작가 데뷔','프로로그·클리셰 뒤집기','보통','9분','초판본'),
+      s('스트리머 체험','세팅·채팅 매니징','쉬움','6분','파트너 배지'),
+      s('e스포츠 토너먼트','팀 빌드·전술 콜','어려움','12분','챔피언 링')
+    ]
+  },
+  city:{
+    title:'🏙 도시/사회',
+    stories:[
+      s('직장인 데이','프로젝트/회의/보고서 챌린지','보통','8분','성과 보너스'),
+      s('스타트업 창업','MVP·피벗·투자유치','어려움','12분','창업 배지'),
+      s('선거 유세','공약·토론·현장 소통','보통','10분','민주 배지'),
+      s('대통령 시뮬','위기관리·협치·결정','어려움','12분','국정 배지'),
+      s('기자 취재','팩트체크·윤리·기사 송고','보통','9분','보도 패스'),
+      s('의료 시뮬','문진·응급·팀워크','어려움','11분','의료 휘장'),
+      s('법정 공방','증거·증언·논리 전개','어려움','10분','정의의 저울'),
+      s('재난 구조','대피/지원/커뮤니티 연계','보통','9분','구조 배지'),
+      s('도시 건설','인프라·환경·예산 균형','보통','10분','도시 설계도'),
+      s('경제 위기 대응','통화/재정/심리 안정','어려움','12분','안정 채권')
+    ]
+  }
+};
+
+/* 스토리 생성 헬퍼 */
+function s(title, desc, diff='보통', time='8분', reward='랜덤 보상', steps){
+  return {
+    id: title + '_' + Math.random().toString(36).slice(2,7),
+    title, desc, diff, time, reward,
+    thumb: `https://picsum.photos/seed/${encodeURIComponent(title)}/640/360`,
+    steps: steps || [
+      step('인트로','시작한다','나중에','좋은 출발!','기회가 줄어든다'),
+      step('핵심 선택','도전한다','안전하게 간다','보상 확률 ↑','안전하지만 보상 ↓'),
+      step('엔딩','완수한다','포기한다','완료!','실패…')
+    ]
+  }
+}
+function step(title, a, b, aMsg, bMsg){ return {title, a, b, aMsg, bMsg}; }
+
+/* ===== 모듈 렌더링 ===== */
+const moduleButtons = document.querySelectorAll('[data-module]');
+moduleButtons.forEach(btn=> btn.addEventListener('click', ()=> loadModule(btn.dataset.module)));
+
+function loadModule(key){
+  const mod = DB[key];
+  state.currentModule = key;
+  els.module.title.textContent = mod.title;
+  els.module.meta.textContent = `총 ${mod.stories.length}개 스토리`;
+  renderStories(mod.stories);
+}
+
+function renderStories(list){
+  const q = els.inputs.search.value.trim().toLowerCase();
+  let filtered = list.filter(s=> s.title.toLowerCase().includes(q) || s.desc.toLowerCase().includes(q));
+  switch(els.inputs.sort.value){
+    case 'easy': filtered.sort((a,b)=> diffRank(a.diff)-diffRank(b.diff)); break;
+    case 'hard': filtered.sort((a,b)=> diffRank(b.diff)-diffRank(a.diff)); break;
+    case 'short': filtered.sort((a,b)=> timeToMin(a.time)-timeToMin(b.time)); break;
+    case 'long': filtered.sort((a,b)=> timeToMin(b.time)-timeToMin(a.time)); break;
+    case 'new': filtered.sort((a,b)=> a.id<b.id?1:-1); break;
+    default: /* popular */ filtered.sort((a,b)=> a.title>b.title?1:-1);
+  }
+  els.module.grid.innerHTML = '';
+  filtered.forEach(story=>{
+    const card = document.createElement('div');
+    card.className = 'card story-card';
+    card.innerHTML = `
+      <div class="thumb" style="background:url('${story.thumb}') center/cover no-repeat">
+        <span>${state.progress[story.id] ? 'COMPLETED' : 'NEW'}</span>
+      </div>
+      <h3>${story.title}</h3>
+      <p class="muted">${story.desc}</p>
+      <div class="chips">
+        <span class="chip">난이도: ${story.diff}</span>
+        <span class="chip">소요: ${story.time}</span>
+        <span class="chip">보상: ${story.reward}</span>
+      </div>
+      <div class="row" style="margin-top:6px">
+        <button data-play="${story.id}">시작</button>
+        <button class="ghost" data-like="${story.id}">❤︎ 찜</button>
+      </div>
+    `;
+    card.querySelector('[data-play]').addEventListener('click', ()=> openStory(story));
+    card.querySelector('[data-like]').addEventListener('click', ()=> toast('찜 목록에 추가했습니다.'));
+    els.module.grid.appendChild(card);
   });
-  // ========================================================
+}
 
-  // ===== 모듈 데이터 (VR 제거, 버튼/텍스트 기반 체험) =====
-  const modules = {
-    love: {
-      title: "연애 모듈 — 공원에서의 첫 만남",
-      desc:  "공원에서 호감도(하트)를 모으며 친밀도를 올리세요. 대화 → 선물 → 약속의 순서로 진행됩니다.",
-      steps: [
-        { label:"① 인사하고 소개하기",  log:"💬 첫 대화가 어색함을 녹였습니다. +5점", points:5,  item:null },
-        { label:"② 공원 산책 권유하기", log:"🚶 산책을 함께 하며 공감대 형성! +10점", points:10, item:"공감 포인트" },
-        { label:"③ 작은 선물 전하기",  log:"🎁 선물이 마음에 들었습니다. +15점", points:15, item:"하트" },
-        { label:"④ 다음 만남 약속",    log:"📅 다음 만남을 약속했어요! +20점", points:20, item:"데이트 티켓" },
-      ],
-      rewards: "총 50점 + 하트/티켓 아이템"
-    },
-    space: {
-      title: "우주체험 모듈 — 소행성 정거장 임무",
-      desc:  "정거장 출발 → 소행성 스캔 → 샘플 회수 → 귀환 보고. 각 단계에서 과학 데이터를 획득하세요.",
-      steps: [
-        { label:"① 정거장 점검",   log:"🛰️ 시스템 정상. 임무 준비 완료! +5점",  points:5,  item:"점검 로그" },
-        { label:"② 소행성 스캔",   log:"🔭 스캔 데이터 확보 완료! +15점", points:15, item:"스캔 데이터" },
-        { label:"③ 샘플 회수",     log:"🧪 귀중한 샘플 채취 성공! +20점", points:20, item:"암석 샘플" },
-        { label:"④ 귀환 및 보고",   log:"📡 본부 보고 완료! +10점",      points:10, item:"임무 리포트" },
-      ],
-      rewards: "총 50점 + 과학 데이터 세트"
-    },
-    hobby: {
-      title: "취미 모듈 — 숲속 휴식과 커피",
-      desc:  "숲길 걷기 → 사진 촬영 → 핸드드립 커피 → 조용한 독서. 마음의 평화를 얻어보세요.",
-      steps: [
-        { label:"① 숲길 걷기",     log:"🌲 상쾌한 공기로 리프레시! +5점",  points:5,  item:"잎사귀" },
-        { label:"② 사진 촬영",     log:"📷 멋진 사진을 건졌습니다! +10점", points:10, item:"사진" },
-        { label:"③ 핸드드립 커피", log:"☕ 향이 훌륭한 커피 한 잔! +15점", points:15, item:"커피" },
-        { label:"④ 조용한 독서",   log:"📖 몰입의 시간, 집중력 회복! +20점", points:20, item:"책갈피" },
-      ],
-      rewards: "총 50점 + 힐링 아이템"
-    }
-  };
+els.inputs.search.addEventListener('input', ()=> {
+  if(!state.currentModule) return;
+  renderStories(DB[state.currentModule].stories);
+});
+els.inputs.sort.addEventListener('change', ()=> {
+  if(!state.currentModule) return;
+  renderStories(DB[state.currentModule].stories);
+});
+function diffRank(d){ return d==='쉬움'?1: d==='보통'?2: 3; }
+function timeToMin(t){ return parseInt(String(t).replace(/\D/g,''))||8; }
 
-  const btnLove  = document.getElementById("loveModule");
-  const btnSpace = document.getElementById("spaceModule");
-  const btnHobby = document.getElementById("hobbyModule");
-
-  btnLove.addEventListener("click",  ()=>selectModule("love"));
-  btnSpace.addEventListener("click", ()=>selectModule("space"));
-  btnHobby.addEventListener("click", ()=>selectModule("hobby"));
-
-  function selectModule(key){
-    const m = modules[key];
-    currentModule = key;
-    currentStepIndex = 0;
-    moduleTitle.textContent = m.title;
-    moduleDesc.textContent  = m.desc + ` (보상: ${m.rewards})`;
-
-    // 스텝 표시 (버튼형)
-    storySteps.innerHTML = "";
-    m.steps.forEach((s, idx)=>{
-      const step = document.createElement("div");
-      step.className = "pill";
-      step.style.marginBottom = "8px";
-
-      const left = document.createElement("div");
-      left.innerHTML = `<span class="emoji">➡️</span> ${s.label}`;
-      const right = document.createElement("div");
-      right.style.marginLeft = "auto";
-
-      const action = document.createElement("button");
-      action.textContent = "실행";
-      action.style.background = idx===0 ? "#111827" : "#9CA3AF";
-      action.style.color = "#fff";
-      action.style.fontWeight = "700";
-      action.style.borderRadius = "10px";
-      action.style.padding = "8px 12px";
-      action.disabled = (idx!==0);
-
-      action.dataset.index = idx;
-      action.addEventListener("click", ()=>{
-        runStep(idx);
-      });
-
-      right.appendChild(action);
-      step.appendChild(left);
-      step.appendChild(right);
-      storySteps.appendChild(step);
+/* ===== 스토리 플레이 ===== */
+function openStory(story){
+  state.currentStory = story;
+  els.play.title.textContent = story.title;
+  els.play.diff.textContent = '난이도: ' + story.diff;
+  els.play.time.textContent = '소요: ' + story.time;
+  els.play.reward.textContent = '보상: ' + story.reward;
+  els.play.desc.textContent = story.desc;
+  els.play.thumb.style.background = `url('${story.thumb}') center/cover no-repeat`;
+  els.play.badge.textContent = state.progress[story.id] ? 'REPLAY' : 'STORY';
+  els.play.steps.innerHTML = '';
+  story.steps.forEach((st, idx)=>{
+    const box = document.createElement('div');
+    box.className = 'card';
+    box.style.flex = '1 1 320px';
+    box.innerHTML = `
+      <b>${idx+1}. ${st.title}</b>
+      <div class="row" style="margin-top:8px">
+        <button class="success" data-choose="A">${st.a}</button>
+        <button class="ghost" data-choose="B">${st.b}</button>
+      </div>
+      <p class="muted" data-msg style="min-height:20px; margin-top:8px"></p>
+    `;
+    const msg = box.querySelector('[data-msg]');
+    box.querySelector('[data-choose="A"]').addEventListener('click', ()=>{
+      msg.textContent = st.aMsg || '좋은 선택!';
+      reward(3, '선택 보상');
     });
-
-    startStoryBtn.style.display="inline-block";
-    backBtn.style.display="inline-block";
-    questLogEl.innerHTML = "• 모듈을 시작하면 진행 로그가 기록됩니다.";
-  }
-
-  function runStep(idx){
-    const m = modules[currentModule];
-    const s = m.steps[idx];
-    if(idx !== currentStepIndex) return; // 순서 진행
-
-    // 포인트/아이템 지급
-    points += s.points;
-    if(s.item) items.push(s.item);
-    updateScore();
-    log(s.log);
-
-    // 다음 스텝 활성화
-    const buttons = storySteps.querySelectorAll("button");
-    buttons[idx].textContent = "완료";
-    buttons[idx].style.background = "#10B981";
-    buttons[idx].disabled = true;
-
-    currentStepIndex++;
-    if(currentStepIndex < buttons.length){
-      buttons[currentStepIndex].disabled = false;
-      buttons[currentStepIndex].style.background = "#111827";
-    } else {
-      log("🏁 모듈 스토리 완료! 축하합니다.");
-    }
-  }
-
-  // 체험 시작: 첫 스텝을 안내만 (이미 버튼에서 실행함)
-  startStoryBtn.addEventListener("click", ()=>{
-    logMessages = [];
-    questLogEl.innerHTML = "• 스토리를 시작했습니다.";
-    updateScore();
+    box.querySelector('[data-choose="B"]').addEventListener('click', ()=>{
+      msg.textContent = st.bMsg || '무난한 선택…';
+      reward(1, '소량 보상');
+    });
+    els.play.steps.appendChild(box);
   });
+  els.play.start.disabled = false;
+  els.play.complete.disabled = true;
+  switchScreen('module','play');
+}
 
-  // 뒤로가기
-  backBtn.addEventListener("click", ()=>{
-    moduleScreen.style.display = "none";
-    homeScreen.style.display   = "flex";
-    startStoryBtn.style.display = "none";
-    backBtn.style.display = "none";
-    storySteps.innerHTML = "";
-    moduleTitle.textContent = "모듈을 선택하면 스토리가 표시됩니다.";
-    moduleDesc.textContent  = "";
-    logMessages = [];
-    questLogEl.innerHTML = "• 아직 진행 내역이 없습니다.";
-    statusEl.textContent = "상태: 대기 중";
-  });
+els.play.start.addEventListener('click', ()=>{
+  if(!state.currentStory){ return; }
+  toast('스토리를 시작했습니다. 각 단계의 선택으로 보상을 받습니다.');
+  els.play.start.disabled = true;
+  els.play.complete.disabled = false;
+});
 
-  // 초기 점수표시
-  updateScore();
+els.play.complete.addEventListener('click', ()=>{
+  if(!state.currentStory){ return; }
+  state.progress[state.currentStory.id] = true;
+  reward(10, state.currentStory.reward, true);
+  logQuest(`『${state.currentStory.title}』 완료! 보상: ${state.currentStory.reward} · 포인트 +10`);
+  toast('스토리를 완료했습니다.');
+  switchScreen('play','module');
+  // 목록 갱신
+  renderStories(DB[state.currentModule].stories);
+});
+
+/* ===== 보상 처리 ===== */
+function reward(pts=1, item='코인', important=false){
+  state.points += pts;
+  if(item){ state.items.push(item); }
+  hudUpdate();
+  if(important) toast(`🎁 보상 획득: ${item} · +${pts}p`);
+}
+
+/* ===== 진입 가드 & 기본 모듈 선택 ===== */
+document.addEventListener('click', (e)=>{
+  if(!state.loggedIn && e.target.closest('#moduleScreen, #playScreen')){
+    e.preventDefault(); e.stopPropagation();
+    alert('먼저 로그인 및 Pi 결제를 완료하세요. π');
+  }
+}, true);
+
+// 첫 모듈 프리로드
+loadModule('romance');
+
+/* ===== 초기 HUD ===== */
+hudUpdate();
+setStatus('상태: 대기 중');
 </script>
 </body>
 </html>
