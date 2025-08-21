@@ -2,17 +2,16 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>Me2Verse-1 - Demo</title>
+  <title>Me2Verse - Demo</title>
   <style>
     body { margin:0; overflow:hidden; }
     canvas { display:block; }
   </style>
 </head>
 <body>
-<script type="module">
-import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160/build/three.module.js';
-import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.160/examples/jsm/controls/OrbitControls.js';
-
+<script src="https://cdn.jsdelivr.net/npm/three@0.160/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.160/examples/js/controls/OrbitControls.js"></script>
+<script>
 // 기본 세팅
 let scene = new THREE.Scene();
 scene.background = new THREE.Color(0xeeeeee);
@@ -24,7 +23,7 @@ let renderer = new THREE.WebGLRenderer({antialias:true});
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
-let controls = new OrbitControls(camera, renderer.domElement);
+let controls = new THREE.OrbitControls(camera, renderer.domElement);
 
 let raycaster = new THREE.Raycaster();
 let mouse = new THREE.Vector2();
@@ -36,7 +35,7 @@ let floor = new THREE.Mesh(floorGeo, floorMat);
 floor.rotation.x = -Math.PI/2;
 scene.add(floor);
 
-// ✅ 버튼 만들기 함수 (라벨 포함)
+// 버튼 만들기
 function createButton(name, color, x, z, labelText) {
   const group = new THREE.Group();
 
@@ -48,7 +47,7 @@ function createButton(name, color, x, z, labelText) {
   mesh.name = name;
   group.add(mesh);
 
-  // 라벨 텍스트 (CanvasTexture)
+  // 라벨
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
   canvas.width = 256;
@@ -73,7 +72,7 @@ function createButton(name, color, x, z, labelText) {
 createButton("Teleport", 0x00ff00, -1.5, -2, "Teleport");
 createButton("Kiosk", 0xff0000, 1.5, -2, "Kiosk");
 
-// ✅ Raycaster 선택
+// 클릭 처리
 function pick(clientX, clientY) {
   mouse.x = (clientX / window.innerWidth) * 2 - 1;
   mouse.y = -(clientY / window.innerHeight) * 2 + 1;
@@ -82,7 +81,6 @@ function pick(clientX, clientY) {
   return raycaster.intersectObjects(scene.children, true)[0];
 }
 
-// ✅ 클릭 이벤트
 addEventListener("click", (e) => {
   const hit = pick(e.clientX, e.clientY);
   if (hit) {
