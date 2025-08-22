@@ -1,136 +1,87 @@
-require('dotenv').config();
 const express = require('express');
+const http = require('http');
+const { Server } = require('socket.io');
 const cors = require('cors');
 const bodyParser = require('body-parser');
-const { Pool } = require('pg');
-const { v4: uuidv4 } = require('uuid');
-
-const PORT = process.env.PORT || 4000;
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+const helmet = require('helmet');
+const jwt = require('jsonwebtoken');
+const { MongoClient, ObjectId } = require('mongodb');
 
 const app = express();
 app.use(cors());
+app.use(helmet());
 app.use(bodyParser.json());
 
-// health
-app.get('/', (req,res)=> res.json({ ok:true, server:'me2verse' }));
+const server = http.createServer(app);
+const io = new Server(server, { cors:{ origin:"*" } });
 
-/** USERS **/
-app.post('/api/users', async (req,res)=>{
-  const { name, pi_wallet } = req.body;
+// ENV / CONFIG
+const MONGO_URL = process.env.MONGO_URL || 'mongodb://localhost:27017';
+const DB_NAME = 'me2v';
+const JWT_SECRET = process.env.JWT_SECRET || 'dev_secret';
+
+let db;
+MongoClient.connect(MONGO_URL).then(client => {
+  db = client.db(DB_NAME);
+  console.log('Mongo connected');
+}).catch(err=>console.error(err));
+
+// Simple /api/modules (serve catalogue) -- in production this is read from DB
+app.get('/api/modules', async (req,res) => {
+  // try DB first
   try{
-    const r = await pool.query(`INSERT INTO users (id,name,pi_wallet) VALUES ($1,$2,$3) RETURNING *`, [uuidv4(), name, pi_wallet]);
-    res.json(r.rows[0]);
-  }catch(err){ console.error(err); res.status(500).json({error:'user create failed'}) }
+    const mods = await db.collection('modules').find({enabled:true}).toArray();
+    if(mods && mods.length) return res.json(mods);
+  }catch(e){}
+  // fallback demo modules
+  res.json([
+    {id:'love-park-01', module:'love', title:'공원에서의 첫 만남', visual:'/assets/love-park-01/thumb.jpg', highlight:false},
+    {id:'space-mars-01', module:'space', title:'화성 탐험', visual:'/assets/space-mars-01/thumb.jpg', highlight:true}
+  ]);
 });
 
-app.get('/api/users/:id', async (req,res)=>{
-  const id = req.params.id;
+// Pi login simulation endpoint — production: verify proof from Pi SDK / wallet
+app.post('/api/auth/pi', async (req,res) => {
+  const { piId } = req.body;
+  if(!piId) return res.status(400).json({error:'piId required'});
+  // TODO: PRODUCTION: verify Pi ownership / signature on server side
+  const user = { piId, displayName: piId.replace(/^pi_/,'') };
+  const token = jwt.sign({ piId }, JWT_SECRET, { expiresIn:'7d' });
+  // upsert user in DB
   try{
-    const r = await pool.query(`SELECT * FROM users WHERE id=$1`, [id]);
-    res.json(r.rows[0]||null);
-  }catch(err){ res.status(500).json({error:'user fetch failed'})}
+    await db.collection('users').updateOne({piId}, {$set:{piId, displayName:user.displayName}}, {upsert:true});
+  }catch(e){ console.warn(e); }
+  res.json({ token, user });
 });
 
-/** STORIES (seed via client or DB script) **/
-app.get('/api/stories', async (req,res)=>{
+app.post('/api/user/progress', async (req,res) => {
+  const { token, payload } = req.body;
+  // optional: verify JWT
+  // TODO: validate payload and store
   try{
-    const r = await pool.query(`SELECT * FROM stories ORDER BY created_at DESC`);
-    res.json(r.rows);
-  }catch(err){ res.status(500).json({error:'stories fetch failed'})}
-});
-
-app.get('/api/stories/:id', async (req,res)=>{
-  const id = req.params.id;
-  try{
-    const r = await pool.query(`SELECT * FROM stories WHERE id=$1`, [id]);
-    res.json(r.rows[0]||null);
-  }catch(err){ res.status(500).json({error:'story fetch failed'})}
-});
-
-app.post('/api/stories', async (req,res)=>{
-  // Admin-only in real app
-  const s = req.body;
-  try{
-    await pool.query(
-      `INSERT INTO stories (id,module,title,synopsis,diff,length_min,is_premium,reward,steps,tags) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
-      [s.id, s.module||'custom', s.title, s.synopsis, s.diff||'보통', s.length_min||8, s.is_premium||false, s.reward||{}, s.steps||[], s.tags||[]]
-    );
+    // store under user id
+    await db.collection('progress').insertOne({ payload, createdAt: new Date() });
     res.json({ ok:true });
-  }catch(err){ console.error(err); res.status(500).json({error:'story insert failed'})}
+  }catch(e){ res.status(500).json({error:e.message}); }
 });
 
-/** SUBMISSIONS (user proposed stories) **/
-app.post('/api/submissions', async (req,res)=>{
-  const { user_id, title, synopsis, tags, is_premium } = req.body;
-  try {
-    const r = await pool.query(`INSERT INTO submissions (id,user_id,title,synopsis,tags,is_premium) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *`, [uuidv4(), user_id || null, title, synopsis, tags || [], is_premium || false]);
-    res.json(r.rows[0]);
-  } catch(err){ console.error(err); res.status(500).json({error:'submission failed'}) }
+// WebSocket basic: rooms presence
+io.on('connection', socket => {
+  console.log('ws connected', socket.id);
+  socket.on('joinRoom', (roomId) => {
+    socket.join(roomId);
+    io.to(roomId).emit('presence', { id: socket.id, action:'join' });
+  });
+  socket.on('leaveRoom', (roomId) => {
+    socket.leave(roomId);
+    io.to(roomId).emit('presence', { id: socket.id, action:'leave' });
+  });
+  socket.on('input', (data) => {
+    // broadcast to room (server-authoritative logic should be added)
+    if(data.room) socket.to(data.room).emit('peerInput', { id: socket.id, payload: data.payload });
+  });
+  socket.on('disconnect', () => console.log('ws disconnect', socket.id));
 });
 
-// admin: accept submission -> create story
-app.post('/api/submissions/:id/accept', async (req,res)=>{
-  const id = req.params.id;
-  try{
-    const r = await pool.query(`SELECT * FROM submissions WHERE id=$1`, [id]);
-    const sub = r.rows[0];
-    if(!sub) return res.status(404).json({error:'not found'});
-    const storyId = (sub.title.replace(/\s+/g,'_') + '_' + Date.now()).slice(0,200);
-    const story = {
-      id: storyId,
-      module: 'romance',
-      title: sub.title,
-      synopsis: sub.synopsis,
-      diff: '보통',
-      length_min: 8,
-      is_premium: sub.is_premium,
-      reward: { points:10, items: ['유저제안보상'] },
-      steps: [{title:'사용자제안 기본', a:'진행','b':'보류'}]
-    };
-    await pool.query(`INSERT INTO stories (id,module,title,synopsis,diff,length_min,is_premium,reward,steps,tags) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`, [story.id, story.module, story.title, story.synopsis, story.diff, story.length_min, story.is_premium, story.reward, story.steps, []]);
-    await pool.query(`UPDATE submissions SET status='accepted' WHERE id=$1`, [id]);
-    res.json({ ok:true, storyId });
-  }catch(err){ console.error(err); res.status(500).json({error:'accept failed'})}
-});
-
-/** EXPERIENCES (save user runs) **/
-app.post('/api/experiences', async (req,res)=>{
-  const { user_id, story_id, choices, points, items, emotions, snapshot_urls } = req.body;
-  try{
-    const r = await pool.query(`INSERT INTO experiences (id,user_id,story_id,choices,points,items,emotions,snapshot_urls) VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *`,
-      [uuidv4(), user_id || null, story_id, choices || {}, points || 0, items || [], emotions || {}, snapshot_urls || []]);
-    res.json(r.rows[0]);
-  }catch(err){ console.error(err); res.status(500).json({error:'save experience failed'})}
-});
-
-app.get('/api/experiences/:userId', async (req,res)=>{
-  const uid = req.params.userId;
-  try{
-    const r = await pool.query(`SELECT * FROM experiences WHERE user_id=$1 ORDER BY created_at DESC`, [uid]);
-    res.json(r.rows);
-  }catch(err){ res.status(500).json({error:'fetch experiences failed'})}
-});
-
-/** TRANSACTIONS + Pi verification (SIMULATED) **/
-app.post('/api/transactions/pi', async (req,res)=>{
-  // expected: { user_id, amount_pi, proofTxHash }
-  const { user_id, amount_pi, proofTxHash } = req.body;
-  // NOTE: Put Pi Network verification here in production.
-  // For demo we accept any tx and mark it 'confirmed'
-  try{
-    const r = await pool.query(`INSERT INTO transactions (id,user_id,amount_pi,type,status,tx_hash) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *`, [uuidv4(), user_id || null, amount_pi, 'pi_payment', 'confirmed', proofTxHash || 'demo_'+Date.now()]);
-    res.json({ ok:true, tx: r.rows[0] });
-  }catch(err){ res.status(500).json({error:'transaction failed'})}
-});
-
-/** Simple search endpoint */
-app.get('/api/search', async (req,res)=>{
-  const q = (req.query.q || '').toLowerCase();
-  try{
-    const r = await pool.query(`SELECT * FROM stories WHERE lower(title) LIKE $1 OR lower(synopsis) LIKE $1`, [`%${q}%`]);
-    res.json(r.rows);
-  }catch(err){ res.status(500).json({error:'search failed'})}
-});
-
-app.listen(PORT, ()=> console.log(`Me2Verse server listening ${PORT}`));
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, ()=> console.log('Server running on', PORT));
