@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Me2Verse AI 대화형 체험</title>
+<title>Me2Verse 체험형 SPA</title>
 <style>
 body { font-family: Arial; margin:0; padding:0; background:#f0f4f8; display:flex; flex-direction:column; align-items:center; }
 h1 { color:#e74c3c; margin:10px 0; text-align:center; }
@@ -26,7 +26,7 @@ h1 { color:#e74c3c; margin:10px 0; text-align:center; }
 </head>
 <body>
 
-<h1>🚀 Me2Verse AI 대화형 체험</h1>
+<h1>🚀 Me2Verse 체험형 SPA</h1>
 <div id="levelContainer">
   <div id="levelBar">레벨 1 (0 XP)</div>
 </div>
@@ -38,51 +38,18 @@ h1 { color:#e74c3c; margin:10px 0; text-align:center; }
   <button class="button" onclick="showModule('space')">🌌 우주</button>
 </div>
 
-<!-- 모듈 구조 -->
-<div id="love" class="module">
-  <h2>❤️ 연애 체험</h2>
-  <div class="chat-box" id="loveChat"></div>
-  <input type="text" id="loveInput" placeholder="AI에게 말해보세요...">
-  <button id="loveSend" class="button" onclick="sendMessage('love')">보내기</button>
-  <button class="button backBtn" onclick="backToMain()">메인으로</button>
-</div>
-
-<div id="marriage" class="module">
-  <h2>💍 결혼 체험</h2>
-  <div class="chat-box" id="marriageChat"></div>
-  <input type="text" id="marriageInput" placeholder="AI에게 말해보세요...">
-  <button id="marriageSend" class="button" onclick="sendMessage('marriage')">보내기</button>
-  <button class="button backBtn" onclick="backToMain()">메인으로</button>
-</div>
-
-<div id="hobby" class="module">
-  <h2>🎨 취미 체험</h2>
-  <div class="chat-box" id="hobbyChat"></div>
-  <input type="text" id="hobbyInput" placeholder="AI에게 말해보세요...">
-  <button id="hobbySend" class="button" onclick="sendMessage('hobby')">보내기</button>
-  <button class="button backBtn" onclick="backToMain()">메인으로</button>
-</div>
-
-<div id="space" class="module">
-  <h2>🌌 우주 체험</h2>
-  <div class="chat-box" id="spaceChat"></div>
-  <input type="text" id="spaceInput" placeholder="AI에게 말해보세요...">
-  <button id="spaceSend" class="button" onclick="sendMessage('space')">보내기</button>
-  <button class="button backBtn" onclick="backToMain()">메인으로</button>
-</div>
+<div id="moduleContainer"></div>
 
 <script>
 // 레벨/XP
 let level = 1;
 let xp = 0;
 const xpPerLevel = 20;
-
 function updateLevelBar(){
   let percent = (xp % xpPerLevel)/xpPerLevel*100;
   document.getElementById('levelBar').style.width = percent + '%';
   document.getElementById('levelBar').textContent = `레벨 ${level} (${xp} XP)`;
 }
-
 function addXP(amount){
   xp += amount;
   if(xp >= level*xpPerLevel){
@@ -92,78 +59,100 @@ function addXP(amount){
   updateLevelBar();
 }
 
-// 모듈 관리
+// 모듈별 스토리 데이터
+const modulesData = {
+  love: {
+    aiName: "연인 AI",
+    background: "https://picsum.photos/id/1015/600/300",
+    storyTree: {
+      start: { text: "데이트 장소를 선택하세요.", options:{ 카페:{text:"☕ 카페에서 데이트 시작!", next:"conversation", xp:5}, 공원:{text:"🌳 공원에서 산책 시작!", next:"conversation", xp:5} } },
+      conversation: { text:"대화 주제를 선택하세요.", options:{ 영화:{text:"🎬 영화 이야기를 나눴습니다.", next:"end", xp:5}, 음악:{text:"🎵 음악 이야기를 나눴습니다.", next:"end", xp:5} } },
+      end: { text:"데이트가 즐거웠습니다! 🎉", xp:10 }
+    }
+  },
+  marriage: {
+    aiName: "웨딩 플래너 AI",
+    background: "https://picsum.photos/id/1016/600/300",
+    storyTree: {
+      start: { text:"식장 스타일 선택:", options:{ 전통식:{text:"🏯 전통식 준비 완료!", next:"dress", xp:10}, 현대식:{text:"🏰 현대식 준비 완료!", next:"dress", xp:10} } },
+      dress: { text:"드레스를 선택하세요.", options:{ 화이트:{text:"👰 화이트 드레스 선택!", next:"end", xp:5}, 핑크:{text:"🌸 핑크 드레스 선택!", next:"end", xp:5} } },
+      end: { text:"결혼식 준비 완료! 🎉", xp:10 }
+    }
+  },
+  hobby: {
+    aiName: "취미 멘토 AI",
+    background: "https://picsum.photos/id/1025/600/300",
+    storyTree: {
+      start: { text:"취미를 선택하세요.", options:{ 그림:{text:"🖌️ 그림 그리기 시작!", next:"practice", xp:3}, 악기:{text:"🎹 악기 배우기 시작!", next:"practice", xp:3} } },
+      practice: { text:"연습을 완료했나요?", options:{ yes:{text:"연습 완료! 👍", next:"end", xp:5}, no:{text:"더 연습이 필요합니다.", next:"practice", xp:2} } },
+      end: { text:"취미 체험 완료! 🎉", xp:5 }
+    }
+  },
+  space: {
+    aiName: "우주선 AI",
+    background: "https://picsum.photos/id/1020/600/300",
+    storyTree: {
+      start: { text:"목표를 선택하세요.", options:{ 달:{text:"🌕 달 탐사 시작!", next:"mission", xp:8}, 화성:{text:"🪐 화성 탐사 시작!", next:"mission", xp:8} } },
+      mission: { text:"장비를 점검하고 진행하세요.", options:{ 점검완료:{text:"✅ 장비 점검 완료!", next:"end", xp:5}, 점검미완료:{text:"⚠️ 장비 점검 필요!", next:"mission", xp:2} } },
+      end: { text:"미션 완료! 🚀", xp:10 }
+    }
+  }
+};
+
+// SPA 구현
 let currentModule = '';
+let currentNode = '';
 function showModule(id){
   currentModule = id;
-  const modules = document.querySelectorAll('.module');
-  modules.forEach(m=>m.style.display='none');
-  document.getElementById(id).style.display='block';
-  startConversation(id);
+  currentNode = 'start';
+  renderModule();
 }
 
 function backToMain(){
-  const modules = document.querySelectorAll('.module');
-  modules.forEach(m=>m.style.display='none');
   currentModule = '';
+  document.getElementById('moduleContainer').innerHTML = '';
 }
 
-// AI 대화 초기화
-const aiModules = {
-  love:{chatId:'loveChat', inputId:'loveInput', messages:[], aiName:'연인 AI'},
-  marriage:{chatId:'marriageChat', inputId:'marriageInput', messages:[], aiName:'웨딩 플래너 AI'},
-  hobby:{chatId:'hobbyChat', inputId:'hobbyInput', messages:[], aiName:'취미 멘토 AI'},
-  space:{chatId:'spaceChat', inputId:'spaceInput', messages:[], aiName:'우주선 AI'}
-};
-
-// 대화 시작
-function startConversation(module){
-  const ai = aiModules[module];
-  ai.messages = [];
-  addAIMessage(module, `안녕하세요! ${ai.aiName}입니다. 대화를 시작해볼까요?`);
+// 모듈 렌더링
+function renderModule(){
+  const data = modulesData[currentModule];
+  const node = data.storyTree[currentNode];
+  const container = document.getElementById('moduleContainer');
+  container.innerHTML = `
+    <div class="module" style="display:block;">
+      <img src="${data.background}" style="width:100%; border-radius:12px; margin-bottom:10px;">
+      <div class="chat-box" id="chatBox"></div>
+      <div id="optionsDiv"></div>
+      <button class="button backBtn" onclick="backToMain()">메인으로</button>
+    </div>
+  `;
+  const chatBox = document.getElementById('chatBox');
+  chatBox.innerHTML = `<div class="message ai">${data.aiName}: ${node.text}</div>`;
+  const optionsDiv = document.getElementById('optionsDiv');
+  if(node.options){
+    Object.keys(node.options).forEach(opt=>{
+      const btn = document.createElement('button');
+      btn.className = 'button';
+      btn.textContent = opt;
+      btn.onclick = ()=>chooseOption(opt);
+      optionsDiv.appendChild(btn);
+    });
+  }else{
+    addXP(node.xp);
+  }
 }
 
-// 메시지 표시
-function addMessage(module, text, sender){
-  const ai = aiModules[module];
-  const chatBox = document.getElementById(ai.chatId);
-  const msgDiv = document.createElement('div');
-  msgDiv.className = 'message '+sender;
-  msgDiv.textContent = text;
-  chatBox.appendChild(msgDiv);
-  chatBox.scrollTop = chatBox.scrollHeight;
-}
-
-// AI 메시지
-function addAIMessage(module, text){
-  addMessage(module,text,'ai');
-  aiModules[module].messages.push({sender:'ai', text});
-  addXP(2); // AI 메시지마다 XP
-}
-
-// 사용자 메시지
-function sendMessage(module){
-  const ai = aiModules[module];
-  const input = document.getElementById(ai.inputId);
-  if(!input.value) return;
-  addMessage(module,input.value,'user');
-  ai.messages.push({sender:'user', text:input.value});
-  // AI 반응 생성
-  setTimeout(()=>generateAIResponse(module,input.value),500);
-  input.value='';
-}
-
-// 간단 AI 응답 (랜덤 또는 선택 기반)
-function generateAIResponse(module, userText){
-  const ai = aiModules[module];
-  const responses = [
-    "정말 흥미로운 선택이네요!",
-    "그런 방법도 있군요!",
-    "좋아요, 계속 진행해봐요!",
-    "음… 다른 방법도 시도해볼까요?"
-  ];
-  const response = responses[Math.floor(Math.random()*responses.length)];
-  addAIMessage(module,response);
+// 옵션 선택
+function chooseOption(opt){
+  const data = modulesData[currentModule];
+  const node = data.storyTree[currentNode];
+  const chatBox = document.getElementById('chatBox');
+  const selected = node.options[opt];
+  chatBox.innerHTML += `<div class="message user">${opt}</div>`;
+  chatBox.innerHTML += `<div class="message ai">${selected.text}</div>`;
+  addXP(selected.xp);
+  currentNode = selected.next;
+  setTimeout(()=>renderModule(), 800);
 }
 </script>
 </body>
