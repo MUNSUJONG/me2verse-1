@@ -3,20 +3,20 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Me2Verse 몰입형 SPA</title>
+<title>Me2Verse 완전체 체험</title>
 <style>
-body { font-family: Arial; margin:0; padding:0; background:#f0f4f8; display:flex; flex-direction:column; align-items:center; }
-h1 { color:#e74c3c; margin:10px 0; text-align:center; }
-#levelContainer { width:90%; background:#ddd; border-radius:10px; margin:10px auto; height:25px; overflow:hidden; }
+body { font-family: Arial; margin:0; padding:0; background:#eaeaea; display:flex; flex-direction:column; align-items:center; }
+h1 { color:#c0392b; margin:10px 0; text-align:center; }
+#levelContainer { width:90%; background:#ccc; border-radius:10px; margin:10px auto; height:25px; overflow:hidden; }
 #levelBar { height:25px; width:0%; background:#f39c12; text-align:center; color:#fff; line-height:25px; transition:width 0.5s; font-weight:bold; }
 #moduleButtons { display:flex; flex-wrap:wrap; justify-content:center; margin-top:10px; }
-.button { margin:6px; padding:12px 20px; font-size:16px; color:#fff; background:#3498db; border:none; border-radius:8px; cursor:pointer; flex:1; min-width:120px; transition:0.2s; }
-.button:hover { background:#2980b9; }
-.module { display:none; padding:20px; margin:20px auto; border-radius:12px; box-shadow:0 4px 8px rgba(0,0,0,0.2); max-width:600px; width:90%; position:relative; background:#fff; }
+.button { margin:6px; padding:12px 20px; font-size:16px; color:#fff; background:#2980b9; border:none; border-radius:8px; cursor:pointer; flex:1; min-width:120px; transition:0.2s; }
+.button:hover { background:#2471a3; }
+.module { display:none; padding:20px; margin:20px auto; border-radius:12px; box-shadow:0 4px 8px rgba(0,0,0,0.2); max-width:700px; width:90%; position:relative; background:#fff; }
 .chat-box { border:1px solid #ccc; padding:10px; height:300px; overflow-y:auto; border-radius:10px; background:#fefefe; margin-bottom:10px; }
-.message { margin:6px 0; padding:8px 12px; border-radius:12px; max-width:80%; clear:both; }
-.message.ai { background:#3498db; color:#fff; float:left; }
-.message.user { background:#2ecc71; color:#fff; float:right; }
+.message { margin:6px 0; padding:8px 12px; border-radius:12px; max-width:80%; clear:both; word-break:break-word; }
+.message.ai { background:#2980b9; color:#fff; float:left; }
+.message.user { background:#27ae60; color:#fff; float:right; }
 #userInput { width:calc(100% - 100px); padding:10px; border-radius:8px; border:1px solid #ccc; font-size:16px; }
 #sendBtn { padding:10px 16px; border:none; border-radius:8px; background:#e67e22; color:#fff; cursor:pointer; transition:0.2s; }
 #sendBtn:hover { background:#d35400; }
@@ -26,7 +26,8 @@ h1 { color:#e74c3c; margin:10px 0; text-align:center; }
 </head>
 <body>
 
-<h1>🚀 Me2Verse 몰입형 체험 SPA</h1>
+<h1>🚀 Me2Verse 완전체 체험</h1>
+
 <div id="levelContainer">
   <div id="levelBar">레벨 1 (0 XP)</div>
 </div>
@@ -36,80 +37,79 @@ h1 { color:#e74c3c; margin:10px 0; text-align:center; }
   <button class="button" onclick="showModule('marriage')">💍 결혼</button>
   <button class="button" onclick="showModule('hobby')">🎨 취미</button>
   <button class="button" onclick="showModule('space')">🌌 우주</button>
+  <button class="button" onclick="showModule('culture')">🏛️ 문화체험</button>
+  <button class="button" onclick="showModule('language')">🗣️ 언어체험</button>
 </div>
 
 <div id="moduleContainer"></div>
 
 <script>
-// 레벨/XP
-let level=1, xp=0, currentModule='', currentNode='';
-const xpPerLevel=20;
+// ---------- XP/레벨 ----------
+let level = 1, xp = 0, currentModule='', currentNode='';
+const xpPerLevel = 20;
 function updateLevelBar(){
-  let percent=(xp % xpPerLevel)/xpPerLevel*100;
-  document.getElementById('levelBar').style.width=percent+'%';
-  document.getElementById('levelBar').textContent=`레벨 ${level} (${xp} XP)`;
+  let percent = (xp % xpPerLevel)/xpPerLevel*100;
+  document.getElementById('levelBar').style.width = percent + '%';
+  document.getElementById('levelBar').textContent = `레벨 ${level} (${xp} XP)`;
 }
 function addXP(amount){
-  xp+=amount;
-  if(xp>=level*xpPerLevel){
+  xp += amount;
+  if(xp >= level*xpPerLevel){
     level++;
     alert(`🎉 레벨업! 레벨 ${level} 달성!`);
   }
   updateLevelBar();
 }
 
-// 모듈별 데이터
-const modulesData={
-  love:{
-    aiName:"연인 AI",
-    background:"https://picsum.photos/id/1015/600/300",
+// ---------- 모듈 데이터 ----------
+const modulesData = {
+  love:{aiName:"연인 AI", background:"https://picsum.photos/id/1015/700/300",
     storyTree:{
-      start:{ text:"데이트 장소를 선택하세요.", options:{ 카페:{text:"☕ 카페에서 데이트 시작!", next:"conversation", xp:5}, 공원:{text:"🌳 공원에서 산책 시작!", next:"conversation", xp:5} } },
-      conversation:{ text:"대화 주제를 선택하세요.", options:{ 영화:{text:"🎬 영화 이야기를 나눴습니다.", next:"end", xp:5}, 음악:{text:"🎵 음악 이야기를 나눴습니다.", next:"end", xp:5} } },
-      end:{ text:"데이트가 즐거웠습니다! 🎉", xp:10 }
+      start:{ text:"데이트 장소 선택:", options:{ 카페:{text:"☕ 카페 데이트 시작!", next:"conversation", xp:5}, 공원:{text:"🌳 공원 산책 시작!", next:"conversation", xp:5} } },
+      conversation:{ text:"대화 주제 선택:", options:{ 영화:{text:"🎬 영화 이야기!", next:"end", xp:5}, 음악:{text:"🎵 음악 이야기!", next:"end", xp:5} } },
+      end:{ text:"데이트 즐거웠습니다! 🎉", xp:10 }
     }
   },
-  marriage:{
-    aiName:"웨딩 플래너 AI",
-    background:"https://picsum.photos/id/1016/600/300",
+  marriage:{aiName:"웨딩 플래너 AI", background:"https://picsum.photos/id/1016/700/300",
     storyTree:{
       start:{ text:"식장 스타일 선택:", options:{ 전통식:{text:"🏯 전통식 준비 완료!", next:"dress", xp:10}, 현대식:{text:"🏰 현대식 준비 완료!", next:"dress", xp:10} } },
-      dress:{ text:"드레스를 선택하세요.", options:{ 화이트:{text:"👰 화이트 드레스 선택!", next:"end", xp:5}, 핑크:{text:"🌸 핑크 드레스 선택!", next:"end", xp:5} } },
+      dress:{ text:"드레스 선택:", options:{ 화이트:{text:"👰 화이트 드레스 선택!", next:"end", xp:5}, 핑크:{text:"🌸 핑크 드레스 선택!", next:"end", xp:5} } },
       end:{ text:"결혼식 준비 완료! 🎉", xp:10 }
     }
   },
-  hobby:{
-    aiName:"취미 멘토 AI",
-    background:"https://picsum.photos/id/1025/600/300",
+  hobby:{aiName:"취미 멘토 AI", background:"https://picsum.photos/id/1025/700/300",
     storyTree:{
-      start:{ text:"취미를 선택하세요.", options:{ 그림:{text:"🖌️ 그림 그리기 시작!", next:"practice", xp:3}, 악기:{text:"🎹 악기 배우기 시작!", next:"practice", xp:3} } },
-      practice:{ text:"연습을 완료했나요?", options:{ yes:{text:"연습 완료! 👍", next:"end", xp:5}, no:{text:"더 연습이 필요합니다.", next:"practice", xp:2} } },
+      start:{ text:"취미 선택:", options:{ 그림:{text:"🖌️ 그림 시작!", next:"practice", xp:3}, 악기:{text:"🎹 악기 시작!", next:"practice", xp:3} } },
+      practice:{ text:"연습 완료?", options:{ yes:{text:"👍 연습 완료!", next:"end", xp:5}, no:{text:"💪 더 연습 필요!", next:"practice", xp:2} } },
       end:{ text:"취미 체험 완료! 🎉", xp:5 }
     }
   },
-  space:{
-    aiName:"우주선 AI",
-    background:"https://picsum.photos/id/1020/600/300",
+  space:{aiName:"우주선 AI", background:"https://picsum.photos/id/1020/700/300",
     storyTree:{
-      start:{ text:"목표를 선택하세요.", options:{ 달:{text:"🌕 달 탐사 시작!", next:"mission", xp:8}, 화성:{text:"🪐 화성 탐사 시작!", next:"mission", xp:8} } },
-      mission:{ text:"장비를 점검하고 진행하세요.", options:{ 점검완료:{text:"✅ 장비 점검 완료!", next:"end", xp:5}, 점검미완료:{text:"⚠️ 장비 점검 필요!", next:"mission", xp:2} } },
+      start:{ text:"탐사 목표 선택:", options:{ 달:{text:"🌕 달 탐사 시작!", next:"mission", xp:8}, 화성:{text:"🪐 화성 탐사 시작!", next:"mission", xp:8} } },
+      mission:{ text:"장비 점검:", options:{ 점검완료:{text:"✅ 점검 완료!", next:"end", xp:5}, 점검미완료:{text:"⚠️ 점검 필요!", next:"mission", xp:2} } },
       end:{ text:"미션 완료! 🚀", xp:10 }
+    }
+  },
+  culture:{aiName:"문화 가이드 AI", background:"https://picsum.photos/id/1035/700/300",
+    storyTree:{
+      start:{ text:"체험할 문화 선택:", options:{ 미술관:{text:"🖼️ 미술관 체험!", next:"tour", xp:5}, 박물관:{text:"🏺 박물관 체험!", next:"tour", xp:5} } },
+      tour:{ text:"전시 설명 듣기", options:{ 설명듣기:{text:"🎤 설명 완료!", next:"end", xp:5} } },
+      end:{ text:"문화체험 완료! 🎉", xp:10 }
+    }
+  },
+  language:{aiName:"언어 튜터 AI", background:"https://picsum.photos/id/1045/700/300",
+    storyTree:{
+      start:{ text:"배울 언어 선택:", options:{ 영어:{text:"🇺🇸 영어 학습 시작!", next:"practice", xp:5}, 일본어:{text:"🇯🇵 일본어 학습 시작!", next:"practice", xp:5} } },
+      practice:{ text:"간단한 문장 입력:", options:{ 예:{text:"🎯 문장 학습 성공!", next:"end", xp:5} } },
+      end:{ text:"언어체험 완료! 🎉", xp:10 }
     }
   }
 };
 
-// SPA 로직
-function showModule(id){
-  currentModule=id;
-  currentNode='start';
-  renderModule();
-}
-function backToMain(){
-  currentModule='';
-  document.getElementById('moduleContainer').innerHTML='';
-}
-
-// 메시지 추가
+// ---------- SPA 함수 ----------
+function showModule(id){ currentModule=id; currentNode='start'; renderModule(); }
+function backToMain(){ currentModule=''; document.getElementById('moduleContainer').innerHTML=''; }
 function addMessage(sender,text){
   const chatBox=document.getElementById('chatBox');
   const div=document.createElement('div');
@@ -119,75 +119,77 @@ function addMessage(sender,text){
   chatBox.scrollTop=chatBox.scrollHeight;
 }
 
-// 사용자 입력 분석
-function analyzeInput(userText){
-  const node=modulesData[currentModule].storyTree[currentNode];
-  if(!node || !node.options) return null;
-  const keywords=Object.keys(node.options);
-  for(let kw of keywords){
-    if(userText.includes(kw)) return kw;
-  }
-  return keywords[Math.floor(Math.random()*keywords.length)];
-}
-
-// 입력 처리
+// 사용자 입력 처리
 function handleUserInput(){
   const inputBox=document.getElementById('userInput');
   if(!inputBox.value) return;
-  addMessage('user', inputBox.value);
-  const chosenOption=analyzeInput(inputBox.value);
-  if(chosenOption) setTimeout(()=>chooseOption(chosenOption),500);
+  const userText = inputBox.value;
+  addMessage('user', userText);
   inputBox.value='';
+  processNode(userText);
 }
 
-// 모듈 렌더링
-function renderModule(){
-  const data=modulesData[currentModule];
-  const node=data.storyTree[currentNode];
-  const container=document.getElementById('moduleContainer');
-  container.innerHTML=`
-    <div class="module" style="display:block;">
-      <img src="${data.background}" style="width:100%; border-radius:12px; margin-bottom:10px;">
-      <div class="chat-box" id="chatBox"></div>
-      <input type="text" id="userInput" placeholder="AI에게 말해보세요...">
-      <button class="button" id="sendBtn">보내기</button>
-      <div id="optionsDiv"></div>
-      <button class="button backBtn" onclick="backToMain()">메인으로</button>
-    </div>
-  `;
-  addMessage('ai', `${data.aiName}: ${node.text}`);
-  const optionsDiv=document.getElementById('optionsDiv');
-  optionsDiv.innerHTML='';
-  if(node.options){
-    Object.keys(node.options).forEach(opt=>{
-      const btn=document.createElement('button');
-      btn.className='button';
-      btn.textContent=opt;
-      btn.onclick=()=>chooseOption(opt);
-      optionsDiv.appendChild(btn);
-    });
-  }else addXP(node.xp||0);
-
-  document.getElementById('sendBtn').onclick=handleUserInput;
-  document.getElementById('userInput').addEventListener('keypress', function(e){
-    if(e.key==='Enter') handleUserInput();
-  });
-}
-
-// 옵션 선택
-function chooseOption(opt){
-  const data=modulesData[currentModule];
-  const node=data.storyTree[currentNode];
+// 입력 분석
+function processNode(userText){
+  const node=modulesData[currentModule].storyTree[currentNode];
   if(!node.options) return;
-  const selected=node.options[opt];
-  if(!selected) return;
-  addMessage('user', opt);
-  addMessage('ai', selected.text);
-  addXP(selected.xp||0);
-  currentNode=selected.next;
-  setTimeout(()=>renderModule(),500);
+  const keywords = Object.keys(node.options);
+  let chosen = keywords.find(k=>userText.includes(k));
+  if(!chosen) chosen = keywords[Math.floor(Math.random()*keywords.length)];
+  chooseOption(chosen);
 }
 
+// 선택지 처리
+function chooseOption(opt){
+  const node = modulesData[currentModule].storyTree[currentNode];
+  if(!node.options) return;
+  const sel=node.options[opt];
+  if(!sel) return;
+  addMessage('ai', sel.text);
+  addXP(sel.xp||0);
+  currentNode=sel.next;
+  setTimeout(renderModule,300);
+}
+
+// 렌더링
+function renderModule(){
+  const data = modulesData[currentModule];
+  if(!data) return;
+  const node = data.storyTree[currentNode];
+  const container=document.getElementById('moduleContainer');
+  container.innerHTML=`<div class="module" style="background-image:url(${data.background}); background-size:cover; background-position:center;">
+    <div class="chat-box" id="chatBox"></div>
+    <input type="text" id="userInput" placeholder="여기에 입력하고 Enter" onkeypress="if(event.key==='Enter'){handleUserInput();}">
+    <button id="sendBtn" onclick="handleUserInput()">보내기</button>
+    <button class="backBtn" onclick="backToMain()">⬅️ 메인으로 돌아가기</button>
+  </div>
+  `;
+
+  const chatBox = document.getElementById('chatBox');
+  chatBox.innerHTML = '';
+
+  // AI 초기 메시지 출력
+  if(node.text){
+    addMessage('ai', node.text);
+  }
+
+  // 선택지가 있는 경우 버튼으로 렌더링
+  if(node.options){
+    const optionDiv = document.createElement('div');
+    optionDiv.style.marginTop = '10px';
+    for(let key in node.options){
+      const btn = document.createElement('button');
+      btn.textContent = node.options[key].text;
+      btn.className = 'button';
+      btn.style.margin='4px';
+      btn.onclick = () => chooseOption(key);
+      optionDiv.appendChild(btn);
+    }
+    container.querySelector('.module').appendChild(optionDiv);
+  }
+}
+
+// 페이지 로드 시 레벨바 초기화
 updateLevelBar();
 </script>
 
