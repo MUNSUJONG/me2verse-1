@@ -2,139 +2,169 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<title>Me2Verse 스토리 체험 SPA</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Me2Verse AI 대화형 체험</title>
 <style>
-body { font-family: Arial; text-align:center; margin:0; padding:20px; background:#f0f4f8; }
-h1 { color:#e74c3c; }
-.button { margin:10px; padding:15px 25px; font-size:16px; color:#fff; background:#3498db; border:none; border-radius:8px; cursor:pointer; transition:0.2s; }
+body { font-family: Arial; margin:0; padding:0; background:#f0f4f8; display:flex; flex-direction:column; align-items:center; }
+h1 { color:#e74c3c; margin:10px 0; text-align:center; }
+#levelContainer { width:90%; background:#ddd; border-radius:10px; margin:10px auto; height:25px; overflow:hidden; }
+#levelBar { height:25px; width:0%; background:#f39c12; text-align:center; color:#fff; line-height:25px; transition:width 0.5s; font-weight:bold; }
+#moduleButtons { display:flex; flex-wrap:wrap; justify-content:center; margin-top:10px; }
+.button { margin:6px; padding:12px 20px; font-size:16px; color:#fff; background:#3498db; border:none; border-radius:8px; cursor:pointer; flex:1; min-width:120px; transition:0.2s; }
 .button:hover { background:#2980b9; }
-.module { display:none; padding:20px; margin-top:20px; border-radius:12px; box-shadow:0 4px 8px rgba(0,0,0,0.2); text-align:left; max-width:600px; margin-left:auto; margin-right:auto; }
-.backBtn { background:#16a085; margin-top:20px; }
+.module { display:none; padding:20px; margin:20px auto; border-radius:12px; box-shadow:0 4px 8px rgba(0,0,0,0.2); max-width:600px; width:90%; position:relative; background:#fff; }
+.chat-box { border:1px solid #ccc; padding:10px; height:300px; overflow-y:auto; border-radius:10px; background:#fefefe; margin-bottom:10px; }
+.message { margin:6px 0; padding:8px 12px; border-radius:12px; max-width:80%; clear:both; }
+.message.ai { background:#3498db; color:#fff; float:left; }
+.message.user { background:#2ecc71; color:#fff; float:right; }
+#userInput { width:calc(100% - 100px); padding:10px; border-radius:8px; border:1px solid #ccc; font-size:16px; }
+#sendBtn { padding:10px 16px; border:none; border-radius:8px; background:#e67e22; color:#fff; cursor:pointer; transition:0.2s; }
+#sendBtn:hover { background:#d35400; }
+.backBtn { background:#16a085; margin-top:10px; }
 .backBtn:hover { background:#0e6655; }
-.message-box { font-size:18px; margin-top:10px; min-height:40px; }
-.story-text { font-size:16px; margin:10px 0; }
-#heart { font-size:60px; color:#e74c3c; animation:heartbeat 1s infinite; margin:20px 0; display:inline-block; }
-@keyframes heartbeat { 0%,100%{transform:scale(1);} 50%{transform:scale(1.3);} }
-/* 모듈별 배경 */
-#love { background: linear-gradient(to bottom, #ffe6e6, #fff0f5); }
-#marriage { background: linear-gradient(to bottom, #fff0e6, #fff8f0); }
-#hobby { background: linear-gradient(to bottom, #e6f7ff, #f0faff); }
-#space { background: linear-gradient(to bottom, #000011, #110022); color:#fff; }
-#culture { background: linear-gradient(to bottom, #fffbe6, #fff0c2); }
-#language { background: linear-gradient(to bottom, #e6ffe6, #c2ffc2); }
-#travel { background: linear-gradient(to bottom, #e6f0ff, #c2d9ff); }
-#career { background: linear-gradient(to bottom, #fff0f5, #ffd2e6); }
-#game { background: linear-gradient(to bottom, #1e1e2f, #3b3b5c); color:#fff; }
 </style>
 </head>
 <body>
-<h1>🚀 Me2Verse 스토리 체험 SPA</h1>
-<p>모듈을 선택하여 스토리 체험을 시작하세요!</p>
 
-<!-- 모듈 선택 버튼 -->
-<div>
-<button class="button" onclick="showModule('love')">❤️ 연애</button>
-<button class="button" onclick="showModule('marriage')">💍 결혼</button>
-<button class="button" onclick="showModule('hobby')">🎨 취미</button>
-<button class="button" onclick="showModule('space')">🌌 우주</button>
-<button class="button" onclick="showModule('culture')">🎭 문화</button>
-<button class="button" onclick="showModule('language')">🈴 언어</button>
-<button class="button" onclick="showModule('travel')">✈️ 여행</button>
-<button class="button" onclick="showModule('career')">💼 직업</button>
-<button class="button" onclick="showModule('game')">🎮 게임</button>
+<h1>🚀 Me2Verse AI 대화형 체험</h1>
+<div id="levelContainer">
+  <div id="levelBar">레벨 1 (0 XP)</div>
 </div>
 
-<!-- 연애 모듈 -->
+<div id="moduleButtons">
+  <button class="button" onclick="showModule('love')">❤️ 연애</button>
+  <button class="button" onclick="showModule('marriage')">💍 결혼</button>
+  <button class="button" onclick="showModule('hobby')">🎨 취미</button>
+  <button class="button" onclick="showModule('space')">🌌 우주</button>
+</div>
+
+<!-- 모듈 구조 -->
 <div id="love" class="module">
-<h2>❤️ 연애 체험</h2>
-<div id="heart">💖</div>
-<div class="story-text" id="loveStory">오늘은 첫 데이트 날입니다. 어디로 가시겠습니까?</div>
-<button class="button" onclick="loveChoice('카페')">카페로 가기</button>
-<button class="button" onclick="loveChoice('공원')">공원 산책</button>
-<div class="message-box" id="loveMsg"></div>
-<button class="button backBtn" onclick="backToMain()">메인으로</button>
+  <h2>❤️ 연애 체험</h2>
+  <div class="chat-box" id="loveChat"></div>
+  <input type="text" id="loveInput" placeholder="AI에게 말해보세요...">
+  <button id="loveSend" class="button" onclick="sendMessage('love')">보내기</button>
+  <button class="button backBtn" onclick="backToMain()">메인으로</button>
 </div>
 
-<!-- 결혼 모듈 -->
 <div id="marriage" class="module">
-<h2>💍 결혼 체험</h2>
-<div class="story-text" id="marriageStory">결혼식을 준비 중입니다. 식장을 어떻게 꾸밀까요?</div>
-<button class="button" onclick="marriageChoice('전통식')">전통식</button>
-<button class="button" onclick="marriageChoice('현대식')">현대식</button>
-<div class="message-box" id="marriageMsg"></div>
-<button class="button backBtn" onclick="backToMain()">메인으로</button>
+  <h2>💍 결혼 체험</h2>
+  <div class="chat-box" id="marriageChat"></div>
+  <input type="text" id="marriageInput" placeholder="AI에게 말해보세요...">
+  <button id="marriageSend" class="button" onclick="sendMessage('marriage')">보내기</button>
+  <button class="button backBtn" onclick="backToMain()">메인으로</button>
 </div>
 
-<!-- 취미 모듈 -->
 <div id="hobby" class="module">
-<h2>🎨 취미 체험</h2>
-<div class="story-text" id="hobbyStory">오늘은 새로운 취미를 시작하려 합니다. 무엇을 선택하시겠습니까?</div>
-<button class="button" onclick="hobbyChoice('그림')">그림 그리기</button>
-<button class="button" onclick="hobbyChoice('악기')">악기 배우기</button>
-<div class="message-box" id="hobbyMsg"></div>
-<button class="button backBtn" onclick="backToMain()">메인으로</button>
+  <h2>🎨 취미 체험</h2>
+  <div class="chat-box" id="hobbyChat"></div>
+  <input type="text" id="hobbyInput" placeholder="AI에게 말해보세요...">
+  <button id="hobbySend" class="button" onclick="sendMessage('hobby')">보내기</button>
+  <button class="button backBtn" onclick="backToMain()">메인으로</button>
 </div>
 
-<!-- 우주 모듈 -->
 <div id="space" class="module">
-<h2>🌌 우주 체험</h2>
-<div class="story-text" id="spaceStory">우주 탐사 미션을 시작합니다. 어디로 향하시겠습니까?</div>
-<button class="button" onclick="spaceChoice('달')">달 탐사</button>
-<button class="button" onclick="spaceChoice('화성')">화성 탐사</button>
-<div class="message-box" id="spaceMsg"></div>
-<button class="button backBtn" onclick="backToMain()">메인으로</button>
-</div>
-
-<!-- 문화 모듈 -->
-<div id="culture" class="module">
-<h2>🎭 문화 체험</h2>
-<div class="story-text" id="cultureStory">오늘은 문화체험의 날입니다. 무엇을 체험하시겠습니까?</div>
-<button class="button" onclick="cultureChoice('박물관')">박물관</button>
-<button class="button" onclick="cultureChoice('연극')">연극</button>
-<div class="message-box" id="cultureMsg"></div>
-<button class="button backBtn" onclick="backToMain()">메인으로</button>
-</div>
-
-<!-- 언어 모듈 -->
-<div id="language" class="module">
-<h2>🈴 언어 체험</h2>
-<div class="story-text" id="languageStory">외국어 연습을 시작합니다. 누구와 대화하시겠습니까?</div>
-<button class="button" onclick="languageChoice('로컬 주민')">로컬 주민</button>
-<button class="button" onclick="languageChoice('관광객')">관광객</button>
-<div class="message-box" id="languageMsg"></div>
-<button class="button backBtn" onclick="backToMain()">메인으로</button>
-</div>
-
-<!-- 여행 모듈 -->
-<div id="travel" class="module">
-<h2>✈️ 여행 체험</h2>
-<div class="story-text" id="travelStory">여행지에 도착했습니다. 무엇을 먼저 하시겠습니까?</div>
-<button class="button" onclick="travelChoice('관광')">관광</button>
-<button class="button" onclick="travelChoice('음식 체험')">음식 체험</button>
-<div class="message-box" id="travelMsg"></div>
-<button class="button backBtn" onclick="backToMain()">메인으로</button>
-</div>
-
-<!-- 직업 모듈 -->
-<div id="career" class="module">
-<h2>💼 직업 체험</h2>
-<div class="story-text" id="careerStory">오늘 첫 출근 날입니다. 어디서 시작하시겠습니까?</div>
-<button class="button" onclick="careerChoice('사무실')">사무실</button>
-<button class="button" onclick="careerChoice('현장')">현장</button>
-<div class="message-box" id="careerMsg"></div>
-<button class="button backBtn" onclick="backToMain()">메인으로</button>
-</div>
-
-<!-- 게임 모듈 -->
-<div id="game" class="module">
-<h2>🎮 게임 체험</h2>
-<div class="story-text" id="gameStory">게임 속 모험을 시작합니다. 무엇을 하시겠습니까?</div>
-<button class="button" onclick="gameChoice('전투')">전투</button>
-<button class="button" onclick="gameChoice('탐험')">탐험</button>
-<div class="message-box" id="gameMsg"></div>
-<button class="button backBtn" onclick="backToMain()">메인으로</button>
+  <h2>🌌 우주 체험</h2>
+  <div class="chat-box" id="spaceChat"></div>
+  <input type="text" id="spaceInput" placeholder="AI에게 말해보세요...">
+  <button id="spaceSend" class="button" onclick="sendMessage('space')">보내기</button>
+  <button class="button backBtn" onclick="backToMain()">메인으로</button>
 </div>
 
 <script>
+// 레벨/XP
+let level = 1;
+let xp = 0;
+const xpPerLevel = 20;
+
+function updateLevelBar(){
+  let percent = (xp % xpPerLevel)/xpPerLevel*100;
+  document.getElementById('levelBar').style.width = percent + '%';
+  document.getElementById('levelBar').textContent = `레벨 ${level} (${xp} XP)`;
+}
+
+function addXP(amount){
+  xp += amount;
+  if(xp >= level*xpPerLevel){
+    level++;
+    alert(`🎉 레벨업! 레벨 ${level} 달성!`);
+  }
+  updateLevelBar();
+}
+
+// 모듈 관리
+let currentModule = '';
 function showModule(id){
-  document.querySelector
+  currentModule = id;
+  const modules = document.querySelectorAll('.module');
+  modules.forEach(m=>m.style.display='none');
+  document.getElementById(id).style.display='block';
+  startConversation(id);
+}
+
+function backToMain(){
+  const modules = document.querySelectorAll('.module');
+  modules.forEach(m=>m.style.display='none');
+  currentModule = '';
+}
+
+// AI 대화 초기화
+const aiModules = {
+  love:{chatId:'loveChat', inputId:'loveInput', messages:[], aiName:'연인 AI'},
+  marriage:{chatId:'marriageChat', inputId:'marriageInput', messages:[], aiName:'웨딩 플래너 AI'},
+  hobby:{chatId:'hobbyChat', inputId:'hobbyInput', messages:[], aiName:'취미 멘토 AI'},
+  space:{chatId:'spaceChat', inputId:'spaceInput', messages:[], aiName:'우주선 AI'}
+};
+
+// 대화 시작
+function startConversation(module){
+  const ai = aiModules[module];
+  ai.messages = [];
+  addAIMessage(module, `안녕하세요! ${ai.aiName}입니다. 대화를 시작해볼까요?`);
+}
+
+// 메시지 표시
+function addMessage(module, text, sender){
+  const ai = aiModules[module];
+  const chatBox = document.getElementById(ai.chatId);
+  const msgDiv = document.createElement('div');
+  msgDiv.className = 'message '+sender;
+  msgDiv.textContent = text;
+  chatBox.appendChild(msgDiv);
+  chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+// AI 메시지
+function addAIMessage(module, text){
+  addMessage(module,text,'ai');
+  aiModules[module].messages.push({sender:'ai', text});
+  addXP(2); // AI 메시지마다 XP
+}
+
+// 사용자 메시지
+function sendMessage(module){
+  const ai = aiModules[module];
+  const input = document.getElementById(ai.inputId);
+  if(!input.value) return;
+  addMessage(module,input.value,'user');
+  ai.messages.push({sender:'user', text:input.value});
+  // AI 반응 생성
+  setTimeout(()=>generateAIResponse(module,input.value),500);
+  input.value='';
+}
+
+// 간단 AI 응답 (랜덤 또는 선택 기반)
+function generateAIResponse(module, userText){
+  const ai = aiModules[module];
+  const responses = [
+    "정말 흥미로운 선택이네요!",
+    "그런 방법도 있군요!",
+    "좋아요, 계속 진행해봐요!",
+    "음… 다른 방법도 시도해볼까요?"
+  ];
+  const response = responses[Math.floor(Math.random()*responses.length)];
+  addAIMessage(module,response);
+}
+</script>
+</body>
+</html>
