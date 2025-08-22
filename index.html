@@ -2,23 +2,22 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<title>Me2Verse 완성형</title>
+<title>Me2Verse VR 완성형</title>
 <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
 <style>
-body { margin:0; font-family: Arial,sans-serif; background:#f0f0f0; }
-.screen{width:100%; height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; position:absolute; top:0; left:0; transition:all 0.5s;}
-#homeScreen{background:#fff; z-index:3;}
-#moduleScreen{background:#fafafa; display:none; z-index:2;}
-#storyScreen{background:#eee; display:none; z-index:2;}
-#vrScreen{background:#000; display:none; z-index:1;}
-button{padding:10px 15px; margin:5px; font-size:16px; border:none; border-radius:5px; color:white; cursor:pointer;}
-#loginBtn{background:#2196F3;}
-.moduleBtn{background:#4CAF50;}
-#startVRBtn{background:#9C27B0; display:none;}
-#backBtn{background:#FF5722; display:none;}
-#status{position:fixed;top:10px; left:50%; transform:translateX(-50%); background:rgba(255,255,255,0.85); padding:5px 10px; border-radius:5px; z-index:5;}
-#score{position:fixed; bottom:10px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.6); color:white; padding:5px 10px; border-radius:5px; z-index:5;}
-#storyLog{margin-top:10px; max-height:200px; overflow-y:auto; background:rgba(255,255,255,0.8); padding:10px; border-radius:5px; width:80%;}
+body { margin:0; padding:0; font-family: Arial, sans-serif; background:#f0f0f0; }
+.screen { width:100%; height:100vh; display:flex; justify-content:center; align-items:center; flex-direction:column; position:absolute; top:0; left:0; transition:all 0.5s; }
+#status{position:fixed;top:10px;left:50%;transform:translateX(-50%); background:rgba(255,255,255,0.85);padding:5px 10px;border-radius:5px;font-size:16px; z-index:5;}
+#score{position:fixed;bottom:10px;left:50%;transform:translateX(-50%); background:rgba(0,0,0,0.6);color:white;padding:5px 10px;border-radius:5px;font-size:16px; z-index:5;}
+input,select,button{padding:10px 15px;margin:5px;font-size:16px;border-radius:5px;border:1px solid #ccc;}
+button{cursor:pointer;border:none;color:white;}
+#autoBtn{background-color:#2196F3;}
+.moduleBtn{background-color:#4CAF50;}
+#startVRBtn{background-color:#9C27B0;display:none;margin-top:10px;}
+#backBtn{background-color:#FF5722;display:none;margin-top:15px;}
+#nextStoryBtn{background-color:#3F51B5;display:none;margin-top:10px;}
+#questLog{margin-top:15px;background:rgba(255,255,255,0.8);padding:10px;border-radius:5px;width:80%;max-width:400px;font-size:14px;max-height:150px;overflow-y:auto;}
+a-scene{width:100%;height:100vh;}
 </style>
 </head>
 <body>
@@ -28,156 +27,192 @@ button{padding:10px 15px; margin:5px; font-size:16px; border:none; border-radius
 
 <!-- 홈 화면 -->
 <div id="homeScreen" class="screen">
-  <h1>🚀 Me2Verse</h1>
-  <p>Pi 계정 로그인 후 모듈 선택</p>
-  <input type="text" id="username" placeholder="Pi 계정 입력">
-  <button id="loginBtn">로그인</button>
+<h1>🚀 Me2Verse VR 메타버스</h1>
+<p>Pi 계정 로그인 후 모듈 선택 → 스토리 체험 → VR</p>
+<input type="text" id="username" placeholder="Pi 계정 이름 입력">
+<button id="autoBtn">로그인</button>
 </div>
 
-<!-- 모듈 선택 -->
-<div id="moduleScreen" class="screen">
-  <h2>모듈 선택</h2>
-  <div>
-    <button class="moduleBtn" data-mod="love">연애 모듈</button>
-    <button class="moduleBtn" data-mod="space">우주체험</button>
-    <button class="moduleBtn" data-mod="hobby">취미 모듈</button>
-    <button class="moduleBtn" data-mod="beauty">미투 뷰티</button>
-  </div>
-  <button id="backBtn">🏠 뒤로가기</button>
+<!-- 모듈 선택 화면 -->
+<div id="moduleScreen" class="screen" style="display:none;">
+<h2>모듈 선택</h2>
+<div>
+<button class="moduleBtn" id="loveModule">연애 모듈</button>
+<button class="moduleBtn" id="spaceModule">우주체험 모듈</button>
+<button class="moduleBtn" id="hobbyModule">취미 모듈</button>
+<button class="moduleBtn" id="beautyModule">미투 뷰티</button>
 </div>
-
-<!-- 스토리 화면 -->
-<div id="storyScreen" class="screen">
-  <h2 id="storyTitle">스토리 제목</h2>
-  <p id="storyDesc">스토리 설명</p>
-  <button id="startVRBtn">VR 체험 시작</button>
-  <button id="backToModuleBtn">뒤로가기</button>
-  <div id="storyLog"></div>
+<div id="moduleDetail" style="margin-top:20px;">
+<h3 id="moduleTitle"></h3>
+<p id="moduleDesc"></p>
+<button id="startVRBtn">VR 체험 시작</button>
+<button id="nextStoryBtn">다음 스토리</button>
+<button id="backBtn">🏠 뒤로가기</button>
+<div id="questLog"></div>
+</div>
 </div>
 
 <!-- VR 화면 -->
-<div id="vrScreen" class="screen">
-  <a-scene id="vrScene">
-    <a-sky id="vrSky" color="#ECECEC"></a-sky>
-    <a-entity id="vrContent"></a-entity>
-    <a-entity id="cameraRig" position="0 1.6 0">
-      <a-camera wasd-controls look-controls>
-        <a-cursor color="black"></a-cursor>
-      </a-camera>
-    </a-entity>
-    <a-entity light="type: ambient; intensity:0.6"></a-entity>
-    <a-entity light="type: directional; intensity:0.8" position="1 2 1"></a-entity>
-  </a-scene>
-  <button id="backFromVR" style="position:absolute; top:10px; left:10px; z-index:10;">뒤로가기</button>
+<div id="vrScreen" class="screen" style="display:none;">
+<a-scene id="vrScene">
+<a-sky id="vrSky" color="#ECECEC"></a-sky>
+<a-entity id="moduleContent"></a-entity>
+<a-entity id="cameraRig" position="0 1.6 0">
+<a-camera wasd-controls look-controls>
+<a-cursor color="black"></a-cursor>
+</a-camera>
+</a-entity>
+<a-entity light="type: ambient; intensity:0.6"></a-entity>
+<a-entity light="type: directional; intensity:0.8" position="1 2 1"></a-entity>
+</a-scene>
 </div>
 
 <script>
-let currentUser="", currentModule="", points=0, items=[], logMessages=[];
 const statusEl=document.getElementById("status");
 const scoreEl=document.getElementById("score");
 const homeScreen=document.getElementById("homeScreen");
 const moduleScreen=document.getElementById("moduleScreen");
-const storyScreen=document.getElementById("storyScreen");
 const vrScreen=document.getElementById("vrScreen");
-const storyTitle=document.getElementById("storyTitle");
-const storyDesc=document.getElementById("storyDesc");
-const storyLog=document.getElementById("storyLog");
+const moduleContent=document.getElementById("moduleContent");
 const vrSky=document.getElementById("vrSky");
-const vrContent=document.getElementById("vrContent");
+const moduleTitle=document.getElementById("moduleTitle");
+const moduleDesc=document.getElementById("moduleDesc");
+const startVRBtn=document.getElementById("startVRBtn");
+const backBtn=document.getElementById("backBtn");
+const nextStoryBtn=document.getElementById("nextStoryBtn");
+const questLog=document.getElementById("questLog");
+
+let points=0, items=[], currentModule="", logMessages=[], currentStoryIndex=0;
 
 function updateScore(){ scoreEl.textContent=`포인트: ${points} | 아이템: ${items.length?items.join(", "):"없음"}`; }
-function logStory(msg){ logMessages.push(msg); storyLog.innerHTML=logMessages.map(m=>"• "+m).join("<br>"); }
+function logQuest(msg){ logMessages.push(msg); questLog.innerHTML=logMessages.map(m=>`• ${m}`).join("<br>"); }
 
 // 로그인
-document.getElementById("loginBtn").addEventListener("click",()=>{
-  const uname=document.getElementById("username").value.trim();
-  if(!uname){ alert("Pi 계정 입력 필요"); return; }
-  currentUser=uname;
-  statusEl.textContent=`상태: ${currentUser} 로그인 성공!`;
-  homeScreen.style.display="none";
-  moduleScreen.style.display="flex";
+document.getElementById("autoBtn").addEventListener("click",()=>{
+const username=document.getElementById("username").value.trim();
+if(!username){ alert("Pi 계정 입력 필요!"); return; }
+statusEl.textContent=`상태: ${username} 로그인 성공! 🎉`;
+homeScreen.style.display="none";
+moduleScreen.style.display="flex";
 });
 
-// 모듈 정의
+// 모듈과 스토리 구성
 const modules={
-love:{title:"연애 모듈", desc:"공원에서 캐릭터와 상호작용하며 연애 체험! 10개 스토리 포함", stories:[
-{title:"첫 만남",desc:"공원에서 캐릭터1과 인사"}, {title:"데이트 준비",desc:"커피를 준비하며 캐릭터2와 대화"},
-{title:"산책",desc:"함께 산책하며 하트 획득"}, {title:"놀이공원",desc:"놀이공원에서 즐거운 시간"},
-{title:"영화 관람",desc:"캐릭터와 영화 보기"}, {title:"선물 교환",desc:"하트를 선물로 교환"},
-{title:"레스토랑",desc:"저녁식사 체험"}, {title:"밤하늘 산책",desc:"별 보며 대화"},
-{title:"사진 촬영",desc:"캐릭터와 사진 찍기"}, {title:"마지막 인사",desc:"다음 만남 약속"}]},
-space:{title:"우주체험", desc:"탐사선 탑승 → 행성 탐험 → 10개 스토리", stories:[
-{title:"탐사선 탑승",desc:"탐사선 탑승 준비"}, {title:"행성 도착",desc:"행성1 탐험 시작"},
-{title:"크레이터 관찰",desc:"행성 지형 관찰"}, {title:"자원 수집",desc:"자원 채집"},
-{title:"중력 체험",desc:"중력 변화를 경험"}, {title:"위성 관측",desc:"위성 데이터 수집"},
-{title:"생명체 발견",desc:"외계 생명체 탐험"}, {title:"우주선 수리",desc:"수리 체험"},
-{title:"귀환 준비",desc:"지구 귀환 준비"}, {title:"귀환",desc:"지구로 귀환 완료"}]},
-hobby:{title:"취미 모듈", desc:"숲속 산책, 취미 활동 10개 스토리", stories:[
-{title:"아침 산책",desc:"숲속 산책 시작"}, {title:"꽃 관찰",desc:"꽃 종류 확인"},
-{title:"사진 촬영",desc:"자연 속 사진 촬영"}, {title:"커피 준비",desc:"숲속 커피 체험"},
-{title:"드로잉",desc:"나무 아래 드로잉"}, {title:"요가",desc:"자연 속 요가 체험"},
-{title:"새 관찰",desc:"새 종류 확인"}, {title:"낚시 체험",desc:"호수에서 낚시"},
-{title:"피크닉",desc:"피크닉 즐기기"}, {title:"명상",desc:"숲속 명상 완료"}]},
-beauty:{title:"미투 뷰티", desc:"패션/미용 체험 10개 스토리", stories:[
-{title:"헤어스타일",desc:"헤어스타일 변화 체험"}, {title:"메이크업",desc:"화장 체험"},
-{title:"패션 코디",desc:"의상 선택 체험"}, {title:"네일아트",desc:"네일 체험"},
-{title:"향수 선택",desc:"향수 체험"}, {title:"피부관리",desc:"스킨케어 체험"},
-{title:"쇼핑",desc:"아이템 쇼핑 체험"}, {title:"사진촬영",desc:"스타일 사진 촬영"},
-{title:"런웨이 체험",desc:"런웨이 워킹 체험"}, {title:"최종 스타일",desc:"최종 스타일 완성"}]}
+love:{title:"연애 모듈", desc:"연애 체험 스토리 10개", sky:"#FFC0CB", stories:[
+"공원에서 캐릭터와 첫 만남",
+"카페에서 대화하며 호감 쌓기",
+"영화관 데이트 체험",
+"축제 참가하며 이벤트 즐기기",
+"꽃 선물 주고받기",
+"편지 전달 미션",
+"커플 사진 촬영",
+"놀이공원 체험",
+"서프라이즈 이벤트",
+"마지막 하트 획득"
+]},
+space:{title:"우주체험 모듈", desc:"우주 탐험 스토리 10개", sky:"#000022", stories:[
+"우주선 탑승",
+"달 탐험 미션",
+"화성 기지 탐험",
+"소행성 채집",
+"우주정거장 미션",
+"외계 생물 관찰",
+"위성 점검",
+"중력 실험",
+"은하 지도 작성",
+"최종 행성 도착"
+]},
+hobby:{title:"취미 모듈", desc:"취미 체험 스토리 10개", sky:"#A0E0A0", stories:[
+"숲속 산책",
+"꽃 관찰",
+"커피 만들기 체험",
+"그림 그리기",
+"악기 연주 체험",
+"요리 체험",
+"사진 촬영",
+"독서 체험",
+"자전거 체험",
+"자연 관찰"
+]},
+beauty:{title:"미투 뷰티", desc:"패션 & 미용 스토리 10개", sky:"#FFD700", stories:[
+"메이크업 체험",
+"헤어 스타일링",
+"패션 코디미션",
+"쇼핑몰 체험",
+"뷰티 클래스 참여",
+"네일아트 체험",
+"피부 관리 체험",
+"스타일 사진 촬영",
+"런웨이 체험",
+"패션쇼 최종 미션"
+]}
 };
 
-// 모듈 선택
-document.querySelectorAll(".moduleBtn").forEach(btn=>{
-  btn.addEventListener("click",()=>{
-    currentModule=btn.dataset.mod;
-    const mod=modules[currentModule];
-    storyTitle.textContent=mod.title;
-    storyDesc.textContent=mod.desc;
-    logMessages=[];
-    storyLog.innerHTML="";
-    storyScreen.style.display="flex";
-    moduleScreen.style.display="none";
-    document.getElementById("startVRBtn").style.display="inline-block";
-    backBtn.style.display="inline-block";
-  });
+function selectModule(name){
+currentModule=name;
+currentStoryIndex=0;
+moduleTitle.textContent=modules[name].title;
+moduleDesc.textContent=modules[name].stories[currentStoryIndex];
+startVRBtn.style.display="inline-block";
+nextStoryBtn.style.display="inline-block";
+backBtn.style.display="inline-block";
+logMessages=[];
+questLog.innerHTML="";
+}
+
+document.getElementById("loveModule").addEventListener("click",()=>selectModule("love"));
+document.getElementById("spaceModule").addEventListener("click",()=>selectModule("space"));
+document.getElementById("hobbyModule").addEventListener("click",()=>selectModule("hobby"));
+document.getElementById("beautyModule").addEventListener("click",()=>selectModule("beauty"));
+
+// 스토리 다음
+nextStoryBtn.addEventListener("click",()=>{
+if(currentModule==="") return;
+currentStoryIndex++;
+if(currentStoryIndex>=modules[currentModule].stories.length) currentStoryIndex=0;
+moduleDesc.textContent=modules[currentModule].stories[currentStoryIndex];
+});
+
+// VR 체험 시작
+startVRBtn.addEventListener("click",()=>{
+if(currentModule==="") return;
+moduleScreen.style.display="none";
+vrScreen.style.display="flex";
+moduleContent.innerHTML="";
+points=0; items=[]; updateScore();
+logMessages=[]; questLog.innerHTML="";
+vrSky.setAttribute("color",modules[currentModule].sky);
+
+// 스토리 내용 기반 가상 아바타/환경 생성 (샘플 GLTF 모델)
+const storyName=modules[currentModule].stories[currentStoryIndex];
+const avatar=document.createElement("a-gltf-model");
+avatar.setAttribute("src","https://cdn.jsdelivr.net/gh/KhronosGroup/glTF-Sample-Models/2.0/Avocado/glTF/Avocado.gltf");
+avatar.setAttribute("position","0 0 -3");
+avatar.setAttribute("scale","0.5 0.5 0.5");
+avatar.addEventListener("click",()=>{
+points+=10; items.push("아이템"); updateScore(); logQuest(`체험 완료: ${storyName} +10점, 아이템 획득`);
+});
+moduleContent.appendChild(avatar);
 });
 
 // 뒤로가기
-document.getElementById("backBtn").addEventListener("click",()=>{
-  moduleScreen.style.display="none";
-  homeScreen.style.display="flex";
-  backBtn.style.display="none";
-});
-document.getElementById("backToModuleBtn").addEventListener("click",()=>{
-  storyScreen.style.display="none";
-  moduleScreen.style.display="flex";
-});
-
-// VR 시작
-document.getElementById("startVRBtn").addEventListener("click",()=>{
-  storyScreen.style.display="none";
-  vrScreen.style.display="flex";
-  vrContent.innerHTML="";
-  points=0; items=[]; updateScore();
-  const mod=modules[currentModule];
-  vrSky.setAttribute("color","#"+Math.floor(Math.random()*16777215).toString(16));
-  // 아바타/환경 생성
-  mod.stories.forEach((s,i)=>{
-    const el=document.createElement("a-box");
-    el.setAttribute("position",(i%5-2)+" 0.5 "+(-3-i));
-    el.setAttribute("depth","0.5"); el.setAttribute("height","1"); el.setAttribute("width","0.5");
-    el.setAttribute("color","#"+Math.floor(Math.random()*16777215).toString(16));
-    el.addEventListener("click",()=>{
-      points+=10; items.push(s.title); updateScore(); logStory("체험 완료: "+s.title);
-    });
-    vrContent.appendChild(el);
-  });
-});
-
-// VR 뒤로가기
-document.getElementById("backFromVR").addEventListener("click",()=>{
-  vrScreen.style.display="none";
-  storyScreen.style.display="flex";
+backBtn.addEventListener("click",()=>{
+if(vrScreen.style.display==="flex"){
+vrScreen.style.display="none";
+moduleScreen.style.display="flex";
+}else{
+moduleScreen.style.display="none";
+homeScreen.style.display="flex";
+}
+backBtn.style.display="none";
+startVRBtn.style.display="none";
+nextStoryBtn.style.display="none";
+moduleContent.innerHTML="";
+logMessages=[];
+questLog.innerHTML="";
+statusEl.textContent="상태: 대기 중";
+currentModule="";
+currentStoryIndex=0;
 });
 </script>
 </body>
