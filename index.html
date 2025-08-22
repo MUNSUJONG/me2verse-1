@@ -2,27 +2,23 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<title>Me2Verse VR 메타버스</title>
+<title>Me2Verse VR 완성형</title>
 <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
 <style>
   body { margin:0; padding:0; font-family: Arial, sans-serif; background:#f0f0f0; }
-  #status{position:fixed;top:10px;left:50%;transform:translateX(-50%);
-          background:rgba(255,255,255,0.85);padding:5px 10px;border-radius:5px;font-size:16px; z-index:5;}
-  #score{position:fixed;bottom:10px;left:50%;transform:translateX(-50%);
-         background:rgba(0,0,0,0.6);color:white;padding:5px 10px;border-radius:5px;font-size:16px; z-index:5;}
-  .screen{width:100%;height:100vh;display:flex;justify-content:center;
-          align-items:center;flex-direction:column;transition:all 0.5s;position:absolute;top:0;left:0;}
-  #homeScreen{background:white; z-index:3;}
-  #moduleScreen{background:#fafafa;display:none; z-index:2;}
-  #vrScreen{background:black;display:none; z-index:1;}
-  input,select,button{padding:10px 15px;margin:5px;font-size:16px;border-radius:5px;border:1px solid #ccc;}
-  button{cursor:pointer;border:none;color:white;}
-  #autoBtn{background-color:#2196F3;}
-  .moduleBtn{background-color:#4CAF50;}
-  #startVRBtn{background-color:#9C27B0;display:none;margin-top:10px;}
-  #backBtn{background-color:#FF5722;display:none;margin-top:15px;}
-  #questLog{margin-top:15px;background:rgba(255,255,255,0.8);padding:10px;border-radius:5px;width:80%;max-width:400px;font-size:14px;max-height:150px;overflow-y:auto;}
-  a-scene{width:100%;height:100vh;}
+  .screen { width:100%; height:100vh; display:flex; justify-content:center; align-items:center; flex-direction:column; position:absolute; top:0; left:0; transition:0.5s; }
+  #homeScreen { background:white; z-index:3; }
+  #moduleScreen { background:#fafafa; z-index:2; display:none; }
+  #vrScreen { background:black; z-index:1; display:none; }
+  input, select, button { padding:10px 15px; margin:5px; font-size:16px; border-radius:5px; border:1px solid #ccc; }
+  button { cursor:pointer; border:none; color:white; }
+  #autoBtn { background:#2196F3; }
+  .moduleBtn { background:#4CAF50; }
+  #startVRBtn { background:#9C27B0; display:none; margin-top:10px; }
+  #backBtn { background:#FF5722; display:none; margin-top:10px; }
+  #status { position:fixed; top:10px; left:50%; transform:translateX(-50%); background:rgba(255,255,255,0.85); padding:5px 10px; border-radius:5px; z-index:5; }
+  #score { position:fixed; bottom:10px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.6); color:white; padding:5px 10px; border-radius:5px; z-index:5; }
+  #questLog { margin-top:15px; background:rgba(255,255,255,0.8); padding:10px; border-radius:5px; width:80%; max-width:400px; font-size:14px; max-height:150px; overflow-y:auto; }
 </style>
 </head>
 <body>
@@ -32,10 +28,10 @@
 
 <!-- 홈 화면 -->
 <div id="homeScreen" class="screen">
-  <h1>🚀 Me2Verse VR 메타버스</h1>
-  <p>로그인 → 모듈 선택 → 스토리 체험 → VR 체험</p>
+  <h1>🚀 Me2Verse VR</h1>
+  <p>Pi네트워크 계정 로그인 후 무료체험 또는 하이라이트 체험 가능</p>
   <input type="text" id="username" placeholder="유저 이름 입력">
-  <button id="autoBtn">로그인</button>
+  <button id="autoBtn">로그인 / 무료체험</button>
 </div>
 
 <!-- 모듈 선택 화면 -->
@@ -49,8 +45,9 @@
   <div id="moduleDetail" style="margin-top:20px;">
     <h3 id="moduleTitle"></h3>
     <p id="moduleDesc"></p>
+    <select id="storySelect"></select>
     <button id="startVRBtn">VR 체험 시작</button>
-    <button id="backBtn">홈으로</button>
+    <button id="backBtn">🏠 뒤로가기</button>
     <div id="questLog"></div>
   </div>
 </div>
@@ -68,135 +65,107 @@
     <a-entity light="type: ambient; intensity:0.6"></a-entity>
     <a-entity light="type: directional; intensity:0.8" position="1 2 1"></a-entity>
   </a-scene>
+  <button id="backFromVR" style="position:absolute;top:10px;right:10px;padding:10px;background:#FF5722;color:white;border:none;border-radius:5px;z-index:5;">🏠 뒤로가기</button>
 </div>
 
 <script>
-const statusEl=document.getElementById("status");
-const scoreEl=document.getElementById("score");
-const homeScreen=document.getElementById("homeScreen");
-const moduleScreen=document.getElementById("moduleScreen");
-const vrScreen=document.getElementById("vrScreen");
-const moduleContent=document.getElementById("moduleContent");
-const vrSky=document.getElementById("vrSky");
-const moduleTitle=document.getElementById("moduleTitle");
-const moduleDesc=document.getElementById("moduleDesc");
-const startVRBtn=document.getElementById("startVRBtn");
-const backBtn=document.getElementById("backBtn");
-const questLog=document.getElementById("questLog");
+const statusEl = document.getElementById("status");
+const scoreEl = document.getElementById("score");
+const homeScreen = document.getElementById("homeScreen");
+const moduleScreen = document.getElementById("moduleScreen");
+const vrScreen = document.getElementById("vrScreen");
+const moduleTitle = document.getElementById("moduleTitle");
+const moduleDesc = document.getElementById("moduleDesc");
+const storySelect = document.getElementById("storySelect");
+const startVRBtn = document.getElementById("startVRBtn");
+const backBtn = document.getElementById("backBtn");
+const questLog = document.getElementById("questLog");
+const moduleContent = document.getElementById("moduleContent");
+const vrSky = document.getElementById("vrSky");
+const backFromVR = document.getElementById("backFromVR");
 
-let points=0, items=[], currentModule="", logMessages=[];
+let points=0, items=[], currentModule="", currentStory=0, logMessages=[], userName="";
+
+// 샘플 스토리 데이터 (각 모듈 10개 이상)
+const modules = {
+  love: Array.from({length:10},(_,i)=>({title:`연애 스토리 ${i+1}`, desc:`연애 모험 체험 ${i+1}`, points:5+i, item:`하트${i+1}`})),
+  space: Array.from({length:10},(_,i)=>({title:`우주 스토리 ${i+1}`, desc:`우주 탐험 체험 ${i+1}`, points:10+i, item:`지도${i+1}`})),
+  hobby: Array.from({length:10},(_,i)=>({title:`취미 스토리 ${i+1}`, desc:`취미 체험 ${i+1}`, points:3+i, item:`꽃${i+1}`})),
+};
 
 function updateScore(){ scoreEl.textContent=`포인트: ${points} | 아이템: ${items.length?items.join(", "):"없음"}`; }
 function logQuest(msg){ logMessages.push(msg); questLog.innerHTML=logMessages.map(m=>`• ${m}`).join("<br>"); }
 
-// 로그인
+// 로그인 + 무료체험
 document.getElementById("autoBtn").addEventListener("click",()=>{
-  const username=document.getElementById("username").value.trim();
-  if(!username){ alert("유저 이름 입력 필요!"); return; }
-  statusEl.textContent=`상태: ${username} 로그인 성공! 🎉`;
+  userName = document.getElementById("username").value.trim();
+  if(!userName){ alert("유저 이름 입력 필요!"); return; }
+  statusEl.textContent=`${userName} 로그인 성공! 무료체험 가능 🎉`;
   homeScreen.style.display="none";
   moduleScreen.style.display="flex";
 });
 
-// 모듈 정의 (스토리 + 이벤트)
-const modules={
-love:{
-title:"연애 모듈", desc:"공원에서 캐릭터와 상호작용하며 연애 체험! 하트를 모아보세요.",
-events:[
-"공원 입장",
-"캐릭터1과 인사",
-"캐릭터2와 대화",
-"꽃 선물하기",
-"카페 데이트",
-"사진 찍기",
-"손 잡기",
-"하트 획득",
-"편지 전달",
-"마지막 포옹"
-]},
-space:{
-title:"우주체험 모듈", desc:"탐사선 탑승 → 행성 탐험 → 지도, 아이템 수집!",
-events:[
-"탐사선 탑승",
-"달 착륙",
-"화성 탐사",
-"우주 유영",
-"운석 회피",
-"위성 관찰",
-"블랙홀 체험",
-"우주 지도 획득",
-"샘플 수집",
-"귀환"
-]},
-hobby:{
-title:"취미 모듈", desc:"숲속 산책과 취미 활동 VR 체험! 꽃과 커피를 수집하세요.",
-events:[
-"숲 입장",
-"꽃 관찰",
-"커피 만들기",
-"새 소리 듣기",
-"벤치에 앉기",
-"사진 찍기",
-"그림 그리기",
-"요리 체험",
-"아이템 수집",
-"마무리 산책"
-]}
-};
-
+// 모듈 선택
 function selectModule(name){
-currentModule=name;
-moduleTitle.textContent=modules[name].title;
-moduleDesc.textContent=modules[name].desc;
-startVRBtn.style.display="inline-block";
-backBtn.style.display="inline-block";
-logMessages=[];
-modules[name].events.forEach(ev=>logQuest(ev));
+  currentModule = name;
+  moduleTitle.textContent = `${name} 모듈`;
+  moduleDesc.textContent = "스토리를 선택하세요.";
+  storySelect.innerHTML = "";
+  modules[name].forEach((story,i)=>{
+    const opt = document.createElement("option");
+    opt.value = i;
+    opt.textContent = story.title;
+    storySelect.appendChild(opt);
+  });
+  startVRBtn.style.display="inline-block";
+  backBtn.style.display="inline-block";
+  logMessages=[];
+  questLog.innerHTML="";
 }
 
 document.getElementById("loveModule").addEventListener("click",()=>selectModule("love"));
 document.getElementById("spaceModule").addEventListener("click",()=>selectModule("space"));
 document.getElementById("hobbyModule").addEventListener("click",()=>selectModule("hobby"));
 
-// VR 체험 시작
+// VR 시작
 startVRBtn.addEventListener("click",()=>{
-moduleScreen.style.display="none";
-vrScreen.style.display="flex";
-moduleContent.innerHTML="";
-points=0; items=[]; updateScore();
-logMessages=[]; questLog.innerHTML="";
+  currentStory = parseInt(storySelect.value);
+  const story = modules[currentModule][currentStory];
+  moduleScreen.style.display="none";
+  vrScreen.style.display="flex";
+  moduleContent.innerHTML="";
+  points = 0; items = []; updateScore();
+  logMessages=[];
+  questLog.innerHTML="";
+  vrSky.setAttribute("color","#ECECEC");
 
-// VR 환경 단순 샘플 (아바타 표시)
-vrSky.setAttribute("color","#ECECEC");
-for(let i=0;i<5;i++){
-  const box=document.createElement("a-box");
-  box.setAttribute("position",`${i-2} 1 -3`);
-  box.setAttribute("color","#"+Math.floor(Math.random()*16777215).toString(16));
-  box.setAttribute("scale","0.5 0.5 0.5");
-  box.addEventListener("click",()=>{
-    points+=5; items.push("아이템"+i); updateScore();
-    logQuest(`아바타${i} 상호작용 완료`);
+  // 단순 상호작용 예시
+  const entity = document.createElement("a-box");
+  entity.setAttribute("position","0 1 -3");
+  entity.setAttribute("color","#FF69B4");
+  entity.setAttribute("depth","1"); entity.setAttribute("height","2"); entity.setAttribute("width","1");
+  entity.addEventListener("click",()=>{
+    points += story.points;
+    items.push(story.item);
+    updateScore();
+    logQuest(`💌 ${story.item} 획득! +${story.points}점`);
   });
-  moduleContent.appendChild(box);
-}
+  moduleContent.appendChild(entity);
 });
 
 // 뒤로가기
 backBtn.addEventListener("click",()=>{
-if(vrScreen.style.display==="flex"){
-vrScreen.style.display="none";
-moduleScreen.style.display="flex";
-}else{
-moduleScreen.style.display="none";
-homeScreen.style.display="flex";
-}
-backBtn.style.display="none";
-startVRBtn.style.display="none";
-moduleContent.innerHTML="";
-logMessages=[];
-questLog.innerHTML="";
-statusEl.textContent="상태: 대기 중";
+  moduleScreen.style.display="none";
+  homeScreen.style.display="flex";
+  backBtn.style.display="none";
+  startVRBtn.style.display="none";
 });
+
+backFromVR.addEventListener("click",()=>{
+  vrScreen.style.display="none";
+  moduleScreen.style.display="flex";
+});
+
 </script>
 </body>
 </html>
