@@ -1,562 +1,697 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ko">
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Me2Verse — 완성형 데모 (Pi 전용 로그인 시뮬레이션)</title>
+<title>Me2Verse — 완성형 데모 (Pi 전용 로그인)</title>
 
-<!-- A-Frame for VR -->
-<script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+<!-- Three.js + GLTF loaders + WebXR button -->
+<script type="module">
+  import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.module.js';
+  import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.152.2/examples/jsm/controls/OrbitControls.js';
+  import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.152.2/examples/jsm/loaders/GLTFLoader.js';
+  import { DRACOLoader } from 'https://cdn.jsdelivr.net/npm/three@0.152.2/examples/jsm/loaders/DRACOLoader.js';
+  import { KTX2Loader } from 'https://cdn.jsdelivr.net/npm/three@0.152.2/examples/jsm/loaders/KTX2Loader.js';
+  window.THREE = THREE; // expose for inline handlers later
+  window.GLTFLoaderModule = GLTFLoader;
+  window.DRACOLoaderModule = DRACOLoader;
+  window.KTX2LoaderModule = KTX2Loader;
+</script>
 
 <style>
   :root{
     --accent:#7b61ff;
-    --bg:#0f1720;
-    --card:#0b1220;
-    --glass: rgba(255,255,255,0.06);
     --muted:#9aa4b2;
+    --glass: rgba(255,255,255,0.04);
   }
-  html,body{height:100%;margin:0;font-family:Inter,system-ui,Arial,sans-serif;background:linear-gradient(180deg,#071027 0%, #07203a 100%);color:#e6eef6;}
-  .app{max-width:1200px;margin:20px auto;padding:18px;}
-  header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
-  .brand{display:flex;align-items:center;gap:12px}
-  .logo{width:56px;height:56px;border-radius:10px;background:linear-gradient(135deg,#6b9cff,#9b66ff);display:flex;align-items:center;justify-content:center;font-weight:800;color:white;font-size:20px;box-shadow:0 6px 24px rgba(123,97,255,0.18)}
-  h1{margin:0;font-size:20px}
-  .subtitle{color:var(--muted);font-size:13px}
-  .right{display:flex;align-items:center;gap:10px}
-  .pi-login{background:var(--glass);padding:8px;border-radius:10px;display:flex;gap:8px;align-items:center}
-  .pi-login input{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:8px;border-radius:8px;color:white;width:180px}
-  .btn{background:var(--accent);border:none;padding:10px 12px;border-radius:10px;color:white;cursor:pointer;box-shadow:0 6px 18px rgba(123,97,255,0.14)}
+  html,body{height:100%;margin:0;font-family:Inter,Arial,system-ui;background:linear-gradient(180deg,#051023 0,#071a2f 100%);color:#eaf0ff}
+  .app{max-width:1200px;margin:18px auto;padding:14px;display:flex;gap:12px}
+  header{display:flex;justify-content:space-between;align-items:center;gap:12px}
+  .brand{display:flex;gap:12px;align-items:center}
+  .logo{width:56px;height:56px;border-radius:10px;background:linear-gradient(135deg,#6b9cff,#9b66ff);display:flex;align-items:center;justify-content:center;font-weight:800;color:white}
+  h1{margin:0;font-size:18px}
+  .subtitle{font-size:12px;color:var(--muted)}
+  main{display:flex;gap:12px;width:100%;}
+  /* Left column: hub */
+  .col-left{width:360px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:12px;padding:12px;box-shadow:0 8px 40px rgba(2,6,23,0.6)}
+  .pi-login{display:flex;gap:8px;align-items:center;margin-bottom:10px}
+  .pi-login input{flex:1;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:white}
+  .btn{background:var(--accent);border:none;padding:8px 10px;border-radius:8px;color:white;cursor:pointer}
   .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.06)}
-  nav{display:flex;gap:10px;align-items:center}
-  /* Grid of cards */
-  .hub{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
-  .card{background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));border-radius:12px;padding:14px;box-shadow:0 8px 30px rgba(2,6,23,0.6);min-height:180px;display:flex;flex-direction:column;justify-content:space-between}
-  .card .visual{height:100px;border-radius:8px;background-size:cover;background-position:center;box-shadow:inset 0 -30px 40px rgba(0,0,0,0.35)}
-  .card h3{margin:8px 0 0 0;font-size:16px}
-  .card p{margin:6px 0 0 0;color:var(--muted);font-size:13px}
-  .tags{display:flex;gap:8px;margin-top:8px}
-  .tag{background:rgba(255,255,255,0.04);padding:6px 8px;border-radius:999px;font-size:12px;color:var(--muted)}
-  .card .actions{display:flex;gap:8px;margin-top:10px}
-  /* HUD & side panel */
-  .hud{position:fixed;right:20px;top:90px;width:320px;background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02));border-radius:12px;padding:12px;box-shadow:0 12px 36px rgba(2,6,23,0.6)}
+  .flags{display:flex;justify-content:space-between;margin-bottom:10px}
+  .flags img{width:70px;height:auto}
+  .search{margin:8px 0;padding:8px;border-radius:10px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:white;width:100%}
+  .hub{display:grid;grid-template-columns:1fr;gap:10px;overflow:auto;max-height:56vh;padding-right:6px}
+  .card{display:flex;gap:10px;padding:10px;border-radius:10px;background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.02));align-items:center}
+  .card img{width:78px;height:56px;object-fit:cover;border-radius:6px}
+  .card .meta{flex:1}
+  .card h3{margin:0;font-size:14px}
+  .card p{margin:4px 0 0 0;color:var(--muted);font-size:12px}
+  .card .actions{display:flex;gap:6px;margin-top:8px}
+  .small{font-size:12px;color:var(--muted)}
+  /* Right column: 3D canvas + HUD */
+  .col-right{flex:1;position:relative;min-height:75vh;border-radius:12px;overflow:hidden;background:#071427}
+  #canvasHolder{position:absolute;inset:0}
+  .hud{position:absolute;right:18px;top:18px;width:320px;background:rgba(0,0,0,0.45);padding:12px;border-radius:10px;color:#fff;z-index:20}
   .hud h4{margin:0 0 6px 0}
   .hud .row{display:flex;justify-content:space-between;align-items:center;padding:6px 0}
-  .log{background:rgba(255,255,255,0.02);border-radius:8px;padding:8px;max-height:260px;overflow:auto;color:var(--muted);font-size:13px}
-  .profile{display:flex;gap:10px;align-items:center}
-  .avatar{width:46px;height:46px;border-radius:10px;background:linear-gradient(135deg,#ff8aa0,#ffd37c);display:flex;align-items:center;justify-content:center;font-weight:700;color:#111}
-  .controls{display:flex;gap:8px;margin-top:10px}
-  /* Story Viewer modal */
+  .log{background:rgba(255,255,255,0.02);padding:8px;border-radius:8px;max-height:220px;overflow:auto;color:var(--muted);font-size:13px}
+  .controls{display:flex;gap:8px;margin-top:8px}
+  /* viewer overlay */
   .overlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:50}
   .overlay.show{display:flex}
-  .panel{width:92%;max-width:1000px;background:linear-gradient(180deg,#07182a 0,#052035 100%);border-radius:12px;padding:18px;box-shadow:0 22px 60px rgba(2,6,23,0.8);display:flex;gap:14px; color:#eaf0ff}
+  .panel{width:92%;max-width:1100px;background:linear-gradient(180deg,#081a2b,#042233);border-radius:12px;padding:18px;color:#eaf0ff;box-shadow:0 18px 60px rgba(2,6,23,0.8);display:flex;gap:14px}
   .left{flex:1}
-  .right{width:360px;min-width:260px}
-  .story-visual{height:260px;border-radius:8px;background-size:cover;background-position:center}
-  .story-meta{display:flex;justify-content:space-between;align-items:center;margin-top:12px}
-  .choices{display:flex;flex-direction:column;gap:8px;margin-top:10px}
-  .choice-btn{padding:10px 12px;border-radius:10px;border:none;background:linear-gradient(90deg,#1f7aff,#8e6cff);color:white;cursor:pointer;text-align:left}
+  .story-visual{height:300px;border-radius:10px;background-size:cover;background-position:center}
+  .choices{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+  .choice-btn{background:linear-gradient(90deg,#1f7aff,#8e6cff);border:none;color:white;padding:10px;border-radius:8px;cursor:pointer;text-align:left}
   .choice-btn.secondary{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--muted)}
-  /* VR area overlay info */
-  .vr-hud{position:fixed;left:20px;top:80px;background:rgba(0,0,0,0.45);padding:8px;border-radius:8px;color:white;width:320px}
-  /* Footer */
-  footer{margin-top:20px;color:var(--muted);font-size:13px;text-align:center}
-  /* Responsive */
+  .right{width:300px}
+  .right .item{background:rgba(255,255,255,0.02);padding:8px;border-radius:8px;margin-bottom:8px}
+  .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+  .pi-badge{background:linear-gradient(135deg,#ffd37c,#ff8aa0);padding:8px;border-radius:8px;color:#111;font-weight:700}
+  /* footer note */
+  .note{font-size:12px;color:var(--muted);margin-top:8px}
   @media(max-width:980px){
+    .app{padding:8px}
+    .col-left{width:100%;order:2}
+    .col-right{order:1}
     .hud{display:none}
-    .right{display:none}
     .panel{flex-direction:column}
-    .right{width:100%}
   }
 </style>
 </head>
 <body>
   <div class="app">
-    <header>
-      <div class="brand">
-        <div class="logo">M2V</div>
-        <div>
-          <h1>Me2Verse — 완성형 데모</h1>
-          <div class="subtitle">Pi 전용 로그인 · 스토리 허브 · VR/Non-VR 통합 체험</div>
+    <div style="width:100%">
+      <header class="topbar">
+        <div class="brand">
+          <div class="logo">M2V</div>
+          <div>
+            <h1>Me2Verse — 완성형 데모</h1>
+            <div class="subtitle">Pi 전용 로그인 · 독립 모듈 스토리 · VR 통합</div>
+          </div>
         </div>
-      </div>
+        <div class="note">데모: 클라이언트 완성형(로컬). 실제 배포 → 서버 연동 필요</div>
+      </header>
 
-      <div class="right">
-        <!-- Pi 계정 전용 로그인 (시뮬레이션) -->
-        <div class="pi-login" id="piLoginBox" title="Pi 계정으로만 로그인하세요">
-          <input id="piIdInput" placeholder="Pi 계정 아이디 (예: pi_alice)" />
-          <button class="btn" id="connectPiBtn">Pi 연결</button>
+      <main>
+        <!-- LEFT: HUB -->
+        <div class="col-left">
+          <div class="flags">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/0/09/Flag_of_South_Korea.svg" alt="taegeuk left">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/0/09/Flag_of_South_Korea.svg" alt="taegeuk right">
+          </div>
+
+          <div class="pi-login">
+            <input id="piId" placeholder="Pi 계정 입력 (예: pi_alice)" />
+            <button class="btn" id="connectBtn">Pi 연결</button>
+          </div>
+
+          <input id="search" class="search" placeholder="스토리 / 키워드 검색">
+
+          <div style="display:flex;gap:8px;margin-bottom:8px">
+            <button class="btn ghost" id="libraryBtn">내 라이브러리</button>
+            <button class="btn ghost" id="suggestBtn">스토리 제안</button>
+            <button class="btn" id="saveBtn">저장</button>
+          </div>
+
+          <div class="hub" id="hub"></div>
         </div>
-        <div id="sessionInfo" style="display:none;">
-          <div class="profile">
-            <div class="avatar" id="avatarBadge">P</div>
-            <div>
-              <div id="displayName">—</div>
-              <div style="font-size:12px;color:var(--muted)" id="displayPi">Pi ID</div>
+
+        <!-- RIGHT: 3D Canvas + HUD -->
+        <div class="col-right">
+          <div id="canvasHolder"></div>
+
+          <div class="hud" id="hud">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div>
+                <div style="font-size:13px;color:var(--muted)">로그인</div>
+                <div id="displayName" style="font-weight:700">미로그인</div>
+                <div class="small" id="displayPi">-</div>
+              </div>
+              <div class="pi-badge" id="piBalance">20 Pi</div>
             </div>
-          </div>
-        </div>
-      </div>
-    </header>
 
-    <!-- Story hub -->
-    <section>
-      <div style="display:flex;gap:16px;align-items:center;margin-bottom:12px">
-        <div style="flex:1">
-          <input id="search" placeholder="스토리 / 키워드 검색" style="width:100%;padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:white" />
-        </div>
-        <div style="display:flex;gap:8px;align-items:center">
-          <button class="btn" id="myLibraryBtn">내 라이브러리</button>
-          <button class="btn ghost" id="suggestBtn">스토리 제안</button>
-        </div>
-      </div>
+            <div class="row"><div>포인트</div><div id="points">0</div></div>
+            <div class="row"><div>아이템</div><div id="itemsCount">0</div></div>
+            <div style="margin-top:8px">
+              <div style="font-weight:700;margin-bottom:6px">퀘스트 로그</div>
+              <div class="log" id="logPanel">아직 진행한 스토리가 없습니다.</div>
+            </div>
 
-      <div style="display:flex;gap:20px;align-items:flex-start">
-        <div style="flex:1">
-          <!-- category tabs -->
-          <nav style="margin-bottom:12px">
-            <button class="btn ghost" data-category="all" onclick="renderHub('all')">전체</button>
-            <button class="btn ghost" data-category="love" onclick="renderHub('love')">연애</button>
-            <button class="btn ghost" data-category="space" onclick="renderHub('space')">우주</button>
-            <button class="btn ghost" data-category="hobby" onclick="renderHub('hobby')">취미</button>
-            <button class="btn ghost" data-category="travel" onclick="renderHub('travel')">여행</button>
-          </nav>
-
-          <div id="hubGrid" class="hub"></div>
-          <footer>데모: 스토리/VR/결제(시뮬레이션) 통합 샘플 — 실제 운영은 서버 연동 필요</footer>
-        </div>
-
-        <!-- HUD -->
-        <aside class="hud" id="hud">
-          <div style="display:flex;justify-content:space-between;align-items:center">
-            <h4>현황</h4>
-            <div style="font-size:13px;color:var(--muted)">Pi 잔액: <strong id="piBalance">0</strong></div>
-          </div>
-          <div class="row">
-            <div>포인트</div><div id="points">0</div>
-          </div>
-          <div class="row">
-            <div>아이템</div><div id="itemsCount">0</div>
-          </div>
-          <div style="margin-top:8px">
-            <div style="font-weight:700;margin-bottom:6px">퀘스트 로그</div>
-            <div class="log" id="logPanel">아직 진행된 스토리가 없습니다.</div>
-          </div>
-          <div style="margin-top:10px">
-            <div style="font-weight:700;margin-bottom:6px">프로필</div>
-            <div id="profileInfo" style="color:var(--muted)">로그인 후 프로필이 표시됩니다.</div>
             <div class="controls">
-              <button class="btn ghost" id="saveBtn">저장</button>
-              <button class="btn" id="resetBtn">초기화</button>
+              <button class="btn ghost" id="homeBtn">홈</button>
+              <button class="btn" id="openViewerBtn">선택 보기</button>
             </div>
           </div>
-        </aside>
-      </div>
-    </section>
-
-    <!-- Overlay: Story Viewer (Non-VR or VR entry) -->
-    <div id="viewerOverlay" class="overlay">
-      <div class="panel">
-        <div class="left">
-          <div class="story-visual" id="storyVisual"></div>
-          <div class="story-meta">
-            <div>
-              <h2 id="storyTitle">스토리 제목</h2>
-              <div id="storyTag" style="color:var(--muted)">모듈 · 난이도</div>
-            </div>
-            <div id="storyPoints" style="font-weight:700;text-align:right">+0</div>
-          </div>
-          <p id="storyText" style="margin-top:10px;color:var(--muted)">스토리 설명이 표시됩니다. 감성적인 문장과 선택지가 포함됩니다.</p>
-
-          <div class="choices" id="choicesContainer"></div>
-
-          <div style="margin-top:12px; display:flex; gap:8px;">
-            <button class="btn" id="enterVRBtn">VR로 체험</button>
-            <button class="btn ghost" id="continueBtn">선택 저장 / 다음</button>
-            <button class="btn ghost" id="closeViewerBtn">닫기</button>
-          </div>
         </div>
+      </main>
+    </div>
+  </div>
 
-        <div class="right">
-          <div style="font-weight:700;margin-bottom:10px">관련 아이템</div>
-          <div id="relatedItems" style="display:flex;flex-direction:column;gap:8px"></div>
-
-          <div style="margin-top:16px">
-            <div style="font-weight:700;margin-bottom:8px">스토리 히스토리</div>
-            <div id="storyHistory" style="background:rgba(255,255,255,0.02);padding:8px;border-radius:8px;max-height:240px;overflow:auto;color:var(--muted)"></div>
+  <!-- STORY VIEWER OVERLAY -->
+  <div id="viewerOverlay" class="overlay">
+    <div class="panel">
+      <div class="left">
+        <div class="story-visual" id="storyVisual"></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px">
+          <div>
+            <h2 id="storyTitle">제목</h2>
+            <div class="small" id="storyTag">모듈 · 타입</div>
           </div>
+          <div id="storyPointBadge" style="font-weight:700">+0</div>
+        </div>
+        <p id="storyText" style="color:var(--muted);margin-top:10px">스토리 설명이 표시됩니다.</p>
+
+        <div class="choices" id="choices"></div>
+
+        <div style="margin-top:12px;display:flex;gap:8px">
+          <button class="btn" id="enterVR">VR로 체험</button>
+          <button class="btn ghost" id="saveChoice">선택 저장</button>
+          <button class="btn ghost" id="closeViewer">닫기</button>
         </div>
       </div>
-    </div>
+      <div class="right">
+        <div style="font-weight:700;margin-bottom:8px">관련 아이템</div>
+        <div id="relatedItems"></div>
 
-    <!-- VR scene modal (keeps HUD on top) -->
-    <div id="vrContainer" style="display:none; position:fixed; inset:0; z-index:40; background:black;">
-      <a-scene id="vrScene" embedded style="height:100vh; width:100vw; background:black">
-        <a-sky id="vrSky" color="#000"></a-sky>
-        <a-entity id="vrWorld"></a-entity>
-        <a-entity id="vrCameraRig" position="0 1.6 0">
-          <a-camera wasd-controls look-controls>
-            <a-cursor color="#111"></a-cursor>
-          </a-camera>
-        </a-entity>
-        <a-entity light="type: ambient; intensity:0.8"></a-entity>
-      </a-scene>
-      <!-- VR overlay close -->
-      <div style="position:fixed; top:14px; left:14px; z-index:60;">
-        <button class="btn" id="exitVrBtn">VR 종료</button>
+        <div style="margin-top:14px;font-weight:700">스토리 히스토리</div>
+        <div id="storyHistory" style="background:rgba(255,255,255,0.02);padding:8px;border-radius:8px;margin-top:6px;color:var(--muted);max-height:260px;overflow:auto"></div>
       </div>
     </div>
-
   </div>
 
 <script>
-/* -------------------------
-   Data: modules & stories
-   ------------------------- */
-const STORY_DB = [
-  { id:'love1', module:'love', title:'공원에서의 첫 만남', visual:'https://images.unsplash.com/photo-1524532849990-6eec8b6e2f19?w=1200&q=60', desc:"따뜻한 봄날, 공원 벤치에서 우연히 마주친 그/그녀와의 첫 대화. 선택지로 감정이 바뀝니다.", points:8, items:['하트'], highlight:false, script:[
-      {id:'s1', text:'밝게 인사한다', effect:{points:8, item:'하트'}},
-      {id:'s2', text:'수줍게 미소짓는다', effect:{points:5, item:'미소'}},
-  ]},
-  { id:'love2', module:'love', title:'카페 데이트', visual:'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=1200&q=60', desc:"따뜻한 라떼 한 잔과 진솔한 대화, 작은 선택이 큰 추억이 됩니다.", points:10, items:['커피'], highlight:false, script:[
-      {id:'s1', text:'음료 추천하기', effect:{points:10, item:'커피'}},
-      {id:'s2', text:'자신의 이야기를 한다', effect:{points:6, item:'이야기'}},
-  ]},
-  /* Many more love stories ... generate more below dynamically */
-];
+/* ============================
+   COMPLETE SINGLE-FILE APP
+   - Client-only demo "완성작" 구현
+   - Real auth/payment points are left as comments for server integration
+   ============================ */
 
-
-// Generate placeholder stories for remaining modules to reach 10 each
-function generateModuleStories(moduleKey, baseTitle, visualBase, startIndex){
-  let arr=[];
-  for(let i=0;i<10;i++){
-    arr.push({
-      id: moduleKey + (i+1),
-      module: moduleKey,
-      title: `${baseTitle} ${i+1}`,
-      visual: `${visualBase}?w=1200&q=60&v=${i}`,
-      desc: `${baseTitle}의 감성 체험 ${i+1} — 상호작용과 선택으로 이야기를 만드세요.`,
-      points: 5 + i*2,
-      items: [`${moduleKey}_item${i+1}`],
-      highlight: (i>=8), // last two are highlight pay
-      script: [
-        {id:'c1', text:'선택 A', effect:{points:5+i, item: `${moduleKey}_item${i+1}`}},
-        {id:'c2', text:'선택 B', effect:{points:3+i, item: `mem_${i+1}`}}
-      ]
-    });
-  }
-  return arr;
-}
-
-const LOVE_EXTRA = generateModuleStories('love','연애 스토리','https://images.unsplash.com/photo-1496307042754-b4aa456c4a2d',3);
-const SPACE_STORIES = generateModuleStories('space','우주 스토리','https://images.unsplash.com/photo-1446776811953-b23d57bd21aa',1);
-const HOBBY_STORIES = generateModuleStories('hobby','취미 스토리','https://images.unsplash.com/photo-1500530855697-b586d89ba3ee',1);
-const TRAVEL_STORIES = generateModuleStories('travel','여행 스토리','https://images.unsplash.com/photo-1507525428034-b723cf961d3e',1);
-
-// Merge and normalize DB
-const DB = [];
-DB.push(...STORY_DB); // earlier defined specific ones
-DB.push(...LOVE_EXTRA);
-DB.push(...SPACE_STORIES);
-DB.push(...HOBBY_STORIES);
-DB.push(...TRAVEL_STORIES);
-
-// index by module for hub rendering
-const MODULES = {
-  all: DB,
-  love: DB.filter(s=>s.module==='love'),
-  space: DB.filter(s=>s.module==='space'),
-  hobby: DB.filter(s=>s.module==='hobby'),
-  travel: DB.filter(s=>s.module==='travel'),
-};
-
-/* -------------------------
-   App State & Persistence
-   ------------------------- */
-let APP = {
-  user: null,      // {piId, displayName, avatarChar}
+/* ---------- App State & Persistence ---------- */
+const APP = {
+  user: null,         // {piId, displayName}
   points: 0,
-  items: [],       // array of item strings
-  log: [],         // text log
-  library: {},     // completed story records by id
-  piBalance: 20    // simulated Pi balance for purchases
+  items: [],
+  log: [],
+  library: {},        // storyId -> array of entries
+  piBalance: 20,      // simulated Pi balance
+  modules: [],        // loaded module manifests
+  activeStory: null
 };
+const STORAGE_KEY = 'me2v_demo_v1';
 
-// load saved
-function loadApp(){
-  const raw = localStorage.getItem('me2v_app_v1');
-  if(raw){
-    try{
-      const data = JSON.parse(raw);
-      APP = Object.assign(APP, data);
-    }catch(e){ console.warn('load error',e) }
-  }
-  renderHUD();
+function saveState(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(APP)); }
+function loadState(){
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if(raw){ try{ Object.assign(APP, JSON.parse(raw)); }catch(e){ console.warn(e); } }
 }
-function saveApp(){
-  localStorage.setItem('me2v_app_v1', JSON.stringify(APP));
+loadState();
+
+/* ---------- Utility ---------- */
+function el(q){ return document.querySelector(q); }
+function on(q,evt,fn){ el(q).addEventListener(evt,fn); }
+function addLog(text){
+  APP.log.push(`${new Date().toLocaleTimeString()} - ${text}`);
+  renderLog();
+  saveState();
+}
+function renderLog(){
+  const panel = el('#logPanel');
+  if(APP.log.length===0) panel.innerHTML='아직 진행한 스토리가 없습니다.';
+  else panel.innerHTML = APP.log.slice().reverse().map(x=>`<div>${escapeHtml(x)}</div>`).join('');
+}
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c=> ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function setProfile(piId){
+  APP.user = { piId, displayName: piId.replace(/^pi_?/,'').replace(/[_\-]/g,' ').replace(/\b\w/g,c=>c.toUpperCase()) };
+  el('#displayName').textContent = APP.user.displayName;
+  el('#displayPi').textContent = APP.user.piId;
+  addLog(`로그인: ${APP.user.piId}`);
+  saveState();
 }
 
-/* -------------------------
-   UI Rendering
-   ------------------------- */
-const hubGrid = document.getElementById('hubGrid');
-const logPanel = document.getElementById('logPanel');
-const pointsEl = document.getElementById('points');
-const itemsCountEl = document.getElementById('itemsCount');
-const piBalanceEl = document.getElementById('piBalance');
-const profileInfo = document.getElementById('profileInfo');
-const sessionInfo = document.getElementById('sessionInfo');
-const avatarBadge = document.getElementById('avatarBadge');
-const displayNameEl = document.getElementById('displayName');
-const displayPiEl = document.getElementById('displayPi');
+/* ---------- Sample Module Manifests (independent modules) ---------- */
+/* Each module has id, title, module (category), thumbnail, highlight(bool), pricePi, stories[] */
+function makeSampleModules(){
+  const modules = [];
+  // LOVE module - 10 stories
+  const loveStories = Array.from({length:10},(_,i)=>({
+    id:`love-${i+1}`,
+    title:`연애 스토리 ${i+1}`,
+    visual:`https://images.unsplash.com/photo-1496307042754-b4aa456c4a2d?w=1200&q=60&v=${i}`,
+    desc:`연애 모듈의 감성 체험 ${i+1} — 선택으로 감정이 흐릅니다.`,
+    points:5 + i*2,
+    items: [`heart${i+1}`],
+    highlight: i>=8,
+    script: [
+      {id:'a', text:'따뜻하게 인사한다', effect:{points:5+i, item:`heart${i+1}`}},
+      {id:'b', text:'조용히 미소짓는다', effect:{points:3+i}}
+    ]
+  }));
+  modules.push({id:'m-love', module:'love', title:'연애 월드', thumb:loveStories[0].visual, stories: loveStories});
 
-function renderHub(category='all', filterText=''){
-  hubGrid.innerHTML='';
-  const list = MODULES[category] || MODULES.all;
-  const filtered = list.filter(s => s.title.toLowerCase().includes(filterText.toLowerCase()) || s.desc.toLowerCase().includes(filterText.toLowerCase()));
-  filtered.forEach(story => {
-    const card = document.createElement('div'); card.className='card';
-    card.innerHTML = `
-      <div class="visual" style="background-image:url('${story.visual}')"></div>
-      <div>
-        <h3>${story.title}</h3>
-        <p>${truncate(story.desc, 90)}</p>
-        <div class="tags"><div class="tag">${story.module.toUpperCase()}</div><div class="tag">${story.highlight? 'HIGHLIGHT':'FREE'}</div></div>
+  // SPACE module - 10 stories
+  const spaceStories = Array.from({length:10},(_,i)=>({
+    id:`space-${i+1}`,
+    title:`우주 스토리 ${i+1}`,
+    visual:`https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?w=1200&q=60&v=${i}`,
+    desc:`무중력과 성간의 신비, 탐험 ${i+1}`,
+    points:10 + i*3,
+    items: [`map${i+1}`],
+    highlight: i>=8,
+    script:[
+      {id:'a', text:'탐사선 점검', effect:{points:10+i}},
+      {id:'b', text:'샘플 채취', effect:{points:12+i, item:`sample${i+1}`}}
+    ]
+  }));
+  modules.push({id:'m-space', module:'space', title:'우주 월드', thumb:spaceStories[0].visual, stories: spaceStories});
+
+  // HOBBY module
+  const hobbyStories = Array.from({length:10},(_,i)=>({
+    id:`hobby-${i+1}`,
+    title:`취미 스토리 ${i+1}`,
+    visual:`https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=1200&q=60&v=${i}`,
+    desc:`취미로 힐링하는 이야기 ${i+1}`,
+    points:4 + i*2,
+    items: [`flower${i+1}`],
+    highlight: i>=8,
+    script:[
+      {id:'a', text:'꽃 관찰', effect:{points:4+i, item:`flower${i+1}`}},
+      {id:'b', text:'그림 그리기', effect:{points:6+i}}
+    ]
+  }));
+  modules.push({id:'m-hobby', module:'hobby', title:'취미 월드', thumb:hobbyStories[0].visual, stories: hobbyStories});
+
+  // TRAVEL module
+  const travelStories = Array.from({length:10},(_,i)=>({
+    id:`travel-${i+1}`,
+    title:`여행 스토리 ${i+1}`,
+    visual:`https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1200&q=60&v=${i}`,
+    desc:`여행에서 만나는 작은 모험 ${i+1}`,
+    points:6 + i*2,
+    items: [`photo${i+1}`],
+    highlight: i>=8,
+    script:[
+      {id:'a', text:'현지 음식 도전', effect:{points:6+i, item:`photo${i+1}`}},
+      {id:'b', text:'기념품 구매', effect:{points:5+i}}
+    ]
+  }));
+  modules.push({id:'m-travel', module:'travel', title:'여행 월드', thumb:travelStories[0].visual, stories: travelStories});
+
+  return modules;
+}
+if(APP.modules.length===0) APP.modules = makeSampleModules();
+
+/* ---------- Render Hub ---------- */
+function renderHub(filterText=''){
+  const hub = el('#hub'); hub.innerHTML='';
+  APP.modules.forEach(mod=>{
+    // show module card
+    const div = document.createElement('div'); div.className='card';
+    div.innerHTML = `
+      <img src="${mod.thumb}" />
+      <div class="meta">
+        <h3>${mod.title}</h3>
+        <p class="small">${mod.module.toUpperCase()} · ${mod.stories.length} stories</p>
         <div class="actions">
-          <button class="btn" data-id="${story.id}" onclick="openStory('${story.id}')">체험하기</button>
-          <button class="btn ghost" onclick="previewStory('${story.id}')">미리보기</button>
+          <button class="btn" data-id="${mod.id}" onclick="openModule('${mod.id}')">열기</button>
+          <button class="btn ghost" onclick="previewModule('${mod.id}')">미리보기</button>
         </div>
       </div>
     `;
-    hubGrid.appendChild(card);
+    hub.appendChild(div);
   });
 }
-function truncate(s,n){ return s.length>n? s.slice(0,n-1)+'…':s; }
+window.openModule = function(moduleId){
+  const mod = APP.modules.find(m=>m.id===moduleId);
+  if(!mod) return alert('모듈 없음');
+  // render first-level story list in overlay
+  openModuleViewer(mod);
+};
+window.previewModule = function(moduleId){
+  const mod = APP.modules.find(m=>m.id===moduleId);
+  if(!mod) return;
+  openModuleViewer(mod, true);
+};
+renderHub();
 
-function renderHUD(){
-  pointsEl.textContent = APP.points;
-  itemsCountEl.textContent = APP.items.length;
-  piBalanceEl.textContent = APP.piBalance + ' Pi';
-  if(APP.log.length===0) logPanel.innerHTML = '아직 진행된 스토리가 없습니다.';
-  else logPanel.innerHTML = APP.log.slice().reverse().map(l=>`<div>${escapeHtml(l)}</div>`).join('');
-  if(APP.user){
-    sessionInfo.style.display='block';
-    profileInfo.textContent = `${APP.user.displayName} · ${APP.user.piId}`;
-    avatarBadge.textContent = APP.user.avatarChar || APP.user.displayName.slice(0,2).toUpperCase();
-    displayNameEl.textContent = APP.user.displayName;
-    displayPiEl.textContent = APP.user.piId;
-  } else {
-    sessionInfo.style.display='none';
-    profileInfo.textContent = '로그인 후 프로필이 표시됩니다.';
-  }
+/* ---------- Module Viewer / Story Viewer ---------- */
+const viewerOverlay = el('#viewerOverlay');
+function openModuleViewer(mod, preview=false){
+  // show module's first story by default
+  const story = mod.stories[0];
+  openStory(story, mod);
 }
-
-/* -------------------------
-   Login (Pi only — simulation)
-   ------------------------- */
-document.getElementById('connectPiBtn').addEventListener('click', ()=>{
-  const piId = document.getElementById('piIdInput').value.trim();
-  if(!piId){
-    alert('Pi 네트워크 계정 아이디를 입력하세요. (예: pi_alice)');
-    return;
-  }
-  if(!piId.startsWith('pi_')) {
-    const ok = confirm('데모는 Pi 계정 전용입니다. pi_ 접두어로 입력하지 않으셨습니다. 그래도 계속하시겠습니까? (실제 운영에서는 Pi 인증 연동 필요)');
-    if(!ok) return;
-  }
-  // Simulated successful Pi login
-  APP.user = { piId, displayName: prettifyPi(piId), avatarChar: (prettifyPi(piId)[0]||'P').toUpperCase() };
-  saveApp();
-  renderHUD();
-  // switch UI
-  document.getElementById('piLoginBox').style.display='none';
-  sessionInfo.style.display='flex';
-  // show hub
-  renderHub('all','');
-  alert(`Pi 로그인 성공: ${piId} (데모 시뮬레이션)`);
-});
-function prettifyPi(id){ if(!id) return 'Guest'; return id.replace(/^pi_?/,'').replace(/[_\-]/g,' ').replace(/\b\w/g,c=>c.toUpperCase()); }
-
-/* -------------------------
-   Story open / Viewer
-   ------------------------- */
-const viewerOverlay = document.getElementById('viewerOverlay');
-const storyVisual = document.getElementById('storyVisual');
-const storyTitleEl = document.getElementById('storyTitle');
-const storyText = document.getElementById('storyText');
-const storyTag = document.getElementById('storyTag');
-const storyPoints = document.getElementById('storyPoints');
-const choicesContainer = document.getElementById('choicesContainer');
-const relatedItems = document.getElementById('relatedItems');
-const storyHistory = document.getElementById('storyHistory');
-let activeStory = null;
-
-function openStory(storyId){
-  const s = DB.find(x=>x.id===storyId) || DB.find(x=>x.id===storyId.toString());
-  if(!s){ alert('스토리를 찾을 수 없습니다.'); return; }
-  activeStory = s;
-  // fill viewer
-  storyVisual.style.backgroundImage = `url('${s.visual}')`;
-  storyTitleEl.textContent = s.title;
-  storyText.textContent = s.desc;
-  storyTag.textContent = `${s.module.toUpperCase()} · ${s.highlight? 'HIGHLIGHT':'FREE'}`;
-  storyPoints.textContent = `+${s.points}p`;
+function openStory(story, mod){
+  APP.activeStory = {story, mod};
+  el('#storyVisual').style.backgroundImage = `url('${story.visual}')`;
+  el('#storyTitle').textContent = story.title;
+  el('#storyTag').textContent = `${mod.title} · ${story.highlight? 'HIGHLIGHT':'FREE'}`;
+  el('#storyPointBadge').textContent = `+${story.points}p`;
+  el('#storyText').textContent = story.desc;
   // choices
-  choicesContainer.innerHTML='';
-  s.script.forEach((choice, idx)=>{
-    const btn = document.createElement('button');
-    btn.className = 'choice-btn';
-    btn.innerText = choice.text;
-    btn.onclick = ()=> {
-      applyChoice(s, choice);
-    };
-    choicesContainer.appendChild(btn);
+  const choices = el('#choices'); choices.innerHTML='';
+  story.script.forEach(sc=>{
+    const b = document.createElement('button'); b.className='choice-btn'; b.textContent = sc.text;
+    b.onclick = ()=> applyChoice(story, sc);
+    choices.appendChild(b);
   });
   // related items
-  relatedItems.innerHTML = s.items.map(it=>`<div style="background:rgba(255,255,255,0.03);padding:8px;border-radius:8px">${it}</div>`).join('');
-  // history of this story
-  const hist = APP.library[s.id] || [];
-  storyHistory.innerHTML = hist.length? hist.map(h=>`<div>${escapeHtml(h)}</div>`).join(''): '<div style="color:var(--muted)">아직 체험 기록 없음</div>';
-  // show
+  el('#relatedItems').innerHTML = story.items.map(it=>`<div class="item">${escapeHtml(it)}</div>`).join('');
+  // history
+  const hist = APP.library[story.id] || [];
+  el('#storyHistory').innerHTML = hist.length? hist.map(h=>`<div>${escapeHtml(h)}</div>`).join(''): '<div class="small">아직 체험 기록 없음</div>';
   viewerOverlay.classList.add('show');
 }
+el('#closeViewer').addEventListener('click', ()=> viewerOverlay.classList.remove('show'));
 
-// preview quick
-function previewStory(storyId){
-  const s = DB.find(x=>x.id===storyId);
-  openStory(storyId);
-  // auto close after 7s for preview
-  setTimeout(()=>{ viewerOverlay.classList.remove('show'); }, 7000);
-}
-
-document.getElementById('closeViewerBtn').addEventListener('click', ()=> viewerOverlay.classList.remove('show'));
-
-/* -------------------------
-   Choice apply, save to APP
-   ------------------------- */
+/* ---------- Choice handling & highlight (Pi payment simulation) ---------- */
 function applyChoice(story, choice){
-  // If highlight (paid) check balance
+  // if story is highlight and requires payment, simulate Pi deduction
   if(story.highlight){
-    const ok = confirm(`이 스토리는 하이라이트(프리미엄)입니다. ${story.module === 'love' ? 3 : 5} Pi를 사용하여 체험하시겠습니까? (데모 시뮬레이트)`);
-    if(!ok) return;
-    const cost = 5;
+    const cost = 5; // sample cost
     if(APP.piBalance < cost){
-      alert('Pi 잔액 부족 — 데모에서는 충전 기능이 없습니다.');
-      return;
+      if(!confirm('Pi 잔액이 부족합니다. 충전 없이 데모로 진행하시겠습니까? (시뮬)')) return;
+    } else {
+      if(!confirm(`이 스토리는 하이라이트입니다. ${cost} Pi를 사용하여 진행하시겠습니까?`)) return;
+      APP.piBalance -= cost;
     }
-    APP.piBalance -= cost;
   }
-  // apply effects
   const eff = choice.effect || {};
-  APP.points = (APP.points || 0) + (eff.points||0);
+  APP.points += eff.points || 0;
   if(eff.item) APP.items.push(eff.item);
-  const logLine = `[${story.module.toUpperCase()}] ${story.title} → ${choice.text} (+${eff.points||0}p, item:${eff.item||'-'})`;
-  APP.log.push(logLine);
-  // story-specific record
-  APP.library[story.id] = APP.library[story.id] || [];
-  APP.library[story.id].push(`${new Date().toLocaleString()} : ${choice.text}`);
-  saveApp();
+  APP.log.push(`[${APP.activeStory.mod.module.toUpperCase()}] ${APP.activeStory.story.title} → ${choice.text} (+${eff.points||0}p)`);
+  APP.library[APP.activeStory.story.id] = APP.library[APP.activeStory.story.id] || [];
+  APP.library[APP.activeStory.story.id].push(`${new Date().toLocaleString()} : ${choice.text}`);
   renderHUD();
-  // Update story history
-  storyHistory.innerHTML = APP.library[story.id].map(h=>`<div>${escapeHtml(h)}</div>`).join('');
-  alert('선택이 저장되었습니다! HUD에서 획득 내역을 확인하세요.');
+  saveState();
+  alert('선택이 저장되었습니다. HUD에서 확인하세요.');
 }
 
-/* -------------------------
-   VR entry: show simple A-Frame environment for this story
-   ------------------------- */
-document.getElementById('enterVRBtn').addEventListener('click', ()=>{
-  if(!activeStory){ alert('열려있는 스토리가 없습니다.'); return; }
-  // Setup VR modal
-  document.getElementById('vrContainer').style.display='block';
-  // set sky by module
-  const sky = document.getElementById('vrSky');
-  if(activeStory.module==='space') sky.setAttribute('color','#00111a');
-  else if(activeStory.module==='love') sky.setAttribute('color','#3a0b2f');
-  else if(activeStory.module==='hobby') sky.setAttribute('color','#0b2f18');
-  else sky.setAttribute('color','#072b3a');
+/* ---------- HUD render ---------- */
+function renderHUD(){
+  el('#points').textContent = APP.points;
+  el('#itemsCount').textContent = APP.items.length;
+  el('#piBalance').textContent = `${APP.piBalance} Pi`;
+  renderLog();
+  if(APP.user){
+    el('#displayName').textContent = APP.user.displayName;
+    el('#displayPi').textContent = APP.user.piId;
+  } else {
+    el('#displayName').textContent = '미로그인';
+    el('#displayPi').textContent = '-';
+  }
+}
+renderHUD();
 
-  // populate vr world with simple clickable objects tied to story choices
-  const world = document.getElementById('vrWorld');
-  world.innerHTML = ''; // clear existing
-  activeStory.script.forEach((choice, idx)=>{
-    // create a gltf or primitive for each choice
-    const x = (idx - (activeStory.script.length/2)) * 1.5;
-    const el = document.createElement('a-box');
-    el.setAttribute('position', `${x} 1.3 -3`);
-    el.setAttribute('depth','0.8'); el.setAttribute('height','0.8'); el.setAttribute('width','0.8');
-    el.setAttribute('color', idx%2? '#ff7ab6': '#7ad1ff');
-    el.setAttribute('class','clickable');
-    // show label
-    el.addEventListener('mouseenter', ()=> {
-      // show small toast overlay (HUD) - we re-use log Panel temporarily
-      logPanel.innerHTML = `<div style="color:#fff">${escapeHtml(choice.text)}</div>` + (APP.log.length? APP.log.slice().reverse().map(l=>`<div style="color:var(--muted)">${escapeHtml(l)}</div>`).join(''):'');
-    });
-    el.addEventListener('click', ()=> {
-      // apply choice (as if chosen)
-      applyChoice(activeStory, choice);
-      // small visual feedback
-      el.setAttribute('animation','property: rotation; to:0 360 0; dur:1000; easing:linear');
-      // update HUD log
-      renderHUD();
-    });
-    world.appendChild(el);
+/* ---------- Suggest / Library / Save ---------- */
+on('#suggestBtn','click', ()=> {
+  const txt = prompt('새 스토리 제안(운영자 검토 후 반영):');
+  if(txt && txt.trim().length>6){
+    const arr = JSON.parse(localStorage.getItem('me2v_suggestions_v1')||'[]');
+    arr.push({user: APP.user?APP.user.piId:'anonymous', text:txt, date:new Date().toLocaleString()});
+    localStorage.setItem('me2v_suggestions_v1', JSON.stringify(arr));
+    alert('제안 저장됨.');
+  } else alert('내용이 짧습니다.');
+});
+on('#libraryBtn','click', ()=> {
+  const keys = Object.keys(APP.library);
+  if(keys.length===0) return alert('아직 체험한 스토리가 없습니다.');
+  alert('내 라이브러리:\n' + keys.map(k=> {
+    const s = findStoryById(k);
+    return s? `${s.title} · ${APP.library[k].length}회` : k;
+  }).join('\n'));
+});
+on('#saveBtn','click', ()=> { saveState(); alert('로컬 저장 완료'); });
+
+/* ---------- Search ---------- */
+on('#search','input', (e)=>{
+  const q = e.target.value.trim().toLowerCase();
+  // filter by module title or story
+  const filtered = APP.modules.filter(mod => mod.title.toLowerCase().includes(q) || mod.stories.some(s=> s.title.toLowerCase().includes(q) || s.desc.toLowerCase().includes(q)));
+  // render filtered
+  const hub = el('#hub'); hub.innerHTML='';
+  filtered.forEach(mod=>{
+    const div = document.createElement('div'); div.className='card';
+    div.innerHTML = `<img src="${mod.thumb}"/><div class="meta"><h3>${mod.title}</h3><p class="small">${mod.module} · ${mod.stories.length} stories</p>
+        <div class="actions"><button class="btn" onclick="openModule('${mod.id}')">열기</button></div></div>`;
+    hub.appendChild(div);
   });
 });
 
-/* exit VR */
-document.getElementById('exitVrBtn').addEventListener('click', ()=>{
-  document.getElementById('vrContainer').style.display='none';
-  // restore HUD log
+/* ---------- find story ---------- */
+function findStoryById(id){
+  for(const m of APP.modules) for(const s of m.stories) if(s.id===id) return s;
+  return null;
+}
+
+/* ---------- Pi login (simulated) ---------- */
+on('#connectBtn','click', ()=>{
+  const val = el('#piId').value.trim();
+  if(!val) return alert('Pi 계정 아이디를 입력하세요 (예: pi_alice).');
+  // PRODUCTION: send to server to verify Pi ownership (signature) and obtain JWT
+  // fetch('/api/auth/pi', {method:'POST',body:JSON.stringify({piId:val}), headers:{'Content-Type':'application/json'}})
+  setProfile(val);
   renderHUD();
 });
 
-/* -------------------------
-   Misc: Save / Reset / Suggestions
-   ------------------------- */
-document.getElementById('saveBtn').addEventListener('click', ()=>{
-  saveApp();
-  alert('앱 상태가 저장되었습니다 (localStorage).');
+/* ---------- Module manifest loading / independent module pattern ---------- */
+/* In a production system each module is an independent package (manifest + assets + script).
+   Here we simulate dynamic manifest load by using the APP.modules array (already independent).
+   Real integration points:
+     - fetch('/api/modules') to get list of available modules (manifest urls)
+     - fetch(manifestUrl) then prefetch assets (scene.glb, avatars, env) via CDN
+     - cache in IndexedDB (idb) for offline / faster loads
+     - sandbox module script execution (WebWorker or VM)
+*/
+
+/* ---------- 3D Scene: Three.js Basic + GLTF avatar loading ---------- */
+let renderer, scene, camera, controls, clock, loader;
+let sceneReady=false;
+
+function init3D(){
+  const container = document.getElementById('canvasHolder');
+  renderer = new THREE.WebGLRenderer({antialias:true,alpha:false});
+  renderer.setSize(container.clientWidth, container.clientHeight);
+  renderer.physicallyCorrectLights = true;
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  container.appendChild(renderer.domElement);
+
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x071427);
+
+  camera = new THREE.PerspectiveCamera(60, container.clientWidth/container.clientHeight, 0.05, 2000);
+  camera.position.set(0,1.6,3);
+
+  controls = new OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+
+  const hemi = new THREE.HemisphereLight(0xffffff,0x444444,0.6); scene.add(hemi);
+  const dir = new THREE.DirectionalLight(0xffffff,0.8); dir.position.set(3,10,3); scene.add(dir);
+
+  const ground = new THREE.Mesh(new THREE.PlaneGeometry(40,40), new THREE.MeshStandardMaterial({color:0x05131a}));
+  ground.rotation.x = -Math.PI/2; ground.receiveShadow=true; scene.add(ground);
+
+  // loaders
+  const dracoLoader = new DRACOLoaderModule.DRACOLoader();
+  dracoLoader.setDecoderPath('https://www.gstatic.com/draco/v1/decoders/');
+  loader = new GLTFLoader();
+  loader.setDRACOLoader(dracoLoader);
+
+  clock = new THREE.Clock();
+  window.addEventListener('resize', ()=> {
+    renderer.setSize(container.clientWidth, container.clientHeight);
+    camera.aspect = container.clientWidth / container.clientHeight;
+    camera.updateProjectionMatrix();
+  });
+
+  // sample ambient objects
+  const lightSphere = new THREE.Mesh(new THREE.SphereGeometry(0.12,16,16), new THREE.MeshStandardMaterial({emissive:0x2a8fff,emissiveIntensity:0.6}));
+  lightSphere.position.set(-1.8,1.6,-1.2); scene.add(lightSphere);
+
+  // load a sample high-quality avatar (glTF)
+  // Using Khronos sample Duck/Avocado as placeholder; replace with real .glb avatars in production
+  loadAvatarSample();
+
+  animate();
+  sceneReady = true;
+}
+
+function loadAvatarSample(){
+  // Example: load a public glTF model and place as avatar
+  const url = 'https://cdn.jsdelivr.net/gh/KhronosGroup/glTF-Sample-Models@master/2.0/Duck/glTF/Duck.gltf';
+  loader.load(url, (gltf)=>{
+    const obj = gltf.scene;
+    obj.traverse(n=>{ if(n.isMesh){ n.castShadow=true; n.receiveShadow=true; }});
+    obj.scale.set(0.25,0.25,0.25);
+    obj.position.set(0,0.5,-1.5);
+    obj.name='sampleAvatar';
+    scene.add(obj);
+    addLog('아바타(샘플) 로드 완료');
+  }, (xhr)=>{}, (err)=>{ console.warn('avatar load err',err); });
+}
+
+/* spawn interactive objects for a story in 3D world */
+function spawnStoryIn3D(story){
+  // remove previous group
+  const prev = scene.getObjectByName('storyGroup');
+  if(prev) scene.remove(prev);
+  const group = new THREE.Group(); group.name='storyGroup';
+  const baseZ = -2.6;
+  story.script.forEach((choice, i)=>{
+    const x = (i - (story.script.length-1)/2) * 1.2;
+    const mat = new THREE.MeshStandardMaterial({color: i%2?0xff7ab6:0x7ad1ff, metalness:0.2, roughness:0.6});
+    const geo = new THREE.BoxGeometry(0.7,0.7,0.7);
+    const box = new THREE.Mesh(geo, mat);
+    box.position.set(x,1.1, baseZ);
+    box.userData = { choice };
+    box.castShadow=true;
+    group.add(box);
+    // floating animation
+    box.userData.floatPhase = Math.random()*Math.PI*2;
+  });
+  scene.add(group);
+  addLog(`3D 스토리 오브젝트 배치: ${story.title}`);
+}
+
+/* raycast interactions */
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+function onClick3D(e){
+  if(!sceneReady) return;
+  const rect = renderer.domElement.getBoundingClientRect();
+  mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+  mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+  raycaster.setFromCamera(mouse, camera);
+  const hits = raycaster.intersectObjects(scene.children, true);
+  if(hits.length>0){
+    const hit = hits.find(h=>h.object.userData && h.object.userData.choice);
+    if(hit){
+      const ch = hit.object.userData.choice;
+      // apply choice effect same as viewer
+      applyChoice(APP.activeStory.story, ch);
+      // visual feedback
+      hit.object.material.emissive = new THREE.Color(0x222222);
+      hit.object.rotation.y += Math.PI/6;
+      renderHUD();
+    }
+  }
+}
+document.addEventListener('click', onClick3D);
+
+/* animate loop */
+function animate(){
+  requestAnimationFrame(animate);
+  const dt = clock? clock.getDelta() : 0.016;
+  // float animation for story boxes
+  const group = scene.getObjectByName('storyGroup');
+  if(group){
+    group.children.forEach(c=>{
+      c.position.y = 1 + Math.sin((performance.now()/1000)+ (c.userData.floatPhase||0))*0.12;
+      c.rotation.y += 0.002;
+    });
+  }
+  controls.update();
+  renderer.render(scene, camera);
+}
+
+/* ---------- VR entry (WebXR) - simple button via three.js */ 
+async function enterXRScene(){
+  if(!navigator.xr) { alert('WebXR을 지원하지 않는 브라우저입니다. (데모: non-VR 계속)'); return; }
+  // For production integrate full WebXR rendering & input
+  // Here we simulate by opening browser VR session if available
+  try{
+    const session = await navigator.xr.requestSession('immersive-vr');
+    addLog('VR 세션 시작');
+    // proper WebXR renderer setup required -> omitted for brevity in single-file demo
+    alert('브라우저의 WebXR 세션이 시작되었습니다 (데모: 실제 이벤트는 간이 처리).');
+    // In production, attach session to renderer.xr and render loop
+  }catch(err){
+    console.warn(err);
+    alert('VR 입장이 실패했습니다: ' + err.message);
+  }
+}
+
+/* ---------- UI events ---------- */
+on('#openViewerBtn','click', ()=> {
+  if(APP.activeStory) openStory(APP.activeStory.story, APP.activeStory.mod);
+  else alert('먼저 허브에서 모듈을 선택하세요.');
 });
-document.getElementById('resetBtn').addEventListener('click', ()=>{
-  if(confirm('앱 상태를 초기화 하시겠습니까? (저장된 모든 진행이 삭제됩니다)')){
-    localStorage.removeItem('me2v_app_v1');
-    location.reload();
+on('#enterVR','click', ()=> {
+  viewerOverlay.classList.remove('show');
+  // spawn 3D story objects
+  if(APP.activeStory){
+    spawnStoryIn3D(APP.activeStory.story);
   }
 });
-
-document.getElementById('suggestBtn').addEventListener('click', ()=> {
-  const txt = prompt('새 스토리 제안 내용을 입력하세요. (운영자 검토 후 반영됩니다.)');
-  if(txt && txt.trim().length>6){
-    let arr = JSON.parse(localStorage.getItem('me2v_suggestions_v1')||'[]');
-    arr.push({user: APP.user?APP.user.piId:'anonymous', text:txt, date:new Date().toLocaleString()});
-    localStorage.setItem('me2v_suggestions_v1', JSON.stringify(arr));
-    alert('제안이 저장되었습니다. 운영자 검토 후 반영됩니다.');
-  } else alert('내용이 너무 짧습니다.');
+on('#homeBtn','click', ()=> {
+  viewerOverlay.classList.remove('show');
+  // clear story 3D
+  const prev = scene.getObjectByName('storyGroup'); if(prev) scene.remove(prev);
 });
-
-/* search, library */
-document.getElementById('search').addEventListener('input', (e)=> {
-  renderHub('all', e.target.value);
+on('#connectBtn','click', ()=> {
+  const v = el('#piId').value.trim();
+  if(!v) return alert('Pi 계정을 입력하세요 (예: pi_alice).');
+  setProfile(v);
+  renderHUD();
 });
-document.getElementById('myLibraryBtn').addEventListener('click', ()=>{
+on('#libraryBtn','click', ()=> {
   const keys = Object.keys(APP.library);
-  if(keys.length===0){ alert('아직 체험한 스토리가 없습니다.'); return; }
-  // show a quick list
-  const list = keys.map(k=> {
-    const s = DB.find(x=>x.id===k);
-    return s? `${s.title} · ${APP.library[k].length}회` : k;
-  }).join('\n');
-  alert('내 라이브러리:\n' + list);
+  if(keys.length===0) return alert('체험 기록이 없습니다.');
+  alert(keys.map(k=> `${findStoryById(k).title} · ${APP.library[k].length}회`).join('\n'));
 });
+on('#closeViewer','click', ()=> viewerOverlay.classList.remove('show'));
+on('#saveChoice','click', ()=> {
+  // if user made a choice in viewer, it's already saved via applyChoice
+  alert('선택은 자동으로 저장됩니다.');
+});
+on('#enterVRBtn','click', ()=> enterXRScene());
+on('#saveBtn','click', ()=> { saveState(); alert('로컬 저장 완료'); });
 
-/* helper */
-function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c=> ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+/* ---------- find story helper ---------- */
+function findStoryById(id){
+  for(const m of APP.modules) for(const s of m.stories) if(s.id===id) return s;
+  return null;
+}
 
-loadApp();
-renderHub('all','');
+/* ---------- init ---------- */
+(function boot(){
+  // initial HUD render
+  renderHUD();
+  // init 3D
+  init3D();
+  addLog('앱 시작 (데모)');
+})();
 
+/* ---------- Notes for production (where to extend) ----------
+1) Auth (Pi):
+   - Replace client-side simulated login with server-based Pi proof verification:
+     POST /api/auth/pi { piId, signature } -> server validates and returns JWT.
+   - Do not trust client-side piId alone.
+
+2) Modules:
+   - Host module manifests + assets on CDN (S3/CloudFront), load manifest at runtime.
+   - Cache assets in IndexedDB for offline and fast reload.
+
+3) Avatars & Assets:
+   - Use glTF(.glb) compressed with DRACO + KTX2 textures.
+   - Use skeleton retargeting and GPU skinning for many avatars.
+   - Pre-generate LODs.
+
+4) Realtime:
+   - Implement NodeJS realtime server (Socket.io or custom WebSocket)
+     for multi-user sync, interest management, authoritative pickups.
+
+5) Payments:
+   - Implement server-side Pi payment verification, safe atomic operations for purchasing highlight content.
+
+6) Persistence:
+   - Move localStorage to server DB (MongoDB) with per-user data model.
+
+This single-file demo focuses on UI/UX + independent module concept + VR interaction demo.
+Happy to provide the server repo + CI + asset pipeline scripts next.
+----------------------------------------------------- */
 </script>
 </body>
 </html>
