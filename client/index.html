@@ -1,12 +1,221 @@
 <!doctype html>
-<html>
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Me2Verse Client</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Me2Verse — Three.js Client Demo</title>
+<style>
+  body,html{margin:0;height:100%;background:#081022;color:#e8f1ff;font-family:Inter,Arial}
+  #app{display:flex;height:100%}
+  #left{width:360px;padding:18px;border-right:1px solid rgba(255,255,255,0.03);box-sizing:border-box;background:linear-gradient(180deg,#07172a,#042033)}
+  #right{flex:1;position:relative}
+  button{padding:8px 10px;border-radius:8px;border:none;background:#7b61ff;color:#fff;cursor:pointer}
+  .card{background:rgba(255,255,255,0.03);padding:12px;border-radius:10px;margin-bottom:12px}
+  #canvasContainer{width:100%;height:100%}
+  #hud{position:absolute;left:12px;top:12px;background:rgba(0,0,0,0.45);padding:8px;border-radius:8px}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="left">
+    <h2>Me2Verse Client</h2>
+    <div class="card">
+      <div><strong>Pi 로그인 (시뮬)</strong></div>
+      <input id="piId" placeholder="pi_alice" style="width:100%;padding:8px;border-radius:6px;margin-top:8px"/>
+      <div style="margin-top:8px"><button id="loginBtn">로그인 (Pi)</button></div>
+    </div>
+
+    <div class="card">
+      <div><strong>모듈 카탈로그</strong></div>
+      <div id="modulesList"></div>
+      <div style="margin-top:8px"><button id="refreshModulesBtn">모듈 업데이트</button></div>
+    </div>
+
+    <div class="card">
+      <div><strong>스토리/선택</strong></div>
+      <div id="storyPanel">스토리를 선택하세요.</div>
+      <div style="margin-top:8px"><button id="enterVrBtn">VR로 체험</button></div>
+    </div>
+
+    <div class="card">
+      <div><strong>상태</strong></div>
+      <div>포인트: <span id="points">0</span></div>
+      <div>아이템: <span id="items">0</span></div>
+      <div style="margin-top:8px"><button id="saveBtn">로컬 저장</button></div>
+    </div>
+  </div>
+
+  <div id="right">
+    <div id="canvasContainer"></div>
+    <div id="hud">
+      <div id="hudTitle">HUD</div>
+      <div id="hudLog" style="max-width:480px;max-height:120px;overflow:auto;color:#cfe7ff"></div>
+    </div>
+  </div>
+</div>
+
+<!-- 라이브러리 (three + loaders) -->
+<script type="module">
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.module.js';
+import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.152.2/examples/jsm/controls/OrbitControls.js';
+import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.152.2/examples/jsm/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'https://cdn.jsdelivr.net/npm/three@0.152.2/examples/jsm/loaders/DRACOLoader.js';
+import { KTX2Loader } from 'https://cdn.jsdelivr.net/npm/three@0.152.2/examples/jsm/loaders/KTX2Loader.js';
+
+///// Simple app state /////
+const APP = { user:null, points:0, items:[], log:[], modules:[], activeStory:null };
+
+///// Scene setup /////
+const container = document.getElementById('canvasContainer');
+const renderer = new THREE.WebGLRenderer({ antialias:true });
+renderer.setSize(container.clientWidth, container.clientHeight);
+renderer.setPixelRatio(window.devicePixelRatio);
+container.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x071427);
+const camera = new THREE.PerspectiveCamera(60, container.clientWidth/container.clientHeight, 0.1, 2000);
+camera.position.set(0,1.6,3);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.set(0,1.2,0);
+
+const hemi = new THREE.HemisphereLight(0xffffff,0x444444,0.8); scene.add(hemi);
+const dir = new THREE.DirectionalLight(0xffffff,0.8); dir.position.set(3,10,3); scene.add(dir);
+
+window.addEventListener('resize', ()=> {
+  renderer.setSize(container.clientWidth, container.clientHeight);
+  camera.aspect = container.clientWidth / container.clientHeight;
+  camera.updateProjectionMatrix();
+});
+
+///// Loaders with DRACO / KTX2 support (optional paths for transcoder/draco) /////
+const ktx2Loader = new KTX2Loader().setTranscoderPath('https://cdn.jsdelivr.net/gh/mbebenita/BasisUniversal/'); // dev use
+const dracoLoader = new DRACOLoader();
+dracoLoader.setDecoderPath('https://www.gstatic.com/draco/v1/decoders/'); // CDN
+const gltfLoader = new GLTFLoader();
+gltfLoader.setDRACOLoader(dracoLoader);
+gltfLoader.setKTX2Loader(ktx2Loader.detectSupport(renderer));
+
+///// Basic ground (placeholder) /////
+const groundG = new THREE.Mesh(new THREE.PlaneGeometry(40,40), new THREE.MeshStandardMaterial({color:0x072033}));
+groundG.rotation.x = -Math.PI/2; scene.add(groundG);
+
+///// UI helpers /////
+const modulesList = document.getElementById('modulesList');
+const storyPanel = document.getElementById('storyPanel');
+const hudLog = document.getElementById('hudLog');
+function addLog(txt){ APP.log.push(txt); hudLog.innerHTML = APP.log.slice().reverse().map(s=>'• '+s).join('<br>'); }
+
+///// Fetch modules from server API (or local manifest) /////
+async function fetchModules(){
+  try{
+    // 서버가 없으면 client/local sample 사용
+    const resp = await fetch('/api/modules').catch(()=>null);
+    if(resp && resp.ok){
+      APP.modules = await resp.json();
+    } else {
+      // local fallback: generate demo modules
+      APP.modules = [
+        {id:'love-park-01', module:'love', title:'공원에서의 첫 만남', visual:'https://images.unsplash.com/photo-1496307042754-b4aa456c4a2d?w=800&q=60', highlight:false, manifestUrl:'/assets/love-park-01/manifest.json'},
+        {id:'space-mars-01', module:'space', title:'화성 탐험', visual:'https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?w=800&q=60', highlight:true, manifestUrl:'/assets/space-mars-01/manifest.json'},
+      ];
+    }
+  }catch(e){ console.error(e); }
+  renderModuleList();
+}
+
+function renderModuleList(){
+  modulesList.innerHTML = '';
+  APP.modules.forEach(m=>{
+    const div = document.createElement('div');
+    div.style.display='flex'; div.style.gap='8px'; div.style.alignItems='center'; div.style.marginBottom='8px';
+    div.innerHTML = `<img src="${m.visual}" style="width:64px;height:48px;object-fit:cover;border-radius:6px"/>
+      <div style="flex:1">
+        <div style="font-weight:700">${m.title}</div>
+        <div style="font-size:12px;color:#9fb4d9">${m.module} · ${m.highlight? 'HIGHLIGHT':'FREE'}</div>
+      </div>
+      <div><button data-id="${m.id}" onclick="openModule('${m.id}')">열기</button></div>`;
+    modulesList.appendChild(div);
+  });
+}
+
+window.openModule = async function(id){
+  const m = APP.modules.find(x=>x.id===id);
+  if(!m){ alert('모듈을 찾을 수 없습니다.'); return; }
+  // load manifest (simulated)
+  // real: fetch(m.manifestUrl) -> load assets
+  APP.activeStory = { id:m.id, title:m.title, desc:'모듈 시나리오 미리보기', points:10, script:[{text:'다정하게 인사한다', effect:{points:10,item:'하트'}},{text:'조용히 미소짓는다', effect:{points:4}}] };
+  storyPanel.innerHTML = `<div style="font-weight:700">${APP.activeStory.title}</div><div style="color:#9fb4d9">${APP.activeStory.desc}</div>`; 
+  addLog(`모듈 열기: ${m.title}`);
+}
+
+document.getElementById('loginBtn').addEventListener('click', ()=> {
+  const v = document.getElementById('piId').value.trim();
+  if(!v){ alert('Pi ID 입력하세요.'); return; }
+  APP.user = { piId:v, displayName:v.replace(/^pi_/,'').replace(/[_\-]/g,' ') };
+  addLog(`로그인: ${APP.user.piId}`);
+});
+
+document.getElementById('enterVrBtn').addEventListener('click', ()=> {
+  if(!APP.activeStory){ alert('먼저 모듈을 선택하세요'); return; }
+  // spawn simple clickable objects as VR interaction placeholders
+  spawnStoryObjects(APP.activeStory);
+});
+
+document.getElementById('saveBtn').addEventListener('click', ()=>{
+  localStorage.setItem('me2v_client_state', JSON.stringify(APP));
+  alert('저장됨 (localStorage)');
+});
+
+function spawnStoryObjects(story){
+  // clear old
+  const prev = scene.getObjectByName('storyGroup');
+  if(prev) scene.remove(prev);
+  const group = new THREE.Group(); group.name='storyGroup';
+  story.script.forEach((c,idx)=>{
+    const box = new THREE.Mesh(new THREE.BoxGeometry(0.6,0.6,0.6), new THREE.MeshStandardMaterial({color: idx%2?0xff7ab6:0x7ad1ff}));
+    box.position.set((idx- (story.script.length-1)/2)*1.2, 1.2, -3);
+    box.userData = { choice: c };
+    box.cursor = true;
+    group.add(box);
+  });
+  scene.add(group);
+  addLog(`VR: ${story.title} 인터랙션 오브젝트 배치`);
+}
+
+// raycast click handler
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+renderer.domElement.addEventListener('click', (e)=> {
+  mouse.x = ( e.clientX / renderer.domElement.clientWidth ) * 2 - 1;
+  mouse.y = - ( e.clientY / renderer.domElement.clientHeight ) * 2 + 1;
+  raycaster.setFromCamera(mouse, camera);
+  const intersects = raycaster.intersectObjects(scene.children, true);
+  if(intersects.length){
+    const it = intersects.find(i=>i.object.userData && i.object.userData.choice);
+    if(it){
+      const c = it.object.userData.choice;
+      APP.points += (c.effect && c.effect.points) || 0;
+      if(c.effect && c.effect.item) APP.items.push(c.effect.item);
+      addLog(`선택: ${c.text} (+${(c.effect && c.effect.points)||0}p)`);
+      updateHUD();
+      // visual feedback
+      it.object.material.emissive = new THREE.Color(0x444444);
+      it.object.rotation.y += Math.PI/6;
+    }
+  }
+});
+
+function updateHUD(){ document.getElementById('points').textContent = APP.points; document.getElementById('items').textContent = APP.items.length; }
+
+///// animate
+function animate(){ requestAnimationFrame(animate); renderer.render(scene, camera); }
+animate();
+
+///// initial
+fetchModules();
+updateHUD();
+</script>
+</body>
 </html>
