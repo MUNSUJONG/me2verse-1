@@ -42,25 +42,25 @@ h1 { color:#e74c3c; margin:10px 0; text-align:center; }
 
 <script>
 // 레벨/XP
-let level = 1, xp = 0, currentModule='', currentNode='';
-const xpPerLevel = 20;
+let level=1, xp=0, currentModule='', currentNode='';
+const xpPerLevel=20;
 function updateLevelBar(){
-  let percent = (xp % xpPerLevel)/xpPerLevel*100;
-  document.getElementById('levelBar').style.width = percent + '%';
-  document.getElementById('levelBar').textContent = `레벨 ${level} (${xp} XP)`;
+  let percent=(xp % xpPerLevel)/xpPerLevel*100;
+  document.getElementById('levelBar').style.width=percent+'%';
+  document.getElementById('levelBar').textContent=`레벨 ${level} (${xp} XP)`;
 }
 function addXP(amount){
-  xp += amount;
-  if(xp >= level*xpPerLevel){
+  xp+=amount;
+  if(xp>=level*xpPerLevel){
     level++;
     alert(`🎉 레벨업! 레벨 ${level} 달성!`);
   }
   updateLevelBar();
 }
 
-// 모듈별 스토리/배경/AI
-const modulesData = {
-  love: {
+// 모듈별 데이터
+const modulesData={
+  love:{
     aiName:"연인 AI",
     background:"https://picsum.photos/id/1015/600/300",
     storyTree:{
@@ -69,7 +69,7 @@ const modulesData = {
       end:{ text:"데이트가 즐거웠습니다! 🎉", xp:10 }
     }
   },
-  marriage: {
+  marriage:{
     aiName:"웨딩 플래너 AI",
     background:"https://picsum.photos/id/1016/600/300",
     storyTree:{
@@ -78,7 +78,7 @@ const modulesData = {
       end:{ text:"결혼식 준비 완료! 🎉", xp:10 }
     }
   },
-  hobby: {
+  hobby:{
     aiName:"취미 멘토 AI",
     background:"https://picsum.photos/id/1025/600/300",
     storyTree:{
@@ -87,7 +87,7 @@ const modulesData = {
       end:{ text:"취미 체험 완료! 🎉", xp:5 }
     }
   },
-  space: {
+  space:{
     aiName:"우주선 AI",
     background:"https://picsum.photos/id/1020/600/300",
     storyTree:{
@@ -100,29 +100,30 @@ const modulesData = {
 
 // SPA 로직
 function showModule(id){
-  currentModule = id;
-  currentNode = 'start';
+  currentModule=id;
+  currentNode='start';
   renderModule();
 }
 function backToMain(){
-  currentModule = '';
-  document.getElementById('moduleContainer').innerHTML = '';
+  currentModule='';
+  document.getElementById('moduleContainer').innerHTML='';
 }
 
 // 메시지 추가
 function addMessage(sender,text){
-  const chatBox = document.getElementById('chatBox');
-  const div = document.createElement('div');
-  div.className = 'message '+sender;
-  div.textContent = text;
+  const chatBox=document.getElementById('chatBox');
+  const div=document.createElement('div');
+  div.className='message '+sender;
+  div.textContent=text;
   chatBox.appendChild(div);
-  chatBox.scrollTop = chatBox.scrollHeight;
+  chatBox.scrollTop=chatBox.scrollHeight;
 }
 
-// 사용자 입력 분석 → 옵션 자동 선택
+// 사용자 입력 분석
 function analyzeInput(userText){
-  const options = modulesData[currentModule].storyTree[currentNode].options;
-  const keywords = Object.keys(options);
+  const node=modulesData[currentModule].storyTree[currentNode];
+  if(!node || !node.options) return null;
+  const keywords=Object.keys(node.options);
   for(let kw of keywords){
     if(userText.includes(kw)) return kw;
   }
@@ -131,20 +132,20 @@ function analyzeInput(userText){
 
 // 입력 처리
 function handleUserInput(){
-  const inputBox = document.getElementById('userInput');
+  const inputBox=document.getElementById('userInput');
   if(!inputBox.value) return;
   addMessage('user', inputBox.value);
-  const chosenOption = analyzeInput(inputBox.value);
-  setTimeout(()=>chooseOption(chosenOption),500);
-  inputBox.value = '';
+  const chosenOption=analyzeInput(inputBox.value);
+  if(chosenOption) setTimeout(()=>chooseOption(chosenOption),500);
+  inputBox.value='';
 }
 
 // 모듈 렌더링
 function renderModule(){
-  const data = modulesData[currentModule];
-  const node = data.storyTree[currentNode];
-  const container = document.getElementById('moduleContainer');
-  container.innerHTML = `
+  const data=modulesData[currentModule];
+  const node=data.storyTree[currentNode];
+  const container=document.getElementById('moduleContainer');
+  container.innerHTML=`
     <div class="module" style="display:block;">
       <img src="${data.background}" style="width:100%; border-radius:12px; margin-bottom:10px;">
       <div class="chat-box" id="chatBox"></div>
@@ -154,21 +155,41 @@ function renderModule(){
       <button class="button backBtn" onclick="backToMain()">메인으로</button>
     </div>
   `;
-  document.getElementById('sendBtn').onclick = handleUserInput;
   addMessage('ai', `${data.aiName}: ${node.text}`);
-  const optionsDiv = document.getElementById('optionsDiv');
+  const optionsDiv=document.getElementById('optionsDiv');
+  optionsDiv.innerHTML='';
   if(node.options){
     Object.keys(node.options).forEach(opt=>{
-      const btn = document.createElement('button');
+      const btn=document.createElement('button');
       btn.className='button';
-      btn.textContent = opt;
-      btn.onclick = ()=>chooseOption(opt);
+      btn.textContent=opt;
+      btn.onclick=()=>chooseOption(opt);
       optionsDiv.appendChild(btn);
     });
-  }else addXP(node.xp);
+  }else addXP(node.xp||0);
+
+  document.getElementById('sendBtn').onclick=handleUserInput;
+  document.getElementById('userInput').addEventListener('keypress', function(e){
+    if(e.key==='Enter') handleUserInput();
+  });
 }
 
 // 옵션 선택
 function chooseOption(opt){
-  const data = modulesData[currentModule];
-  const node = data.storyTree[current
+  const data=modulesData[currentModule];
+  const node=data.storyTree[currentNode];
+  if(!node.options) return;
+  const selected=node.options[opt];
+  if(!selected) return;
+  addMessage('user', opt);
+  addMessage('ai', selected.text);
+  addXP(selected.xp||0);
+  currentNode=selected.next;
+  setTimeout(()=>renderModule(),500);
+}
+
+updateLevelBar();
+</script>
+
+</body>
+</html>
