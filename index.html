@@ -1,608 +1,140 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Me2Verse – Pi 전용 메타버스 (스토리·미션·VR)</title>
-
-<!-- A-Frame -->
-<script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
-
+<meta charset="UTF-8">
+<title>Me2Verse 스토리 체험 SPA</title>
 <style>
-  :root{
-    --brand:#6C4EFF; --ink:#1f2330; --muted:#6b7280; --bg:#f4f6fb; --card:#ffffff; --accent:#ff5a7a;
-  }
-  *{box-sizing:border-box}
-  body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Apple SD Gothic Neo,Noto Sans KR,sans-serif;color:var(--ink);background:var(--bg);}
-  button,input,select{font:inherit}
-  .shell{position:relative;min-height:100vh}
-  .bar{position:sticky;top:0;z-index:20;background:var(--card);border-bottom:1px solid #e6e8ef;}
-  .bar-inner{max-width:1100px;margin:0 auto;display:flex;align-items:center;gap:12px;padding:10px 16px}
-  .flag-wrap{display:flex;gap:12px;margin-right:8px}
-  .flag{width:44px;height:auto;filter:drop-shadow(0 1px 2px rgba(0,0,0,.1))}
-  .title{font-weight:800;letter-spacing:.2px}
-  .pi-pill{margin-left:auto;display:flex;align-items:center;gap:6px;border:1px solid #e6e8ef;border-radius:999px;padding:6px 10px;background:#fff}
-  .pi-icon{font-weight:900}
-  .screen{max-width:1100px;margin:0 auto;padding:24px 16px;display:none}
-  .screen.active{display:block}
-  .card{background:var(--card);border:1px solid #e6e8ef;border-radius:16px;padding:18px;box-shadow:0 4px 12px rgba(17,22,31,.04)}
-  .h1{font-size:28px;font-weight:800;margin:0 0 10px}
-  .h2{font-size:22px;font-weight:800;margin:0 0 10px}
-  .muted{color:var(--muted)}
-  .row{display:flex;flex-wrap:wrap;gap:14px}
-  .col{flex:1 1 320px}
-  .input{width:100%;padding:12px 14px;border:1px solid #d4d7e2;border-radius:12px;background:#fff}
-  .btn{display:inline-flex;align-items:center;gap:8px;padding:12px 14px;border:0;border-radius:12px;background:var(--brand);color:#fff;font-weight:700;cursor:pointer}
-  .btn.secondary{background:#101828;color:#fff}
-  .btn.ghost{background:#fff;color:#101828;border:1px solid #e6e8ef}
-  .btn.link{background:transparent;color:var(--brand);padding:0}
-  .badge{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;border:1px solid #e6e8ef;background:#fff;font-size:12px}
-  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
-  .mod{background:#fff;border:1px solid #e6e8ef;border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:10px}
-  .mod h3{margin:0;font-size:18px}
-  .progress{height:8px;background:#eef0f7;border-radius:999px;overflow:hidden}
-  .progress > span{display:block;height:100%;background:linear-gradient(90deg,#6C4EFF,#AC59FF)}
-  .story{background:#fbfbff;border:1px dashed #d6d9ef;border-radius:12px;padding:12px}
-  .list{margin:8px 0 0 0;padding-left:18px}
-  .chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
-  .footer{padding:16px;color:var(--muted);text-align:center}
-  /* VR overlay buttons */
-  .vr-hud{position:fixed;inset:0;pointer-events:none}
-  .vr-top{position:absolute;top:10px;left:50%;transform:translateX(-50%);pointer-events:auto}
-  .vr-right{position:absolute;top:10px;right:10px;display:flex;flex-direction:column;gap:8px;pointer-events:auto}
-  .hud-btn{padding:10px 12px;border-radius:12px;border:1px solid #e6e8ef;background:#ffffffcc;backdrop-filter:blur(6px);cursor:pointer}
-  .status-pill{position:fixed;bottom:12px;left:50%;transform:translateX(-50%);background:#111827;color:#fff;padding:8px 12px;border-radius:999px;font-size:13px}
-  /* A-Frame container */
-  #vrWrap{display:none;position:fixed;inset:0;background:#000;z-index:50}
-  a-scene{width:100%;height:100%}
+body { font-family: Arial; text-align:center; margin:0; padding:20px; background:#f0f4f8; }
+h1 { color:#e74c3c; }
+.button { margin:10px; padding:15px 25px; font-size:16px; color:#fff; background:#3498db; border:none; border-radius:8px; cursor:pointer; transition:0.2s; }
+.button:hover { background:#2980b9; }
+.module { display:none; padding:20px; margin-top:20px; border-radius:12px; box-shadow:0 4px 8px rgba(0,0,0,0.2); text-align:left; max-width:600px; margin-left:auto; margin-right:auto; }
+.backBtn { background:#16a085; margin-top:20px; }
+.backBtn:hover { background:#0e6655; }
+.message-box { font-size:18px; margin-top:10px; min-height:40px; }
+.story-text { font-size:16px; margin:10px 0; }
+#heart { font-size:60px; color:#e74c3c; animation:heartbeat 1s infinite; margin:20px 0; display:inline-block; }
+@keyframes heartbeat { 0%,100%{transform:scale(1);} 50%{transform:scale(1.3);} }
+/* 모듈별 배경 */
+#love { background: linear-gradient(to bottom, #ffe6e6, #fff0f5); }
+#marriage { background: linear-gradient(to bottom, #fff0e6, #fff8f0); }
+#hobby { background: linear-gradient(to bottom, #e6f7ff, #f0faff); }
+#space { background: linear-gradient(to bottom, #000011, #110022); color:#fff; }
+#culture { background: linear-gradient(to bottom, #fffbe6, #fff0c2); }
+#language { background: linear-gradient(to bottom, #e6ffe6, #c2ffc2); }
+#travel { background: linear-gradient(to bottom, #e6f0ff, #c2d9ff); }
+#career { background: linear-gradient(to bottom, #fff0f5, #ffd2e6); }
+#game { background: linear-gradient(to bottom, #1e1e2f, #3b3b5c); color:#fff; }
 </style>
 </head>
 <body>
-<div class="shell">
+<h1>🚀 Me2Verse 스토리 체험 SPA</h1>
+<p>모듈을 선택하여 스토리 체험을 시작하세요!</p>
 
-  <!-- Top Bar -->
-  <div class="bar">
-    <div class="bar-inner">
-      <div class="flag-wrap">
-        <img class="flag" src="https://upload.wikimedia.org/wikipedia/commons/0/09/Flag_of_South_Korea.svg" alt="태극기(좌)">
-        <img class="flag" src="https://upload.wikimedia.org/wikipedia/commons/0/09/Flag_of_South_Korea.svg" alt="태극기(우)">
-      </div>
-      <div class="title">Me2Verse – 감성 스토리 메타버스</div>
-      <div class="pi-pill" id="userPill"><span class="pi-icon">π</span><span id="userNameLabel">로그인 필요</span></div>
-    </div>
-  </div>
+<!-- 모듈 선택 버튼 -->
+<div>
+<button class="button" onclick="showModule('love')">❤️ 연애</button>
+<button class="button" onclick="showModule('marriage')">💍 결혼</button>
+<button class="button" onclick="showModule('hobby')">🎨 취미</button>
+<button class="button" onclick="showModule('space')">🌌 우주</button>
+<button class="button" onclick="showModule('culture')">🎭 문화</button>
+<button class="button" onclick="showModule('language')">🈴 언어</button>
+<button class="button" onclick="showModule('travel')">✈️ 여행</button>
+<button class="button" onclick="showModule('career')">💼 직업</button>
+<button class="button" onclick="showModule('game')">🎮 게임</button>
+</div>
 
-  <!-- 로그인 (Pi 계정 전용) -->
-  <section id="scr-login" class="screen active">
-    <div class="row">
-      <div class="col">
-        <div class="card">
-          <div class="h1">Pi 계정 로그인</div>
-          <p class="muted">Pi Network 계정 ID(닉네임 또는 지갑 식별자)를 입력하세요. 결제는 필요 없습니다.</p>
-          <input id="piId" class="input" placeholder="예: pi_user_123" />
-          <div class="chips">
-            <span class="badge"><b>π</b> Pi 전용</span>
-            <span class="badge">데이터 로컬 보존</span>
-            <span class="badge">무료 체험 포함</span>
-          </div>
-          <div style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap;">
-            <button id="btnLogin" class="btn">로그인</button>
-            <button id="btnDemo" class="btn ghost">게스트 체험</button>
-          </div>
-        </div>
-      </div>
-      <div class="col">
-        <div class="card">
-          <div class="h2">앱 소개</div>
-          <div class="story">
-            <b>감성형 스토리</b>로 당신의 제2의 삶을 설계하세요.  
-            각 모듈은 <b>스토리 → 미션 → 하이라이트 VR</b>로 구성되며, 원하는 순간에만 VR에 진입합니다.
-          </div>
-          <ul class="list">
-            <li>무료체험: 모든 모듈의 기본 스토리와 미션 1~2개</li>
-            <li>하이라이트 체험(예약 자리): 추후 Pi 결제 연동 시 해금</li>
-            <li>진행도·배지: 자동 저장 (브라우저 로컬)</li>
-            <li>유저 제안 스토리: 제안센터에서 제출 → 운영팀 검토/반영</li>
-          </ul>
-        </div>
-      </div>
-    </div>
-  </section>
+<!-- 연애 모듈 -->
+<div id="love" class="module">
+<h2>❤️ 연애 체험</h2>
+<div id="heart">💖</div>
+<div class="story-text" id="loveStory">오늘은 첫 데이트 날입니다. 어디로 가시겠습니까?</div>
+<button class="button" onclick="loveChoice('카페')">카페로 가기</button>
+<button class="button" onclick="loveChoice('공원')">공원 산책</button>
+<div class="message-box" id="loveMsg"></div>
+<button class="button backBtn" onclick="backToMain()">메인으로</button>
+</div>
 
-  <!-- 모듈 선택 -->
-  <section id="scr-mods" class="screen">
-    <div class="card" style="margin-bottom:12px">
-      <div class="h1">모듈 선택</div>
-      <p class="muted">원하는 세계를 고르세요. 스토리를 먼저 읽고, 미션을 수행한 뒤, 원할 때 VR로 들어갑니다.</p>
-    </div>
-    <div id="modsGrid" class="grid"></div>
-  </section>
+<!-- 결혼 모듈 -->
+<div id="marriage" class="module">
+<h2>💍 결혼 체험</h2>
+<div class="story-text" id="marriageStory">결혼식을 준비 중입니다. 식장을 어떻게 꾸밀까요?</div>
+<button class="button" onclick="marriageChoice('전통식')">전통식</button>
+<button class="button" onclick="marriageChoice('현대식')">현대식</button>
+<div class="message-box" id="marriageMsg"></div>
+<button class="button backBtn" onclick="backToMain()">메인으로</button>
+</div>
 
-  <!-- 모듈 상세(스토리/미션) -->
-  <section id="scr-detail" class="screen">
-    <div class="row">
-      <div class="col">
-        <div class="card">
-          <button class="btn link" id="backToMods">← 모듈 목록</button>
-          <div class="h1" id="modTitle">모듈 제목</div>
-          <p class="muted" id="modTagline">모듈 부제</p>
-          <div class="progress" title="진행도">
-            <span id="modProgress" style="width:0%"></span>
-          </div>
-          <div class="chips" id="modBadges" style="margin-top:10px"></div>
-        </div>
-      </div>
-      <div class="col">
-        <div class="card">
-          <div class="h2">스토리</div>
-          <div id="modStory" class="story"></div>
-        </div>
-      </div>
-    </div>
+<!-- 취미 모듈 -->
+<div id="hobby" class="module">
+<h2>🎨 취미 체험</h2>
+<div class="story-text" id="hobbyStory">오늘은 새로운 취미를 시작하려 합니다. 무엇을 선택하시겠습니까?</div>
+<button class="button" onclick="hobbyChoice('그림')">그림 그리기</button>
+<button class="button" onclick="hobbyChoice('악기')">악기 배우기</button>
+<div class="message-box" id="hobbyMsg"></div>
+<button class="button backBtn" onclick="backToMain()">메인으로</button>
+</div>
 
-    <div class="card" style="margin-top:12px">
-      <div class="h2">미션</div>
-      <div id="missionsList" class="grid"></div>
-      <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
-        <button id="btnStartVR" class="btn secondary">하이라이트 VR 시작</button>
-        <button id="btnFreeTry" class="btn">무료체험(글·이미지)</button>
-        <button id="btnSuggest" class="btn ghost">스토리 제안하기</button>
-        <button id="btnHome" class="btn ghost">홈</button>
-      </div>
-    </div>
-  </section>
+<!-- 우주 모듈 -->
+<div id="space" class="module">
+<h2>🌌 우주 체험</h2>
+<div class="story-text" id="spaceStory">우주 탐사 미션을 시작합니다. 어디로 향하시겠습니까?</div>
+<button class="button" onclick="spaceChoice('달')">달 탐사</button>
+<button class="button" onclick="spaceChoice('화성')">화성 탐사</button>
+<div class="message-box" id="spaceMsg"></div>
+<button class="button backBtn" onclick="backToMain()">메인으로</button>
+</div>
 
-  <!-- 제안센터 -->
-  <section id="scr-suggest" class="screen">
-    <div class="card">
-      <button class="btn link" id="backToDetail">← 모듈로 돌아가기</button>
-      <div class="h1">유저 스토리 제안센터</div>
-      <p class="muted">당신의 아이디어를 보내주세요. 운영팀이 검토 후 반영합니다.</p>
-      <div class="row">
-        <div class="col">
-          <textarea id="suggestText" class="input" rows="8" placeholder="예) 미투 뷰티에 커스텀 향수 조향 스토리 추가해주세요."></textarea>
-          <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
-            <button id="btnSubmitSuggest" class="btn">제안 제출</button>
-            <button id="btnSuggestHome" class="btn ghost">홈</button>
-          </div>
-        </div>
-        <div class="col">
-          <div class="story">
-            <b>가이드</b><br/>
-            · 구체적인 상황/장소/인물/보상 요소를 포함하면 채택 확률 상승<br/>
-            · 욕설·폭력·차별적 내용은 반영 불가<br/>
-            · 채택 시, 프로필에 <b>Creator 배지</b> 지급
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
+<!-- 문화 모듈 -->
+<div id="culture" class="module">
+<h2>🎭 문화 체험</h2>
+<div class="story-text" id="cultureStory">오늘은 문화체험의 날입니다. 무엇을 체험하시겠습니까?</div>
+<button class="button" onclick="cultureChoice('박물관')">박물관</button>
+<button class="button" onclick="cultureChoice('연극')">연극</button>
+<div class="message-box" id="cultureMsg"></div>
+<button class="button backBtn" onclick="backToMain()">메인으로</button>
+</div>
 
-  <!-- VR 컨테이너 -->
-  <div id="vrWrap">
-    <a-scene id="scene" renderer="antialias:true">
-      <a-entity light="type: ambient; intensity:0.7"></a-entity>
-      <a-entity light="type: directional; intensity:0.8" position="1 2 1"></a-entity>
-      <a-sky id="sky" color="#101625"></a-sky>
-      <a-entity id="room"></a-entity>
+<!-- 언어 모듈 -->
+<div id="language" class="module">
+<h2>🈴 언어 체험</h2>
+<div class="story-text" id="languageStory">외국어 연습을 시작합니다. 누구와 대화하시겠습니까?</div>
+<button class="button" onclick="languageChoice('로컬 주민')">로컬 주민</button>
+<button class="button" onclick="languageChoice('관광객')">관광객</button>
+<div class="message-box" id="languageMsg"></div>
+<button class="button backBtn" onclick="backToMain()">메인으로</button>
+</div>
 
-      <!-- 카메라 -->
-      <a-entity id="rig" position="0 1.6 0">
-        <a-camera wasd-controls look-controls>
-          <a-cursor color="#fff"></a-cursor>
-        </a-camera>
-      </a-entity>
-    </a-scene>
+<!-- 여행 모듈 -->
+<div id="travel" class="module">
+<h2>✈️ 여행 체험</h2>
+<div class="story-text" id="travelStory">여행지에 도착했습니다. 무엇을 먼저 하시겠습니까?</div>
+<button class="button" onclick="travelChoice('관광')">관광</button>
+<button class="button" onclick="travelChoice('음식 체험')">음식 체험</button>
+<div class="message-box" id="travelMsg"></div>
+<button class="button backBtn" onclick="backToMain()">메인으로</button>
+</div>
 
-    <!-- VR HUD -->
-    <div class="vr-hud">
-      <div class="vr-right">
-        <button class="hud-btn" id="btnVRBack">나가기</button>
-        <button class="hud-btn" id="btnVRHint">힌트</button>
-      </div>
-      <div class="vr-top">
-        <span class="badge" id="vrTitle">VR</span>
-      </div>
-      <div class="status-pill" id="vrStatus">준비 완료</div>
-    </div>
-  </div>
+<!-- 직업 모듈 -->
+<div id="career" class="module">
+<h2>💼 직업 체험</h2>
+<div class="story-text" id="careerStory">오늘 첫 출근 날입니다. 어디서 시작하시겠습니까?</div>
+<button class="button" onclick="careerChoice('사무실')">사무실</button>
+<button class="button" onclick="careerChoice('현장')">현장</button>
+<div class="message-box" id="careerMsg"></div>
+<button class="button backBtn" onclick="backToMain()">메인으로</button>
+</div>
 
-  <div class="footer">© Me2Verse · Pi 전용 · 진행도는 브라우저에 안전 저장</div>
+<!-- 게임 모듈 -->
+<div id="game" class="module">
+<h2>🎮 게임 체험</h2>
+<div class="story-text" id="gameStory">게임 속 모험을 시작합니다. 무엇을 하시겠습니까?</div>
+<button class="button" onclick="gameChoice('전투')">전투</button>
+<button class="button" onclick="gameChoice('탐험')">탐험</button>
+<div class="message-box" id="gameMsg"></div>
+<button class="button backBtn" onclick="backToMain()">메인으로</button>
 </div>
 
 <script>
-/** =========================
- *  데이터 정의
- *  ========================= */
-const MODULES = [
-  {
-    id:'love', name:'미투 러브', tagline:'첫 만남 → 데이트 → 약속 → 결혼식 리허설',
-    sky:'#ffeff4',
-    story:`러브타운에 막 도착했습니다. 다정한 카페 거리와 분수광장이 당신의 설렘을 환영해요.
-           옅은 재즈가 흐르고, 반짝이는 가로등 아래에서 첫 대화를 시도해보세요.`,
-    badges:['감성','소셜','하트수집'],
-    avatar: { // glTF 샘플 – 실제 서비스에서는 자체 아바타 사용
-      src:'https://cdn.jsdelivr.net/gh/KhronosGroup/glTF-Sample-Models/2.0/CesiumMan/glTF/CesiumMan.gltf',
-      pos:'0 0 -3', scale:'0.8 0.8 0.8'
-    },
-    props:[
-      {src:'https://cdn.jsdelivr.net/gh/KhronosGroup/glTF-Sample-Models/2.0/WaterBottle/glTF/WaterBottle.gltf', pos:'-1 0 -2', scale:'0.6 0.6 0.6'},
-      {src:'https://cdn.jsdelivr.net/gh/KhronosGroup/glTF-Sample-Models/2.0/Avocado/glTF/Avocado.gltf', pos:'1 0 -2', scale:'0.7 0.7 0.7'}
-    ],
-    missions:[
-      {id:'lv1', title:'첫 대화하기', desc:'분수대 앞 NPC에게 다가가 “안녕” 인사하기', reward:'하트 +10'},
-      {id:'lv2', title:'데이트 제안', desc:'카페에서 민트라떼 2잔 주문하기', reward:'하트 +20'},
-      {id:'lv3', title:'야경 산책', desc:'가로등 3곳 촬영하여 앨범 만들기', reward:'포토배지'},
-      {id:'vr',  title:'하이라이트 VR: 프러포즈', desc:'루프탑에서 반짝이는 조명 아래 약속 세우기', reward:'약속반지(기념)'}
-    ]
-  },
-  {
-    id:'enter', name:'미투 엔터', tagline:'연습 · 오디션 · 팬미팅 · 공연',
-    sky:'#0d0f1a',
-    story:`연습실의 거울 조명이 켜졌습니다. 박자와 호흡을 맞추며 무대 위의 자신을 상상해 보세요.
-           심사위원의 피드백은 솔직하지만 따뜻합니다.`,
-    badges:['무대','뮤직','팬소통'],
-    avatar:{
-      src:'https://cdn.jsdelivr.net/gh/KhronosGroup/glTF-Sample-Models/2.0/Fox/glTF/Fox.gltf',
-      pos:'0 0 -3', scale:'0.02 0.02 0.02'
-    },
-    props:[
-      {src:'https://cdn.jsdelivr.net/gh/KhronosGroup/glTF-Sample-Models/2.0/DracoCompression/ABuffer/glTF/ABuffer.gltf', pos:'-1 0 -2', scale:'0.6 0.6 0.6'}
-    ],
-    missions:[
-      {id:'en1', title:'보컬 스케일', desc:'도레미파솔라시도 정확히 맞추기', reward:'연습배지'},
-      {id:'en2', title:'오디션 제출', desc:'30초 영상 클립 업로드(시뮬레이션)', reward:'심사 통과'},
-      {id:'en3', title:'팬미팅 Q&A', desc:'팬 3명에게 답변하기', reward:'팬사인'},
-      {id:'vr',  title:'하이라이트 VR: 라이브 무대', desc:'포그와 라이트 아래 단독 무대', reward:'헤드라이너 배지'}
-    ]
-  },
-  {
-    id:'beauty', name:'미투 뷰티', tagline:'메이크업·헤어·패션·런웨이',
-    sky:'#fff6fb',
-    story:`뷰티 메타몰의 쇼윈도가 열렸습니다. 색조, 텍스처, 실루엣.
-           당신의 시그니처 룩을 완성해 보세요.`,
-    badges:['패션','메이크업','런웨이'],
-    avatar:{
-      src:'https://cdn.jsdelivr.net/gh/KhronosGroup/glTF-Sample-Models/2.0/AnimatedMorphSphere/glTF/AnimatedMorphSphere.gltf',
-      pos:'0 0 -3', scale:'0.6 0.6 0.6'
-    },
-    props:[
-      {src:'https://cdn.jsdelivr.net/gh/KhronosGroup/glTF-Sample-Models/2.0/SciFiHelmet/glTF/SciFiHelmet.gltf', pos:'-1 0 -2', scale:'1 1 1'},
-      {src:'https://cdn.jsdelivr.net/gh/KhronosGroup/glTF-Sample-Models/2.0/Duck/glTF/Duck.gltf', pos:'1 0 -2', scale:'0.03 0.03 0.03'}
-    ],
-    missions:[
-      {id:'bt1', title:'톤 조합', desc:'따뜻/차가운 팔레트 비교 후 선택', reward:'스타일 포인트'},
-      {id:'bt2', title:'헤어 변신', desc:'3가지 헤어스타일 체험', reward:'포토 카드'},
-      {id:'bt3', title:'룩 완성', desc:'상의/하의/액세서리 조합', reward:'런웨이 초대'},
-      {id:'vr',  title:'하이라이트 VR: 런웨이', desc:'플래시 세례 속 캣워크', reward:'아이코닉 룩'}
-    ]
-  },
-  {
-    id:'space', name:'미투 스페이스', tagline:'탐사선 · 기지 · 외계 교류 · 귀환',
-    sky:'#000022',
-    story:`창문 너머로 푸른 지구가 멀어집니다. 무중력의 고요 속에서 새로운 생태를 발견하세요.`,
-    badges:['과학','탐험','개척'],
-    avatar:{
-      src:'https://cdn.jsdelivr.net/gh/KhronosGroup/glTF-Sample-Models/2.0/Astronaut/glTF/Astronaut.gltf',
-      pos:'0 0 -3', scale:'1 1 1'
-    },
-    props:[
-      {src:'https://cdn.jsdelivr.net/gh/KhronosGroup/glTF-Sample-Models/2.0/MetalRoughSpheres/glTF/MetalRoughSpheres.gltf', pos:'-1 0 -2', scale:'0.4 0.4 0.4'}
-    ],
-    missions:[
-      {id:'sp1', title:'도킹', desc:'우주정거장에 정밀 도킹', reward:'조종 배지'},
-      {id:'sp2', title:'샘플 채취', desc:'암석 표본 3개 수집', reward:'지질 키트'},
-      {id:'sp3', title:'외계 교신', desc:'의미 파형 해독', reward:'외교 표식'},
-      {id:'vr',  title:'하이라이트 VR: 달 기지 EVA', desc:'우주복을 입고 월면 활동', reward:'임무 완수'}
-    ]
-  },
-  {
-    id:'life', name:'미투 라이프', tagline:'카페 · 농장 · 미술관 · 스포츠',
-    sky:'#bfe3c8',
-    story:`햇살이 드는 라이프타운. 오늘은 커피 향으로 시작해, 저녁엔 별빛 아래 산책을.`,
-    badges:['힐링','취미','소셜'],
-    avatar:{
-      src:'https://cdn.jsdelivr.net/gh/KhronosGroup/glTF-Sample-Models/2.0/SheenChair/glTF/SheenChair.gltf',
-      pos:'0 0 -3', scale:'0.8 0.8 0.8'
-    },
-    props:[
-      {src:'https://cdn.jsdelivr.net/gh/KhronosGroup/glTF-Sample-Models/2.0/CoffeeCart/glTF/CoffeeCart.gltf', pos:'-1 0 -2', scale:'0.5 0.5 0.5'}
-    ],
-    missions:[
-      {id:'lf1', title:'바리스타', desc:'라떼 아트 1회 성공', reward:'커피 뱃지'},
-      {id:'lf2', title:'텃밭', desc:'씨앗 심고 물 주기', reward:'농장 키트'},
-      {id:'lf3', title:'스케치', desc:'미술관에서 스케치 2장', reward:'아트 포인트'},
-      {id:'vr',  title:'하이라이트 VR: 별빛 산책', desc:'호숫가 보드워크 산책', reward:'힐링 토큰'}
-    ]
-  }
-];
-
-// 로컬 저장소 키
-const LS_KEY = 'me2verse_v1';
-
-/** =========================
- *  상태 & 유틸
- *  ========================= */
-let state = {
-  user:null, // { id, guest:boolean }
-  progress:{} // { [moduleId]: { done: Set<string>, badges: Set<string> } }
-};
-
-function loadState(){
-  try{
-    const raw = localStorage.getItem(LS_KEY);
-    if(raw){ state = JSON.parse(raw);
-      // Set 복원
-      for(const k in state.progress){
-        state.progress[k].done = new Set(state.progress[k].done);
-        state.progress[k].badges = new Set(state.progress[k].badges);
-      }
-    }
-  }catch(e){}
-}
-function saveState(){
-  const safe = { user: state.user, progress:{} };
-  for(const k in state.progress){
-    safe.progress[k] = {
-      done: Array.from(state.progress[k].done),
-      badges: Array.from(state.progress[k].badges)
-    };
-  }
-  localStorage.setItem(LS_KEY, JSON.stringify(safe));
-}
-function ensureModuleProgress(id){
-  if(!state.progress[id]) state.progress[id] = { done:new Set(), badges:new Set() };
-}
-
-/** =========================
- *  DOM 헬퍼
- *  ========================= */
-const $ = s => document.querySelector(s);
-const scrLogin = $('#scr-login');
-const scrMods = $('#scr-mods');
-const scrDetail = $('#scr-detail');
-const scrSuggest = $('#scr-suggest');
-const modsGrid = $('#modsGrid');
-const modTitle = $('#modTitle');
-const modTagline = $('#modTagline');
-const modStory = $('#modStory');
-const modProgress = $('#modProgress');
-const modBadges = $('#modBadges');
-const missionsList = $('#missionsList');
-const userNameLabel = $('#userNameLabel');
-
-function show(screen){
-  [scrLogin,scrMods,scrDetail,scrSuggest].forEach(s=>s.classList.remove('active'));
-  screen.classList.add('active');
-  window.scrollTo({top:0,behavior:'smooth'});
-}
-
-function toastVR(msg){ const el = $('#vrStatus'); el.textContent = msg; }
-
-/** =========================
- *  초기 로드
- *  ========================= */
-loadState();
-if(state.user){
-  userNameLabel.textContent = state.user.guest ? '게스트' : state.user.id;
-  buildMods();
-  show(scrMods);
-}
-
-/** =========================
- *  로그인
- *  ========================= */
-$('#btnLogin').addEventListener('click', ()=>{
-  const id = $('#piId').value.trim();
-  if(!id){ alert('Pi 계정 ID를 입력하세요.'); return; }
-  state.user = { id, guest:false };
-  saveState();
-  userNameLabel.textContent = id;
-  buildMods();
-  show(scrMods);
-});
-$('#btnDemo').addEventListener('click', ()=>{
-  state.user = { id:'guest', guest:true };
-  saveState();
-  userNameLabel.textContent = '게스트';
-  buildMods();
-  show(scrMods);
-});
-
-/** =========================
- *  모듈 목록 생성
- *  ========================= */
-function buildMods(){
-  modsGrid.innerHTML = '';
-  MODULES.forEach(m=>{
-    ensureModuleProgress(m.id);
-    const doneCnt = state.progress[m.id].done.size;
-    const total = m.missions.length - 1; // vr 제외한 일반 미션 기준
-    const pct = Math.min(100, Math.round(doneCnt/Math.max(1,total)*100));
-
-    const card = document.createElement('div');
-    card.className = 'mod';
-    card.innerHTML = `
-      <h3>${m.name}</h3>
-      <div class="muted">${m.tagline}</div>
-      <div class="progress" title="진행도"><span style="width:${pct}%"></span></div>
-      <div class="chips">
-        ${m.badges.map(b=>`<span class="badge">${b}</span>`).join('')}
-      </div>
-      <div style="display:flex;gap:8px;margin-top:8px">
-        <button class="btn" data-open="${m.id}">스토리 보기</button>
-        <button class="btn ghost" data-quick="${m.id}">바로 VR</button>
-      </div>
-    `;
-    modsGrid.appendChild(card);
-  });
-
-  // 바인딩
-  modsGrid.querySelectorAll('[data-open]').forEach(btn=>{
-    btn.addEventListener('click',()=>openDetail(btn.dataset.open));
-  });
-  modsGrid.querySelectorAll('[data-quick]').forEach(btn=>{
-    btn.addEventListener('click',()=>{ openDetail(btn.dataset.quick,true); });
-  });
-}
-
-/** =========================
- *  모듈 상세
- *  ========================= */
-let currentModule = null;
-function openDetail(id, quickVR=false){
-  const m = MODULES.find(x=>x.id===id);
-  if(!m) return;
-  currentModule = m;
-  ensureModuleProgress(m.id);
-
-  modTitle.textContent = m.name;
-  modTagline.textContent = m.tagline;
-  modStory.textContent = m.story;
-
-  // 진행도/배지
-  const doneCnt = state.progress[m.id].done.size;
-  const total = m.missions.length - 1;
-  const pct = Math.min(100, Math.round(doneCnt/Math.max(1,total)*100));
-  modProgress.style.width = pct+'%';
-  modBadges.innerHTML = '';
-  state.progress[m.id].badges.forEach(b=>{
-    const span = document.createElement('span'); span.className='badge'; span.textContent=b; modBadges.appendChild(span);
-  });
-
-  // 미션 리스트
-  missionsList.innerHTML = '';
-  m.missions.forEach(ms=>{
-    const isVR = ms.id==='vr';
-    const done = state.progress[m.id].done.has(ms.id);
-    const item = document.createElement('div');
-    item.className = 'mod';
-    item.innerHTML = `
-      <h3>${isVR?'🎬 ':''}${ms.title}</h3>
-      <div class="muted">${ms.desc}</div>
-      <div class="chips"><span class="badge">보상: ${ms.reward}</span>${done?'<span class="badge">완료</span>':''}</div>
-      <div style="display:flex;gap:8px;margin-top:6px">
-        ${isVR
-          ? `<button class="btn secondary" data-vr="${ms.id}">VR 시작</button>`
-          : `<button class="btn" data-done="${ms.id}">${done?'완료됨':'미션 수행'}</button>`
-        }
-        <button class="btn ghost" data-hint="${ms.id}">힌트</button>
-      </div>
-    `;
-    missionsList.appendChild(item);
-  });
-
-  // 이벤트
-  missionsList.querySelectorAll('[data-done]').forEach(btn=>{
-    btn.addEventListener('click',()=>{
-      const id = btn.dataset.done;
-      state.progress[m.id].done.add(id);
-      state.progress[m.id].badges.add('스토리러버');
-      saveState();
-      openDetail(m.id); // 리프레시
-      alert('미션 완료! 보상이 지급되었습니다.');
-    });
-  });
-  missionsList.querySelectorAll('[data-hint]').forEach(btn=>{
-    btn.addEventListener('click',()=>{
-      alert('힌트: 지형지물을 잘 관찰하고, NPC에게 다가가 보세요!');
-    });
-  });
-  missionsList.querySelectorAll('[data-vr]').forEach(btn=>{
-    btn.addEventListener('click',()=>enterVR(m));
-  });
-
-  // 상단 버튼
-  $('#btnStartVR').onclick = ()=>enterVR(m);
-  $('#btnFreeTry').onclick = ()=>alert('무료체험: 텍스트/이미지로 핵심 흐름을 미리 보여줍니다.');
-  $('#btnSuggest').onclick = ()=>{ show(scrSuggest); };
-  $('#btnHome').onclick = ()=> show(scrMods);
-  $('#backToDetail').onclick = ()=> show(scrDetail);
-  $('#backToMods').onclick = ()=> show(scrMods);
-  $('#btnSuggestHome').onclick = ()=> show(scrMods);
-  $('#btnSubmitSuggest').onclick = ()=>{
-    const t = $('#suggestText').value.trim();
-    if(!t) return alert('제안 내용을 입력해 주세요.');
-    const log = JSON.parse(localStorage.getItem('me2verse_suggests')||'[]');
-    log.push({ by: state.user?.id || 'guest', text:t, at: Date.now(), module: m.id });
-    localStorage.setItem('me2verse_suggests', JSON.stringify(log));
-    $('#suggestText').value='';
-    alert('제출 완료! 검토 후 반영하겠습니다. 감사합니다.');
-  };
-
-  show(scrDetail);
-  if(quickVR) enterVR(m);
-}
-
-/** =========================
- *  VR 진입/종료
- *  ========================= */
-const vrWrap = $('#vrWrap');
-const room = $('#room');
-const sky = $('#sky');
-const vrTitle = $('#vrTitle');
-
-function enterVR(m){
-  // 스토리 화면은 그대로, VR은 오버레이로 표시(겹치지 않음)
-  vrWrap.style.display = 'block';
-  document.body.style.overflow = 'hidden';
-  vrTitle.textContent = `VR – ${m.name}`;
-  toastVR('로딩 중…');
-
-  // 씬 리셋
-  while(room.firstChild) room.removeChild(room.firstChild);
-
-  // 환경
-  sky.setAttribute('color', m.sky);
-
-  // 바닥
-  const ground = document.createElement('a-circle');
-  ground.setAttribute('radius','30');
-  ground.setAttribute('rotation','-90 0 0');
-  ground.setAttribute('color','#e9ecf7');
-  ground.setAttribute('position','0 0 0');
-  room.appendChild(ground);
-
-  // 아바타
-  if(m.avatar){
-    const a = document.createElement('a-gltf-model');
-    a.setAttribute('src', m.avatar.src);
-    a.setAttribute('position', m.avatar.pos);
-    a.setAttribute('scale', m.avatar.scale);
-    a.setAttribute('animation__spin','property=rotation; to=0 360 0; loop:true; dur:12000; easing:linear');
-    a.addEventListener('click', ()=>{
-      toastVR('아바타와 상호작용! 감정 포인트 +1');
-    });
-    room.appendChild(a);
-  }
-  // 오브젝트
-  (m.props||[]).forEach(p=>{
-    const g = document.createElement('a-gltf-model');
-    g.setAttribute('src', p.src);
-    g.setAttribute('position', p.pos);
-    g.setAttribute('scale', p.scale || '1 1 1');
-    g.setAttribute('animation__float','property=position; dir:alternate; loop:true; dur:3000; to: 0 0.3 0;');
-    g.addEventListener('click', ()=>{
-      toastVR('아이템 상호작용! 보상 진동(가상)');
-    });
-    room.appendChild(g);
-  });
-
-  setTimeout(()=>toastVR('시작! 시선을 움직여 주변을 둘러보세요.'), 800);
-}
-
-$('#btnVRBack').addEventListener('click', ()=>{
-  vrWrap.style.display = 'none';
-  document.body.style.overflow = '';
-  toastVR('종료');
-});
-$('#btnVRHint').addEventListener('click', ()=>toastVR('힌트: 빛나는 오브젝트를 터치해 보세요!'));
-
-/** =========================
- *  홈 버튼들
- *  ========================= */
-$('#btnHome').addEventListener('click',()=> show(scrMods));
-$('#backToMods').addEventListener('click',()=> show(scrMods));
-</script>
-</body>
-  </html>
+function showModule(id){
+  document.querySelector
