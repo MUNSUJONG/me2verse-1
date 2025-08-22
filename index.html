@@ -1,170 +1,561 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8">
-<title>Me2Verse VR 완성형</title>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Me2Verse — 완성형 데모 (Pi 전용 로그인 시뮬레이션)</title>
+
+<!-- A-Frame for VR -->
 <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+
 <style>
-  body { margin:0; padding:0; font-family: Arial, sans-serif; background:#f0f0f0; }
-  .screen { width:100%; height:100vh; display:flex; justify-content:center; align-items:center; flex-direction:column; position:absolute; top:0; left:0; transition:0.5s; }
-  #homeScreen { background:white; z-index:3; }
-  #moduleScreen { background:#fafafa; z-index:2; display:none; }
-  #vrScreen { background:black; z-index:1; display:none; }
-  input, select, button { padding:10px 15px; margin:5px; font-size:16px; border-radius:5px; border:1px solid #ccc; }
-  button { cursor:pointer; border:none; color:white; }
-  #autoBtn { background:#2196F3; }
-  .moduleBtn { background:#4CAF50; }
-  #startVRBtn { background:#9C27B0; display:none; margin-top:10px; }
-  #backBtn { background:#FF5722; display:none; margin-top:10px; }
-  #status { position:fixed; top:10px; left:50%; transform:translateX(-50%); background:rgba(255,255,255,0.85); padding:5px 10px; border-radius:5px; z-index:5; }
-  #score { position:fixed; bottom:10px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.6); color:white; padding:5px 10px; border-radius:5px; z-index:5; }
-  #questLog { margin-top:15px; background:rgba(255,255,255,0.8); padding:10px; border-radius:5px; width:80%; max-width:400px; font-size:14px; max-height:150px; overflow-y:auto; }
+  :root{
+    --accent:#7b61ff;
+    --bg:#0f1720;
+    --card:#0b1220;
+    --glass: rgba(255,255,255,0.06);
+    --muted:#9aa4b2;
+  }
+  html,body{height:100%;margin:0;font-family:Inter,system-ui,Arial,sans-serif;background:linear-gradient(180deg,#071027 0%, #07203a 100%);color:#e6eef6;}
+  .app{max-width:1200px;margin:20px auto;padding:18px;}
+  header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+  .brand{display:flex;align-items:center;gap:12px}
+  .logo{width:56px;height:56px;border-radius:10px;background:linear-gradient(135deg,#6b9cff,#9b66ff);display:flex;align-items:center;justify-content:center;font-weight:800;color:white;font-size:20px;box-shadow:0 6px 24px rgba(123,97,255,0.18)}
+  h1{margin:0;font-size:20px}
+  .subtitle{color:var(--muted);font-size:13px}
+  .right{display:flex;align-items:center;gap:10px}
+  .pi-login{background:var(--glass);padding:8px;border-radius:10px;display:flex;gap:8px;align-items:center}
+  .pi-login input{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:8px;border-radius:8px;color:white;width:180px}
+  .btn{background:var(--accent);border:none;padding:10px 12px;border-radius:10px;color:white;cursor:pointer;box-shadow:0 6px 18px rgba(123,97,255,0.14)}
+  .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.06)}
+  nav{display:flex;gap:10px;align-items:center}
+  /* Grid of cards */
+  .hub{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
+  .card{background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));border-radius:12px;padding:14px;box-shadow:0 8px 30px rgba(2,6,23,0.6);min-height:180px;display:flex;flex-direction:column;justify-content:space-between}
+  .card .visual{height:100px;border-radius:8px;background-size:cover;background-position:center;box-shadow:inset 0 -30px 40px rgba(0,0,0,0.35)}
+  .card h3{margin:8px 0 0 0;font-size:16px}
+  .card p{margin:6px 0 0 0;color:var(--muted);font-size:13px}
+  .tags{display:flex;gap:8px;margin-top:8px}
+  .tag{background:rgba(255,255,255,0.04);padding:6px 8px;border-radius:999px;font-size:12px;color:var(--muted)}
+  .card .actions{display:flex;gap:8px;margin-top:10px}
+  /* HUD & side panel */
+  .hud{position:fixed;right:20px;top:90px;width:320px;background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02));border-radius:12px;padding:12px;box-shadow:0 12px 36px rgba(2,6,23,0.6)}
+  .hud h4{margin:0 0 6px 0}
+  .hud .row{display:flex;justify-content:space-between;align-items:center;padding:6px 0}
+  .log{background:rgba(255,255,255,0.02);border-radius:8px;padding:8px;max-height:260px;overflow:auto;color:var(--muted);font-size:13px}
+  .profile{display:flex;gap:10px;align-items:center}
+  .avatar{width:46px;height:46px;border-radius:10px;background:linear-gradient(135deg,#ff8aa0,#ffd37c);display:flex;align-items:center;justify-content:center;font-weight:700;color:#111}
+  .controls{display:flex;gap:8px;margin-top:10px}
+  /* Story Viewer modal */
+  .overlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:50}
+  .overlay.show{display:flex}
+  .panel{width:92%;max-width:1000px;background:linear-gradient(180deg,#07182a 0,#052035 100%);border-radius:12px;padding:18px;box-shadow:0 22px 60px rgba(2,6,23,0.8);display:flex;gap:14px; color:#eaf0ff}
+  .left{flex:1}
+  .right{width:360px;min-width:260px}
+  .story-visual{height:260px;border-radius:8px;background-size:cover;background-position:center}
+  .story-meta{display:flex;justify-content:space-between;align-items:center;margin-top:12px}
+  .choices{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+  .choice-btn{padding:10px 12px;border-radius:10px;border:none;background:linear-gradient(90deg,#1f7aff,#8e6cff);color:white;cursor:pointer;text-align:left}
+  .choice-btn.secondary{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--muted)}
+  /* VR area overlay info */
+  .vr-hud{position:fixed;left:20px;top:80px;background:rgba(0,0,0,0.45);padding:8px;border-radius:8px;color:white;width:320px}
+  /* Footer */
+  footer{margin-top:20px;color:var(--muted);font-size:13px;text-align:center}
+  /* Responsive */
+  @media(max-width:980px){
+    .hud{display:none}
+    .right{display:none}
+    .panel{flex-direction:column}
+    .right{width:100%}
+  }
 </style>
 </head>
 <body>
+  <div class="app">
+    <header>
+      <div class="brand">
+        <div class="logo">M2V</div>
+        <div>
+          <h1>Me2Verse — 완성형 데모</h1>
+          <div class="subtitle">Pi 전용 로그인 · 스토리 허브 · VR/Non-VR 통합 체험</div>
+        </div>
+      </div>
 
-<div id="status">상태: 대기 중</div>
-<div id="score">포인트: 0 | 아이템: 없음</div>
+      <div class="right">
+        <!-- Pi 계정 전용 로그인 (시뮬레이션) -->
+        <div class="pi-login" id="piLoginBox" title="Pi 계정으로만 로그인하세요">
+          <input id="piIdInput" placeholder="Pi 계정 아이디 (예: pi_alice)" />
+          <button class="btn" id="connectPiBtn">Pi 연결</button>
+        </div>
+        <div id="sessionInfo" style="display:none;">
+          <div class="profile">
+            <div class="avatar" id="avatarBadge">P</div>
+            <div>
+              <div id="displayName">—</div>
+              <div style="font-size:12px;color:var(--muted)" id="displayPi">Pi ID</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
 
-<!-- 홈 화면 -->
-<div id="homeScreen" class="screen">
-  <h1>🚀 Me2Verse VR</h1>
-  <p>Pi네트워크 계정 로그인 후 무료체험 또는 하이라이트 체험 가능</p>
-  <input type="text" id="username" placeholder="유저 이름 입력">
-  <button id="autoBtn">로그인 / 무료체험</button>
-</div>
+    <!-- Story hub -->
+    <section>
+      <div style="display:flex;gap:16px;align-items:center;margin-bottom:12px">
+        <div style="flex:1">
+          <input id="search" placeholder="스토리 / 키워드 검색" style="width:100%;padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:white" />
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="btn" id="myLibraryBtn">내 라이브러리</button>
+          <button class="btn ghost" id="suggestBtn">스토리 제안</button>
+        </div>
+      </div>
 
-<!-- 모듈 선택 화면 -->
-<div id="moduleScreen" class="screen">
-  <h2>모듈 선택</h2>
-  <div>
-    <button class="moduleBtn" id="loveModule">연애 모듈</button>
-    <button class="moduleBtn" id="spaceModule">우주체험 모듈</button>
-    <button class="moduleBtn" id="hobbyModule">취미 모듈</button>
+      <div style="display:flex;gap:20px;align-items:flex-start">
+        <div style="flex:1">
+          <!-- category tabs -->
+          <nav style="margin-bottom:12px">
+            <button class="btn ghost" data-category="all" onclick="renderHub('all')">전체</button>
+            <button class="btn ghost" data-category="love" onclick="renderHub('love')">연애</button>
+            <button class="btn ghost" data-category="space" onclick="renderHub('space')">우주</button>
+            <button class="btn ghost" data-category="hobby" onclick="renderHub('hobby')">취미</button>
+            <button class="btn ghost" data-category="travel" onclick="renderHub('travel')">여행</button>
+          </nav>
+
+          <div id="hubGrid" class="hub"></div>
+          <footer>데모: 스토리/VR/결제(시뮬레이션) 통합 샘플 — 실제 운영은 서버 연동 필요</footer>
+        </div>
+
+        <!-- HUD -->
+        <aside class="hud" id="hud">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <h4>현황</h4>
+            <div style="font-size:13px;color:var(--muted)">Pi 잔액: <strong id="piBalance">0</strong></div>
+          </div>
+          <div class="row">
+            <div>포인트</div><div id="points">0</div>
+          </div>
+          <div class="row">
+            <div>아이템</div><div id="itemsCount">0</div>
+          </div>
+          <div style="margin-top:8px">
+            <div style="font-weight:700;margin-bottom:6px">퀘스트 로그</div>
+            <div class="log" id="logPanel">아직 진행된 스토리가 없습니다.</div>
+          </div>
+          <div style="margin-top:10px">
+            <div style="font-weight:700;margin-bottom:6px">프로필</div>
+            <div id="profileInfo" style="color:var(--muted)">로그인 후 프로필이 표시됩니다.</div>
+            <div class="controls">
+              <button class="btn ghost" id="saveBtn">저장</button>
+              <button class="btn" id="resetBtn">초기화</button>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- Overlay: Story Viewer (Non-VR or VR entry) -->
+    <div id="viewerOverlay" class="overlay">
+      <div class="panel">
+        <div class="left">
+          <div class="story-visual" id="storyVisual"></div>
+          <div class="story-meta">
+            <div>
+              <h2 id="storyTitle">스토리 제목</h2>
+              <div id="storyTag" style="color:var(--muted)">모듈 · 난이도</div>
+            </div>
+            <div id="storyPoints" style="font-weight:700;text-align:right">+0</div>
+          </div>
+          <p id="storyText" style="margin-top:10px;color:var(--muted)">스토리 설명이 표시됩니다. 감성적인 문장과 선택지가 포함됩니다.</p>
+
+          <div class="choices" id="choicesContainer"></div>
+
+          <div style="margin-top:12px; display:flex; gap:8px;">
+            <button class="btn" id="enterVRBtn">VR로 체험</button>
+            <button class="btn ghost" id="continueBtn">선택 저장 / 다음</button>
+            <button class="btn ghost" id="closeViewerBtn">닫기</button>
+          </div>
+        </div>
+
+        <div class="right">
+          <div style="font-weight:700;margin-bottom:10px">관련 아이템</div>
+          <div id="relatedItems" style="display:flex;flex-direction:column;gap:8px"></div>
+
+          <div style="margin-top:16px">
+            <div style="font-weight:700;margin-bottom:8px">스토리 히스토리</div>
+            <div id="storyHistory" style="background:rgba(255,255,255,0.02);padding:8px;border-radius:8px;max-height:240px;overflow:auto;color:var(--muted)"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VR scene modal (keeps HUD on top) -->
+    <div id="vrContainer" style="display:none; position:fixed; inset:0; z-index:40; background:black;">
+      <a-scene id="vrScene" embedded style="height:100vh; width:100vw; background:black">
+        <a-sky id="vrSky" color="#000"></a-sky>
+        <a-entity id="vrWorld"></a-entity>
+        <a-entity id="vrCameraRig" position="0 1.6 0">
+          <a-camera wasd-controls look-controls>
+            <a-cursor color="#111"></a-cursor>
+          </a-camera>
+        </a-entity>
+        <a-entity light="type: ambient; intensity:0.8"></a-entity>
+      </a-scene>
+      <!-- VR overlay close -->
+      <div style="position:fixed; top:14px; left:14px; z-index:60;">
+        <button class="btn" id="exitVrBtn">VR 종료</button>
+      </div>
+    </div>
+
   </div>
-  <div id="moduleDetail" style="margin-top:20px;">
-    <h3 id="moduleTitle"></h3>
-    <p id="moduleDesc"></p>
-    <select id="storySelect"></select>
-    <button id="startVRBtn">VR 체험 시작</button>
-    <button id="backBtn">🏠 뒤로가기</button>
-    <div id="questLog"></div>
-  </div>
-</div>
-
-<!-- VR 화면 -->
-<div id="vrScreen" class="screen">
-  <a-scene id="vrScene">
-    <a-sky id="vrSky" color="#ECECEC"></a-sky>
-    <a-entity id="moduleContent"></a-entity>
-    <a-entity id="cameraRig" position="0 1.6 0">
-      <a-camera wasd-controls look-controls>
-        <a-cursor color="black"></a-cursor>
-      </a-camera>
-    </a-entity>
-    <a-entity light="type: ambient; intensity:0.6"></a-entity>
-    <a-entity light="type: directional; intensity:0.8" position="1 2 1"></a-entity>
-  </a-scene>
-  <button id="backFromVR" style="position:absolute;top:10px;right:10px;padding:10px;background:#FF5722;color:white;border:none;border-radius:5px;z-index:5;">🏠 뒤로가기</button>
-</div>
 
 <script>
-const statusEl = document.getElementById("status");
-const scoreEl = document.getElementById("score");
-const homeScreen = document.getElementById("homeScreen");
-const moduleScreen = document.getElementById("moduleScreen");
-const vrScreen = document.getElementById("vrScreen");
-const moduleTitle = document.getElementById("moduleTitle");
-const moduleDesc = document.getElementById("moduleDesc");
-const storySelect = document.getElementById("storySelect");
-const startVRBtn = document.getElementById("startVRBtn");
-const backBtn = document.getElementById("backBtn");
-const questLog = document.getElementById("questLog");
-const moduleContent = document.getElementById("moduleContent");
-const vrSky = document.getElementById("vrSky");
-const backFromVR = document.getElementById("backFromVR");
+/* -------------------------
+   Data: modules & stories
+   ------------------------- */
+const STORY_DB = [
+  { id:'love1', module:'love', title:'공원에서의 첫 만남', visual:'https://images.unsplash.com/photo-1524532849990-6eec8b6e2f19?w=1200&q=60', desc:"따뜻한 봄날, 공원 벤치에서 우연히 마주친 그/그녀와의 첫 대화. 선택지로 감정이 바뀝니다.", points:8, items:['하트'], highlight:false, script:[
+      {id:'s1', text:'밝게 인사한다', effect:{points:8, item:'하트'}},
+      {id:'s2', text:'수줍게 미소짓는다', effect:{points:5, item:'미소'}},
+  ]},
+  { id:'love2', module:'love', title:'카페 데이트', visual:'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=1200&q=60', desc:"따뜻한 라떼 한 잔과 진솔한 대화, 작은 선택이 큰 추억이 됩니다.", points:10, items:['커피'], highlight:false, script:[
+      {id:'s1', text:'음료 추천하기', effect:{points:10, item:'커피'}},
+      {id:'s2', text:'자신의 이야기를 한다', effect:{points:6, item:'이야기'}},
+  ]},
+  /* Many more love stories ... generate more below dynamically */
+];
 
-let points=0, items=[], currentModule="", currentStory=0, logMessages=[], userName="";
 
-// 샘플 스토리 데이터 (각 모듈 10개 이상)
-const modules = {
-  love: Array.from({length:10},(_,i)=>({title:`연애 스토리 ${i+1}`, desc:`연애 모험 체험 ${i+1}`, points:5+i, item:`하트${i+1}`})),
-  space: Array.from({length:10},(_,i)=>({title:`우주 스토리 ${i+1}`, desc:`우주 탐험 체험 ${i+1}`, points:10+i, item:`지도${i+1}`})),
-  hobby: Array.from({length:10},(_,i)=>({title:`취미 스토리 ${i+1}`, desc:`취미 체험 ${i+1}`, points:3+i, item:`꽃${i+1}`})),
-};
-
-function updateScore(){ scoreEl.textContent=`포인트: ${points} | 아이템: ${items.length?items.join(", "):"없음"}`; }
-function logQuest(msg){ logMessages.push(msg); questLog.innerHTML=logMessages.map(m=>`• ${m}`).join("<br>"); }
-
-// 로그인 + 무료체험
-document.getElementById("autoBtn").addEventListener("click",()=>{
-  userName = document.getElementById("username").value.trim();
-  if(!userName){ alert("유저 이름 입력 필요!"); return; }
-  statusEl.textContent=`${userName} 로그인 성공! 무료체험 가능 🎉`;
-  homeScreen.style.display="none";
-  moduleScreen.style.display="flex";
-});
-
-// 모듈 선택
-function selectModule(name){
-  currentModule = name;
-  moduleTitle.textContent = `${name} 모듈`;
-  moduleDesc.textContent = "스토리를 선택하세요.";
-  storySelect.innerHTML = "";
-  modules[name].forEach((story,i)=>{
-    const opt = document.createElement("option");
-    opt.value = i;
-    opt.textContent = story.title;
-    storySelect.appendChild(opt);
-  });
-  startVRBtn.style.display="inline-block";
-  backBtn.style.display="inline-block";
-  logMessages=[];
-  questLog.innerHTML="";
+// Generate placeholder stories for remaining modules to reach 10 each
+function generateModuleStories(moduleKey, baseTitle, visualBase, startIndex){
+  let arr=[];
+  for(let i=0;i<10;i++){
+    arr.push({
+      id: moduleKey + (i+1),
+      module: moduleKey,
+      title: `${baseTitle} ${i+1}`,
+      visual: `${visualBase}?w=1200&q=60&v=${i}`,
+      desc: `${baseTitle}의 감성 체험 ${i+1} — 상호작용과 선택으로 이야기를 만드세요.`,
+      points: 5 + i*2,
+      items: [`${moduleKey}_item${i+1}`],
+      highlight: (i>=8), // last two are highlight pay
+      script: [
+        {id:'c1', text:'선택 A', effect:{points:5+i, item: `${moduleKey}_item${i+1}`}},
+        {id:'c2', text:'선택 B', effect:{points:3+i, item: `mem_${i+1}`}}
+      ]
+    });
+  }
+  return arr;
 }
 
-document.getElementById("loveModule").addEventListener("click",()=>selectModule("love"));
-document.getElementById("spaceModule").addEventListener("click",()=>selectModule("space"));
-document.getElementById("hobbyModule").addEventListener("click",()=>selectModule("hobby"));
+const LOVE_EXTRA = generateModuleStories('love','연애 스토리','https://images.unsplash.com/photo-1496307042754-b4aa456c4a2d',3);
+const SPACE_STORIES = generateModuleStories('space','우주 스토리','https://images.unsplash.com/photo-1446776811953-b23d57bd21aa',1);
+const HOBBY_STORIES = generateModuleStories('hobby','취미 스토리','https://images.unsplash.com/photo-1500530855697-b586d89ba3ee',1);
+const TRAVEL_STORIES = generateModuleStories('travel','여행 스토리','https://images.unsplash.com/photo-1507525428034-b723cf961d3e',1);
 
-// VR 시작
-startVRBtn.addEventListener("click",()=>{
-  currentStory = parseInt(storySelect.value);
-  const story = modules[currentModule][currentStory];
-  moduleScreen.style.display="none";
-  vrScreen.style.display="flex";
-  moduleContent.innerHTML="";
-  points = 0; items = []; updateScore();
-  logMessages=[];
-  questLog.innerHTML="";
-  vrSky.setAttribute("color","#ECECEC");
+// Merge and normalize DB
+const DB = [];
+DB.push(...STORY_DB); // earlier defined specific ones
+DB.push(...LOVE_EXTRA);
+DB.push(...SPACE_STORIES);
+DB.push(...HOBBY_STORIES);
+DB.push(...TRAVEL_STORIES);
 
-  // 단순 상호작용 예시
-  const entity = document.createElement("a-box");
-  entity.setAttribute("position","0 1 -3");
-  entity.setAttribute("color","#FF69B4");
-  entity.setAttribute("depth","1"); entity.setAttribute("height","2"); entity.setAttribute("width","1");
-  entity.addEventListener("click",()=>{
-    points += story.points;
-    items.push(story.item);
-    updateScore();
-    logQuest(`💌 ${story.item} 획득! +${story.points}점`);
+// index by module for hub rendering
+const MODULES = {
+  all: DB,
+  love: DB.filter(s=>s.module==='love'),
+  space: DB.filter(s=>s.module==='space'),
+  hobby: DB.filter(s=>s.module==='hobby'),
+  travel: DB.filter(s=>s.module==='travel'),
+};
+
+/* -------------------------
+   App State & Persistence
+   ------------------------- */
+let APP = {
+  user: null,      // {piId, displayName, avatarChar}
+  points: 0,
+  items: [],       // array of item strings
+  log: [],         // text log
+  library: {},     // completed story records by id
+  piBalance: 20    // simulated Pi balance for purchases
+};
+
+// load saved
+function loadApp(){
+  const raw = localStorage.getItem('me2v_app_v1');
+  if(raw){
+    try{
+      const data = JSON.parse(raw);
+      APP = Object.assign(APP, data);
+    }catch(e){ console.warn('load error',e) }
+  }
+  renderHUD();
+}
+function saveApp(){
+  localStorage.setItem('me2v_app_v1', JSON.stringify(APP));
+}
+
+/* -------------------------
+   UI Rendering
+   ------------------------- */
+const hubGrid = document.getElementById('hubGrid');
+const logPanel = document.getElementById('logPanel');
+const pointsEl = document.getElementById('points');
+const itemsCountEl = document.getElementById('itemsCount');
+const piBalanceEl = document.getElementById('piBalance');
+const profileInfo = document.getElementById('profileInfo');
+const sessionInfo = document.getElementById('sessionInfo');
+const avatarBadge = document.getElementById('avatarBadge');
+const displayNameEl = document.getElementById('displayName');
+const displayPiEl = document.getElementById('displayPi');
+
+function renderHub(category='all', filterText=''){
+  hubGrid.innerHTML='';
+  const list = MODULES[category] || MODULES.all;
+  const filtered = list.filter(s => s.title.toLowerCase().includes(filterText.toLowerCase()) || s.desc.toLowerCase().includes(filterText.toLowerCase()));
+  filtered.forEach(story => {
+    const card = document.createElement('div'); card.className='card';
+    card.innerHTML = `
+      <div class="visual" style="background-image:url('${story.visual}')"></div>
+      <div>
+        <h3>${story.title}</h3>
+        <p>${truncate(story.desc, 90)}</p>
+        <div class="tags"><div class="tag">${story.module.toUpperCase()}</div><div class="tag">${story.highlight? 'HIGHLIGHT':'FREE'}</div></div>
+        <div class="actions">
+          <button class="btn" data-id="${story.id}" onclick="openStory('${story.id}')">체험하기</button>
+          <button class="btn ghost" onclick="previewStory('${story.id}')">미리보기</button>
+        </div>
+      </div>
+    `;
+    hubGrid.appendChild(card);
   });
-  moduleContent.appendChild(entity);
+}
+function truncate(s,n){ return s.length>n? s.slice(0,n-1)+'…':s; }
+
+function renderHUD(){
+  pointsEl.textContent = APP.points;
+  itemsCountEl.textContent = APP.items.length;
+  piBalanceEl.textContent = APP.piBalance + ' Pi';
+  if(APP.log.length===0) logPanel.innerHTML = '아직 진행된 스토리가 없습니다.';
+  else logPanel.innerHTML = APP.log.slice().reverse().map(l=>`<div>${escapeHtml(l)}</div>`).join('');
+  if(APP.user){
+    sessionInfo.style.display='block';
+    profileInfo.textContent = `${APP.user.displayName} · ${APP.user.piId}`;
+    avatarBadge.textContent = APP.user.avatarChar || APP.user.displayName.slice(0,2).toUpperCase();
+    displayNameEl.textContent = APP.user.displayName;
+    displayPiEl.textContent = APP.user.piId;
+  } else {
+    sessionInfo.style.display='none';
+    profileInfo.textContent = '로그인 후 프로필이 표시됩니다.';
+  }
+}
+
+/* -------------------------
+   Login (Pi only — simulation)
+   ------------------------- */
+document.getElementById('connectPiBtn').addEventListener('click', ()=>{
+  const piId = document.getElementById('piIdInput').value.trim();
+  if(!piId){
+    alert('Pi 네트워크 계정 아이디를 입력하세요. (예: pi_alice)');
+    return;
+  }
+  if(!piId.startsWith('pi_')) {
+    const ok = confirm('데모는 Pi 계정 전용입니다. pi_ 접두어로 입력하지 않으셨습니다. 그래도 계속하시겠습니까? (실제 운영에서는 Pi 인증 연동 필요)');
+    if(!ok) return;
+  }
+  // Simulated successful Pi login
+  APP.user = { piId, displayName: prettifyPi(piId), avatarChar: (prettifyPi(piId)[0]||'P').toUpperCase() };
+  saveApp();
+  renderHUD();
+  // switch UI
+  document.getElementById('piLoginBox').style.display='none';
+  sessionInfo.style.display='flex';
+  // show hub
+  renderHub('all','');
+  alert(`Pi 로그인 성공: ${piId} (데모 시뮬레이션)`);
+});
+function prettifyPi(id){ if(!id) return 'Guest'; return id.replace(/^pi_?/,'').replace(/[_\-]/g,' ').replace(/\b\w/g,c=>c.toUpperCase()); }
+
+/* -------------------------
+   Story open / Viewer
+   ------------------------- */
+const viewerOverlay = document.getElementById('viewerOverlay');
+const storyVisual = document.getElementById('storyVisual');
+const storyTitleEl = document.getElementById('storyTitle');
+const storyText = document.getElementById('storyText');
+const storyTag = document.getElementById('storyTag');
+const storyPoints = document.getElementById('storyPoints');
+const choicesContainer = document.getElementById('choicesContainer');
+const relatedItems = document.getElementById('relatedItems');
+const storyHistory = document.getElementById('storyHistory');
+let activeStory = null;
+
+function openStory(storyId){
+  const s = DB.find(x=>x.id===storyId) || DB.find(x=>x.id===storyId.toString());
+  if(!s){ alert('스토리를 찾을 수 없습니다.'); return; }
+  activeStory = s;
+  // fill viewer
+  storyVisual.style.backgroundImage = `url('${s.visual}')`;
+  storyTitleEl.textContent = s.title;
+  storyText.textContent = s.desc;
+  storyTag.textContent = `${s.module.toUpperCase()} · ${s.highlight? 'HIGHLIGHT':'FREE'}`;
+  storyPoints.textContent = `+${s.points}p`;
+  // choices
+  choicesContainer.innerHTML='';
+  s.script.forEach((choice, idx)=>{
+    const btn = document.createElement('button');
+    btn.className = 'choice-btn';
+    btn.innerText = choice.text;
+    btn.onclick = ()=> {
+      applyChoice(s, choice);
+    };
+    choicesContainer.appendChild(btn);
+  });
+  // related items
+  relatedItems.innerHTML = s.items.map(it=>`<div style="background:rgba(255,255,255,0.03);padding:8px;border-radius:8px">${it}</div>`).join('');
+  // history of this story
+  const hist = APP.library[s.id] || [];
+  storyHistory.innerHTML = hist.length? hist.map(h=>`<div>${escapeHtml(h)}</div>`).join(''): '<div style="color:var(--muted)">아직 체험 기록 없음</div>';
+  // show
+  viewerOverlay.classList.add('show');
+}
+
+// preview quick
+function previewStory(storyId){
+  const s = DB.find(x=>x.id===storyId);
+  openStory(storyId);
+  // auto close after 7s for preview
+  setTimeout(()=>{ viewerOverlay.classList.remove('show'); }, 7000);
+}
+
+document.getElementById('closeViewerBtn').addEventListener('click', ()=> viewerOverlay.classList.remove('show'));
+
+/* -------------------------
+   Choice apply, save to APP
+   ------------------------- */
+function applyChoice(story, choice){
+  // If highlight (paid) check balance
+  if(story.highlight){
+    const ok = confirm(`이 스토리는 하이라이트(프리미엄)입니다. ${story.module === 'love' ? 3 : 5} Pi를 사용하여 체험하시겠습니까? (데모 시뮬레이트)`);
+    if(!ok) return;
+    const cost = 5;
+    if(APP.piBalance < cost){
+      alert('Pi 잔액 부족 — 데모에서는 충전 기능이 없습니다.');
+      return;
+    }
+    APP.piBalance -= cost;
+  }
+  // apply effects
+  const eff = choice.effect || {};
+  APP.points = (APP.points || 0) + (eff.points||0);
+  if(eff.item) APP.items.push(eff.item);
+  const logLine = `[${story.module.toUpperCase()}] ${story.title} → ${choice.text} (+${eff.points||0}p, item:${eff.item||'-'})`;
+  APP.log.push(logLine);
+  // story-specific record
+  APP.library[story.id] = APP.library[story.id] || [];
+  APP.library[story.id].push(`${new Date().toLocaleString()} : ${choice.text}`);
+  saveApp();
+  renderHUD();
+  // Update story history
+  storyHistory.innerHTML = APP.library[story.id].map(h=>`<div>${escapeHtml(h)}</div>`).join('');
+  alert('선택이 저장되었습니다! HUD에서 획득 내역을 확인하세요.');
+}
+
+/* -------------------------
+   VR entry: show simple A-Frame environment for this story
+   ------------------------- */
+document.getElementById('enterVRBtn').addEventListener('click', ()=>{
+  if(!activeStory){ alert('열려있는 스토리가 없습니다.'); return; }
+  // Setup VR modal
+  document.getElementById('vrContainer').style.display='block';
+  // set sky by module
+  const sky = document.getElementById('vrSky');
+  if(activeStory.module==='space') sky.setAttribute('color','#00111a');
+  else if(activeStory.module==='love') sky.setAttribute('color','#3a0b2f');
+  else if(activeStory.module==='hobby') sky.setAttribute('color','#0b2f18');
+  else sky.setAttribute('color','#072b3a');
+
+  // populate vr world with simple clickable objects tied to story choices
+  const world = document.getElementById('vrWorld');
+  world.innerHTML = ''; // clear existing
+  activeStory.script.forEach((choice, idx)=>{
+    // create a gltf or primitive for each choice
+    const x = (idx - (activeStory.script.length/2)) * 1.5;
+    const el = document.createElement('a-box');
+    el.setAttribute('position', `${x} 1.3 -3`);
+    el.setAttribute('depth','0.8'); el.setAttribute('height','0.8'); el.setAttribute('width','0.8');
+    el.setAttribute('color', idx%2? '#ff7ab6': '#7ad1ff');
+    el.setAttribute('class','clickable');
+    // show label
+    el.addEventListener('mouseenter', ()=> {
+      // show small toast overlay (HUD) - we re-use log Panel temporarily
+      logPanel.innerHTML = `<div style="color:#fff">${escapeHtml(choice.text)}</div>` + (APP.log.length? APP.log.slice().reverse().map(l=>`<div style="color:var(--muted)">${escapeHtml(l)}</div>`).join(''):'');
+    });
+    el.addEventListener('click', ()=> {
+      // apply choice (as if chosen)
+      applyChoice(activeStory, choice);
+      // small visual feedback
+      el.setAttribute('animation','property: rotation; to:0 360 0; dur:1000; easing:linear');
+      // update HUD log
+      renderHUD();
+    });
+    world.appendChild(el);
+  });
 });
 
-// 뒤로가기
-backBtn.addEventListener("click",()=>{
-  moduleScreen.style.display="none";
-  homeScreen.style.display="flex";
-  backBtn.style.display="none";
-  startVRBtn.style.display="none";
+/* exit VR */
+document.getElementById('exitVrBtn').addEventListener('click', ()=>{
+  document.getElementById('vrContainer').style.display='none';
+  // restore HUD log
+  renderHUD();
 });
 
-backFromVR.addEventListener("click",()=>{
-  vrScreen.style.display="none";
-  moduleScreen.style.display="flex";
+/* -------------------------
+   Misc: Save / Reset / Suggestions
+   ------------------------- */
+document.getElementById('saveBtn').addEventListener('click', ()=>{
+  saveApp();
+  alert('앱 상태가 저장되었습니다 (localStorage).');
 });
+document.getElementById('resetBtn').addEventListener('click', ()=>{
+  if(confirm('앱 상태를 초기화 하시겠습니까? (저장된 모든 진행이 삭제됩니다)')){
+    localStorage.removeItem('me2v_app_v1');
+    location.reload();
+  }
+});
+
+document.getElementById('suggestBtn').addEventListener('click', ()=> {
+  const txt = prompt('새 스토리 제안 내용을 입력하세요. (운영자 검토 후 반영됩니다.)');
+  if(txt && txt.trim().length>6){
+    let arr = JSON.parse(localStorage.getItem('me2v_suggestions_v1')||'[]');
+    arr.push({user: APP.user?APP.user.piId:'anonymous', text:txt, date:new Date().toLocaleString()});
+    localStorage.setItem('me2v_suggestions_v1', JSON.stringify(arr));
+    alert('제안이 저장되었습니다. 운영자 검토 후 반영됩니다.');
+  } else alert('내용이 너무 짧습니다.');
+});
+
+/* search, library */
+document.getElementById('search').addEventListener('input', (e)=> {
+  renderHub('all', e.target.value);
+});
+document.getElementById('myLibraryBtn').addEventListener('click', ()=>{
+  const keys = Object.keys(APP.library);
+  if(keys.length===0){ alert('아직 체험한 스토리가 없습니다.'); return; }
+  // show a quick list
+  const list = keys.map(k=> {
+    const s = DB.find(x=>x.id===k);
+    return s? `${s.title} · ${APP.library[k].length}회` : k;
+  }).join('\n');
+  alert('내 라이브러리:\n' + list);
+});
+
+/* helper */
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c=> ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+loadApp();
+renderHub('all','');
 
 </script>
 </body>
