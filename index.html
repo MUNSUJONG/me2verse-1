@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<title>Me2Verse VR 통합형 체험</title>
+<title>Me2Verse VR 메타버스</title>
 <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
 <style>
   body { margin:0; padding:0; font-family: Arial, sans-serif; background:#f0f0f0; }
@@ -23,8 +23,6 @@
   #backBtn{background-color:#FF5722;display:none;margin-top:15px;}
   #questLog{margin-top:15px;background:rgba(255,255,255,0.8);padding:10px;border-radius:5px;width:80%;max-width:400px;font-size:14px;max-height:150px;overflow-y:auto;}
   a-scene{width:100%;height:100vh;}
-  #flagContainer{display:flex; justify-content:space-between; width:100%; max-width:400px; margin-bottom:10px;}
-  #flagContainer img{width:80px;}
 </style>
 </head>
 <body>
@@ -34,12 +32,8 @@
 
 <!-- 홈 화면 -->
 <div id="homeScreen" class="screen">
-  <div id="flagContainer">
-    <img src="https://upload.wikimedia.org/wikipedia/commons/0/09/Flag_of_South_Korea.svg" alt="태극기">
-    <img src="https://upload.wikimedia.org/wikipedia/commons/0/09/Flag_of_South_Korea.svg" alt="태극기">
-  </div>
-  <h1>🚀 Me2Verse VR 통합 체험</h1>
-  <p>로그인(파이 네트워크 계정) 후 무료 체험 또는 하이라이트 체험 선택</p>
+  <h1>🚀 Me2Verse VR 메타버스</h1>
+  <p>로그인 → 모듈 선택 → 스토리 체험 → VR 체험</p>
   <input type="text" id="username" placeholder="유저 이름 입력">
   <button id="autoBtn">로그인</button>
 </div>
@@ -51,13 +45,12 @@
     <button class="moduleBtn" id="loveModule">연애 모듈</button>
     <button class="moduleBtn" id="spaceModule">우주체험 모듈</button>
     <button class="moduleBtn" id="hobbyModule">취미 모듈</button>
-    <button class="moduleBtn" id="travelModule">여행 모듈</button>
   </div>
   <div id="moduleDetail" style="margin-top:20px;">
     <h3 id="moduleTitle"></h3>
     <p id="moduleDesc"></p>
     <button id="startVRBtn">VR 체험 시작</button>
-    <button id="backBtn">🏠 홈으로</button>
+    <button id="backBtn">홈으로</button>
     <div id="questLog"></div>
   </div>
 </div>
@@ -100,69 +93,55 @@ function logQuest(msg){ logMessages.push(msg); questLog.innerHTML=logMessages.ma
 document.getElementById("autoBtn").addEventListener("click",()=>{
   const username=document.getElementById("username").value.trim();
   if(!username){ alert("유저 이름 입력 필요!"); return; }
-  statusEl.textContent=`상태: ${username} 로그인 중...`;
-  setTimeout(()=>{
-    statusEl.textContent=`상태: ${username} 로그인 성공! 🎉`;
-    alert(`${username}님 환영합니다!`);
-    homeScreen.style.display="none";
-    moduleScreen.style.display="flex";
-  },1000);
+  statusEl.textContent=`상태: ${username} 로그인 성공! 🎉`;
+  homeScreen.style.display="none";
+  moduleScreen.style.display="flex";
 });
 
-// 모듈 정의 (각 모듈 10개 이상 스토리)
+// 모듈 정의 (스토리 + 이벤트)
 const modules={
-love:{title:"연애 모듈", desc:"공원과 카페 등에서 캐릭터와 상호작용하며 감성 체험", sky:"#FFC0CB",
-stories:[
-{desc:"첫 만남", points:5, item:"하트"},
-{desc:"첫 대화", points:5, item:"하트"},
-{desc:"공원 산책", points:10, item:"사진"},
-{desc:"커피 데이트", points:10, item:"커피"},
-{desc:"축제 참가", points:15, item:"축제 표"},
-{desc:"영화관 데이트", points:15, item:"팝콘"},
-{desc:"밤하늘 관찰", points:20, item:"별"},
-{desc:"편지 주기", points:20, item:"편지"},
-{desc:"선물 주기", points:25, item:"선물"},
-{desc:"연애 완료", points:50, item:"하트 뱃지"}]
-},
-space:{title:"우주체험 모듈", desc:"탐사선 탑승 → 행성 탐험 → 지도, 아이템 수집", sky:"#000022",
-stories:[
-{desc:"탐사선 탑승", points:5, item:"탑승권"},
-{desc:"행성 착륙", points:10, item:"행성 지도"},
-{desc:"화성 탐사", points:15, item:"화성 샘플"},
-{desc:"금성 탐사", points:15, item:"금성 샘플"},
-{desc:"소행성 관찰", points:20, item:"소행성 샘플"},
-{desc:"은하 탐험", points:25, item:"은하 지도"},
-{desc:"우주 정거장 체험", points:25, item:"정거장 기념품"},
-{desc:"블랙홀 관찰", points:30, item:"블랙홀 기록"},
-{desc:"외계인 접촉", points:40, item:"외계 생명체 기록"},
-{desc:"우주 체험 완료", points:50, item:"우주 뱃지"}]
-},
-hobby:{title:"취미 모듈", desc:"숲속 산책, 미술, 음악 등 체험", sky:"#A0E0A0",
-stories:[
-{desc:"숲속 산책", points:5, item:"꽃"},
-{desc:"꽃 관찰", points:5, item:"꽃 사진"},
-{desc:"새 소리 듣기", points:10, item:"새 소리 기록"},
-{desc:"미술 체험", points:15, item:"그림"},
-{desc:"음악 감상", points:15, item:"악보"},
-{desc:"사진 촬영", points:20, item:"사진"},
-{desc:"커피 만들기", points:20, item:"커피"},
-{desc:"차 마시기", points:25, item:"찻잔"},
-{desc:"캠핑 체험", points:25, item:"텐트"},
-{desc:"취미 완료", points:50, item:"취미 뱃지"}]
-},
-travel:{title:"여행 모듈", desc:"세계 각지 여행과 명소 탐험", sky:"#87CEEB",
-stories:[
-{desc:"서울 탐방", points:5, item:"서울 사진"},
-{desc:"부산 탐방", points:5, item:"부산 사진"},
-{desc:"제주 여행", points:10, item:"제주 사진"},
-{desc:"경주 탐방", points:10, item:"경주 사진"},
-{desc:"세계 박물관 방문", points:15, item:"박물관 기념품"},
-{desc:"유적지 탐험", points:20, item:"유적 기념품"},
-{desc:"현지 음식 체험", points:25, item:"음식 사진"},
-{desc:"전통 공연 관람", points:25, item:"공연 표"},
-{desc:"도시 야경 관람", points:30, item:"야경 사진"},
-{desc:"여행 완료", points:50, item:"여행 뱃지"}]
-}
+love:{
+title:"연애 모듈", desc:"공원에서 캐릭터와 상호작용하며 연애 체험! 하트를 모아보세요.",
+events:[
+"공원 입장",
+"캐릭터1과 인사",
+"캐릭터2와 대화",
+"꽃 선물하기",
+"카페 데이트",
+"사진 찍기",
+"손 잡기",
+"하트 획득",
+"편지 전달",
+"마지막 포옹"
+]},
+space:{
+title:"우주체험 모듈", desc:"탐사선 탑승 → 행성 탐험 → 지도, 아이템 수집!",
+events:[
+"탐사선 탑승",
+"달 착륙",
+"화성 탐사",
+"우주 유영",
+"운석 회피",
+"위성 관찰",
+"블랙홀 체험",
+"우주 지도 획득",
+"샘플 수집",
+"귀환"
+]},
+hobby:{
+title:"취미 모듈", desc:"숲속 산책과 취미 활동 VR 체험! 꽃과 커피를 수집하세요.",
+events:[
+"숲 입장",
+"꽃 관찰",
+"커피 만들기",
+"새 소리 듣기",
+"벤치에 앉기",
+"사진 찍기",
+"그림 그리기",
+"요리 체험",
+"아이템 수집",
+"마무리 산책"
+]}
 };
 
 function selectModule(name){
@@ -172,13 +151,12 @@ moduleDesc.textContent=modules[name].desc;
 startVRBtn.style.display="inline-block";
 backBtn.style.display="inline-block";
 logMessages=[];
-questLog.innerHTML="";
+modules[name].events.forEach(ev=>logQuest(ev));
 }
 
 document.getElementById("loveModule").addEventListener("click",()=>selectModule("love"));
 document.getElementById("spaceModule").addEventListener("click",()=>selectModule("space"));
 document.getElementById("hobbyModule").addEventListener("click",()=>selectModule("hobby"));
-document.getElementById("travelModule").addEventListener("click",()=>selectModule("travel"));
 
 // VR 체험 시작
 startVRBtn.addEventListener("click",()=>{
@@ -188,18 +166,19 @@ moduleContent.innerHTML="";
 points=0; items=[]; updateScore();
 logMessages=[]; questLog.innerHTML="";
 
-const mod=modules[currentModule];
-vrSky.setAttribute("color",mod.sky);
-
-// 아바타/스토리 순차적 체험
-mod.stories.forEach((story,index)=>{
-setTimeout(()=>{
-points+=story.points; 
-items.push(story.item); 
-updateScore(); 
-logQuest(story.desc + " 완료! +" + story.points + "점, " + story.item + " 획득");
-}, index*2000); // 2초 간격으로 진행
-});
+// VR 환경 단순 샘플 (아바타 표시)
+vrSky.setAttribute("color","#ECECEC");
+for(let i=0;i<5;i++){
+  const box=document.createElement("a-box");
+  box.setAttribute("position",`${i-2} 1 -3`);
+  box.setAttribute("color","#"+Math.floor(Math.random()*16777215).toString(16));
+  box.setAttribute("scale","0.5 0.5 0.5");
+  box.addEventListener("click",()=>{
+    points+=5; items.push("아이템"+i); updateScore();
+    logQuest(`아바타${i} 상호작용 완료`);
+  });
+  moduleContent.appendChild(box);
+}
 });
 
 // 뒤로가기
