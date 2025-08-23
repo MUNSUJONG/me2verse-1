@@ -12,8 +12,8 @@ h1 { color:#c0392b; margin:10px 0; text-align:center; }
 #moduleButtons { display:flex; flex-wrap:wrap; justify-content:center; margin-top:10px; }
 .button { margin:6px; padding:12px 20px; font-size:16px; color:#fff; background:#2980b9; border:none; border-radius:8px; cursor:pointer; flex:1; min-width:120px; transition:0.2s; }
 .button:hover { background:#2471a3; }
-.module { display:none; padding:20px; margin:20px auto; border-radius:12px; box-shadow:0 4px 8px rgba(0,0,0,0.2); max-width:700px; width:90%; position:relative; background:#fff; }
-.moduleOverlay { background: rgba(255,255,255,0.8); padding: 10px; border-radius: 10px; }
+.module { display:block; padding:20px; margin:20px auto; border-radius:12px; box-shadow:0 4px 8px rgba(0,0,0,0.2); max-width:700px; width:90%; position:relative; background:#fff; }
+.moduleOverlay { background: rgba(255,255,255,0.85); padding: 10px; border-radius: 10px; }
 .chat-box { border:1px solid #ccc; padding:10px; height:300px; overflow-y:auto; border-radius:10px; background:#fefefe; margin-bottom:10px; }
 .message { margin:6px 0; padding:8px 12px; border-radius:12px; max-width:80%; clear:both; word-break:break-word; }
 .message.ai { background:#2980b9; color:#fff; float:left; }
@@ -114,7 +114,26 @@ const modulesData = {
 function showModule(id){ 
   currentModule=id; 
   currentNode='start'; 
-  renderModule(); 
+
+  const data = modulesData[currentModule];
+  const container = document.getElementById('moduleContainer');
+  container.innerHTML = `
+    <div class="module" style="background-image:url(${data.background}); background-size:cover; background-position:center;">
+      <div class="moduleOverlay">
+        <div class="chat-box" id="chatBox"></div>
+        <input type="text" id="userInput" placeholder="여기에 입력하고 Enter">
+        <button id="sendBtn">보내기</button>
+        <button class="backBtn">⬅️ 메인으로 돌아가기</button>
+        <div id="optionButtons"></div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('sendBtn').onclick = handleUserInput;
+  document.getElementById('userInput').addEventListener('keypress', (e)=>{if(e.key==='Enter') handleUserInput();});
+  document.querySelector('.backBtn').onclick = backToMain;
+
+  renderNode(); // 초기 노드 렌더링
 }
 
 function backToMain(){ 
@@ -142,7 +161,6 @@ function handleUserInput(){
   processNode(userText);
 }
 
-// 입력 분석
 function processNode(userText){
   const node=modulesData[currentModule].storyTree[currentNode];
   if(!node.options) return;
@@ -152,7 +170,6 @@ function processNode(userText){
   chooseOption(chosen);
 }
 
-// 선택지 처리
 function chooseOption(opt){
   const node = modulesData[currentModule].storyTree[currentNode];
   if(!node.options) return;
@@ -161,42 +178,31 @@ function chooseOption(opt){
   addMessage('ai', sel.text);
   addXP(sel.xp||0);
   currentNode=sel.next;
-  setTimeout(renderModule,300);
+  setTimeout(renderNode,300);
 }
 
-// 렌더링
-function renderModule(){
+function renderNode(){
   const data = modulesData[currentModule];
   if(!data) return;
   const node = data.storyTree[currentNode];
-  const container=document.getElementById('moduleContainer');
-  container.innerHTML=`<div class="module" style="background-image:url(${data.background}); background-size:cover; background-position:center;">
-    <div class="moduleOverlay">
-      <div class="chat-box" id="chatBox"></div>
-      <input type="text" id="userInput" placeholder="여기에 입력하고 Enter" onkeypress="if(event.key==='Enter'){handleUserInput();}">
-      <button id="sendBtn" onclick="handleUserInput()">보내기</button>
-      <button class="backBtn" onclick="backToMain()">⬅️ 메인으로 돌아가기</button>
-    </div>
-  </div>`;
+  if(!node) return;
 
-  // AI 초기 메시지 출력
-  if(node.text){
-    addMessage('ai', node.text);
-  }
+  const chatBox = document.getElementById('chatBox');
+  if(chatBox && chatBox.innerHTML === '') addMessage('ai', node.text);
 
-  // 선택지 버튼 렌더링
-  if(node.options){
-    const optionDiv = document.createElement('div');
-    optionDiv.style.marginTop = '10px';
-    for(let key in node.options){
-      const btn = document.createElement('button');
-      btn.textContent = node.options[key].text;
-      btn.className = 'button';
-      btn.style.margin='4px';
-      btn.onclick = () => chooseOption(key);
-      optionDiv.appendChild(btn);
+  const optionDiv = document.getElementById('optionButtons');
+  if(optionDiv){
+    optionDiv.innerHTML = '';
+    if(node.options){
+      for(let key in node.options){
+        const btn = document.createElement('button');
+        btn.textContent = node.options[key].text;
+        btn.className = 'button';
+        btn.style.margin='4px';
+        btn.onclick = () => chooseOption(key);
+        optionDiv.appendChild(btn);
+      }
     }
-    container.querySelector('.moduleOverlay').appendChild(optionDiv);
   }
 }
 
