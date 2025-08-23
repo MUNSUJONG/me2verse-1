@@ -13,6 +13,7 @@ h1 { color:#c0392b; margin:10px 0; text-align:center; }
 .button { margin:6px; padding:12px 20px; font-size:16px; color:#fff; background:#2980b9; border:none; border-radius:8px; cursor:pointer; flex:1; min-width:120px; transition:0.2s; }
 .button:hover { background:#2471a3; }
 .module { display:none; padding:20px; margin:20px auto; border-radius:12px; box-shadow:0 4px 8px rgba(0,0,0,0.2); max-width:700px; width:90%; position:relative; background:#fff; }
+.moduleOverlay { background: rgba(255,255,255,0.8); padding: 10px; border-radius: 10px; }
 .chat-box { border:1px solid #ccc; padding:10px; height:300px; overflow-y:auto; border-radius:10px; background:#fefefe; margin-bottom:10px; }
 .message { margin:6px 0; padding:8px 12px; border-radius:12px; max-width:80%; clear:both; word-break:break-word; }
 .message.ai { background:#2980b9; color:#fff; float:left; }
@@ -47,14 +48,16 @@ h1 { color:#c0392b; margin:10px 0; text-align:center; }
 // ---------- XP/레벨 ----------
 let level = 1, xp = 0, currentModule='', currentNode='';
 const xpPerLevel = 20;
+
 function updateLevelBar(){
-  let percent = (xp % xpPerLevel)/xpPerLevel*100;
+  let percent = ((xp % xpPerLevel)/xpPerLevel)*100;
   document.getElementById('levelBar').style.width = percent + '%';
   document.getElementById('levelBar').textContent = `레벨 ${level} (${xp} XP)`;
 }
+
 function addXP(amount){
   xp += amount;
-  if(xp >= level*xpPerLevel){
+  while(xp >= level*xpPerLevel){
     level++;
     alert(`🎉 레벨업! 레벨 ${level} 달성!`);
   }
@@ -108,10 +111,20 @@ const modulesData = {
 };
 
 // ---------- SPA 함수 ----------
-function showModule(id){ currentModule=id; currentNode='start'; renderModule(); }
-function backToMain(){ currentModule=''; document.getElementById('moduleContainer').innerHTML=''; }
+function showModule(id){ 
+  currentModule=id; 
+  currentNode='start'; 
+  renderModule(); 
+}
+
+function backToMain(){ 
+  currentModule=''; 
+  document.getElementById('moduleContainer').innerHTML=''; 
+}
+
 function addMessage(sender,text){
   const chatBox=document.getElementById('chatBox');
+  if(!chatBox) return;
   const div=document.createElement('div');
   div.className='message '+sender;
   div.textContent=text;
@@ -122,7 +135,7 @@ function addMessage(sender,text){
 // 사용자 입력 처리
 function handleUserInput(){
   const inputBox=document.getElementById('userInput');
-  if(!inputBox.value) return;
+  if(!inputBox || !inputBox.value) return;
   const userText = inputBox.value;
   addMessage('user', userText);
   inputBox.value='';
@@ -158,22 +171,20 @@ function renderModule(){
   const node = data.storyTree[currentNode];
   const container=document.getElementById('moduleContainer');
   container.innerHTML=`<div class="module" style="background-image:url(${data.background}); background-size:cover; background-position:center;">
-    <div class="chat-box" id="chatBox"></div>
-    <input type="text" id="userInput" placeholder="여기에 입력하고 Enter" onkeypress="if(event.key==='Enter'){handleUserInput();}">
-    <button id="sendBtn" onclick="handleUserInput()">보내기</button>
-    <button class="backBtn" onclick="backToMain()">⬅️ 메인으로 돌아가기</button>
-  </div>
-  `;
-
-  const chatBox = document.getElementById('chatBox');
-  chatBox.innerHTML = '';
+    <div class="moduleOverlay">
+      <div class="chat-box" id="chatBox"></div>
+      <input type="text" id="userInput" placeholder="여기에 입력하고 Enter" onkeypress="if(event.key==='Enter'){handleUserInput();}">
+      <button id="sendBtn" onclick="handleUserInput()">보내기</button>
+      <button class="backBtn" onclick="backToMain()">⬅️ 메인으로 돌아가기</button>
+    </div>
+  </div>`;
 
   // AI 초기 메시지 출력
   if(node.text){
     addMessage('ai', node.text);
   }
 
-  // 선택지가 있는 경우 버튼으로 렌더링
+  // 선택지 버튼 렌더링
   if(node.options){
     const optionDiv = document.createElement('div');
     optionDiv.style.marginTop = '10px';
@@ -185,11 +196,11 @@ function renderModule(){
       btn.onclick = () => chooseOption(key);
       optionDiv.appendChild(btn);
     }
-    container.querySelector('.module').appendChild(optionDiv);
+    container.querySelector('.moduleOverlay').appendChild(optionDiv);
   }
 }
 
-// 페이지 로드 시 레벨바 초기화
+// 초기 레벨바 업데이트
 updateLevelBar();
 </script>
 
